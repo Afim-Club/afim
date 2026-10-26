@@ -31,7 +31,7 @@ npm run build   # SSG: fetches every category/profile from Strapi at build time
 
 - `infra/stack.yml`: Swarm stack (Traefik v3 with Let's Encrypt, MariaDB pinned to a node labelled `db=true`, `cms` and `web` with 2 replicas and `start-first` rolling updates). Needs the external overlay network `proxy`; variables come from the environment (see `.env.example`).
 - `cms/Dockerfile` (multi-stage, runs `strapi start`, verified healthy against MariaDB) and `web/Dockerfile` (Astro build → nginx). The web image renders from the live CMS at build time, so `STRAPI_URL` must be reachable during `docker build`; the web image therefore builds after the CMS is deployed.
-- Root `Jenkinsfile`: Sonar → build → Trivy → push → `docker stack deploy`. Credential ids (`afim-registry-url`, `afim-env`) and the `sonarqube` server name are assumptions; the real Jenkins Shared Library is not wired yet. The stack, the Jenkinsfile and the web image build have not been run against a real Swarm/Jenkins.
+- Root `Jenkinsfile`: Sonar → build → Trivy → push → `docker stack deploy`. Credential ids (`afim-registry-url`, `afim-env`) and the `sonarqube` server name are assumptions; the real Jenkins Shared Library is not wired yet. The web image was built (`docker build --network host --build-arg STRAPI_URL=http://localhost:1337 ...`) and served correctly against the local CMS; the stack and Jenkinsfile have not been run against a real Swarm/Jenkins.
 - CMS config reads `PROXY`, `PUBLIC_URL` and `CORS_ORIGINS` for running behind Traefik.
 
 ## CMS data model

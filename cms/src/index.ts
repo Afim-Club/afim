@@ -4,6 +4,7 @@ import { seed } from './seed';
 const PUBLIC_ACTIONS = [
   'api::profile.profile.find',
   'api::profile.profile.findOne',
+  'api::profile.profile.submit',
   'api::category.category.find',
   'api::category.category.findOne',
 ];

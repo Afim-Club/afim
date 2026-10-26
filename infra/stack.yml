@@ -95,6 +95,21 @@ services:
         - traefik.http.services.web.loadbalancer.server.port=80
         - traefik.docker.network=proxy
 
+  partners:
+    image: ${REGISTRY}/afim-partners:${TAG}
+    networks: [proxy]
+    deploy:
+      replicas: 2
+      update_config: { order: start-first, failure_action: rollback }
+      rollback_config: { order: start-first }
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.partners.rule=Host(`partners.${DOMAIN}`)
+        - traefik.http.routers.partners.entrypoints=websecure
+        - traefik.http.routers.partners.tls.certresolver=le
+        - traefik.http.services.partners.loadbalancer.server.port=80
+        - traefik.docker.network=proxy
+
 networks:
   proxy:
     external: true

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Status
 
-`cms/` (Strapi 5, TypeScript) and `web/` (Astro 7, static) are implemented. `infra/` holds the Swarm stack; `partners/` still contains just `.gitkeep`. The product spec: a searchable directory of profiles with hierarchical categories, delivered trunk-based via Jenkins → Docker Swarm/Traefik. Code identifiers are in English; UI copy may be Portuguese.
+`cms/` (Strapi 5, TypeScript), `web/` and `partners/` (Astro 7, static) and `infra/` (Swarm stack) are implemented. The product spec: a searchable directory of profiles with hierarchical categories, delivered trunk-based via Jenkins → Docker Swarm/Traefik. Code identifiers are in English; UI copy may be Portuguese.
 
 ## Commands (cms/)
 
@@ -26,6 +26,10 @@ npm run build   # SSG: fetches every category/profile from Strapi at build time
 ```
 
 `web/src/lib/strapi.ts` is the API client (pages through all results; `STRAPI_URL` for build-time fetches, `PUBLIC_STRAPI_URL` for the browser). Routes: `/`, `/categorias/[slug]` (includes subcategories' profiles), `/perfis/[slug]`, `/busca` (client-side search straight against the Strapi REST API). The CMS must be reachable and seeded at build time, and new/changed content requires a rebuild. UI copy and URLs are in Portuguese. `astro check` is not set up (it prompts to install `@astrojs/check`).
+
+## Partners site
+
+`partners/` is a static Astro site (landing + `/cadastro` form) built like `web/` but with no build-time CMS dependency: the form POSTs from the browser to `POST /api/profiles/submit` (`PUBLIC_STRAPI_URL`). That public, unauthenticated route (`cms/src/api/profile`) accepts only company|shop|ngo, whitelists fields, always creates `status=review`, and stores `contactEmail` (a `private` field, never returned by the API). No rate limiting or CAPTCHA yet, so it is spam-prone. The `partners` image is wired into `infra/stack.yml` and the Jenkinsfile (untested there).
 
 ## Infra and delivery
 

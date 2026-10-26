@@ -37,7 +37,7 @@ pipeline {
     }
 
     // The site is static and rendered from the live CMS API, so it builds after the CMS is deployed.
-    stage('Build, scan and push web image') {
+    stage('Build, scan and push web and partners images') {
       when { branch 'main' }
       steps {
         sh '''
@@ -46,6 +46,10 @@ pipeline {
             --build-arg PUBLIC_STRAPI_URL=https://admin.$DOMAIN web
           trivy image --exit-code 1 --severity HIGH,CRITICAL --ignore-unfixed $REGISTRY/afim-web:$TAG
           docker push $REGISTRY/afim-web:$TAG
+          docker build -t $REGISTRY/afim-partners:$TAG \
+            --build-arg PUBLIC_STRAPI_URL=https://admin.$DOMAIN partners
+          trivy image --exit-code 1 --severity HIGH,CRITICAL --ignore-unfixed $REGISTRY/afim-partners:$TAG
+          docker push $REGISTRY/afim-partners:$TAG
         '''
         deployStack()
       }

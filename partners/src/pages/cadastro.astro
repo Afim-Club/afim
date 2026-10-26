@@ -1,0 +1,35 @@
+---
+import Layout from '../layouts/Layout.astro';
+const api = import.meta.env.PUBLIC_STRAPI_URL ?? 'http://localhost:1337';
+---
+<Layout title="Cadastro">
+  <h1>Cadastro de parceiro</h1>
+  <form id="f">
+    <input name="name" placeholder="Nome do negócio" required />
+    <select name="profileType" required>
+      <option value="company">Empresa</option>
+      <option value="shop">Comércio</option>
+      <option value="ngo">ONG</option>
+    </select>
+    <input name="contactEmail" type="email" placeholder="E-mail de contato (não será público)" required />
+    <input name="city" placeholder="Cidade" />
+    <input name="state" placeholder="UF" maxlength="2" />
+    <textarea name="description" rows="4" placeholder="Apresentação"></textarea>
+    <button>Enviar para revisão</button>
+  </form>
+  <p id="msg" role="status"></p>
+  <script define:vars={{ api }}>
+    const form = document.getElementById('f');
+    const msg = document.getElementById('msg');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const res = await fetch(`${api}/api/profiles/submit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(Object.fromEntries(new FormData(form))),
+      });
+      msg.textContent = res.ok ? 'Recebemos seu cadastro! Ele será analisado em breve.' : 'Não foi possível enviar. Confira os campos.';
+      if (res.ok) form.reset();
+    });
+  </script>
+</Layout>

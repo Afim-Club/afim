@@ -19,4 +19,27 @@ export default factories.createCoreController('api::profile.profile', ({ strapi 
     if (!found) return ctx.notFound();
     return super.findOne(ctx);
   },
+
+  // Public partner sign-up: always lands in moderation (status=review) and only a whitelist of fields is accepted.
+  async submit(ctx) {
+    const body = (ctx.request.body ?? {}) as Record<string, any>;
+    const str = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
+    const name = str(body.name, 255);
+    const contactEmail = str(body.contactEmail, 255);
+    const profileType = str(body.profileType, 20);
+    if (!name || !/^\S+@\S+\.\S+$/.test(contactEmail) || !['company', 'shop', 'ngo'].includes(profileType)) {
+      return ctx.badRequest('name, a valid contactEmail and profileType (company|shop|ngo) are required');
+    }
+    const slug = `${name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}-${Date.now().toString(36)}`;
+    await strapi.documents('api::profile.profile').create({
+      data: {
+        name, slug, contactEmail, profileType,
+        description: str(body.description, 2000),
+        status: 'review',
+        location: { city: str(body.city, 120), state: str(body.state, 2).toUpperCase() },
+      } as any,
+    });
+    ctx.status = 201;
+    return { data: { received: true } };
+  },
 }));

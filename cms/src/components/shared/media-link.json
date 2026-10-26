@@ -1,0 +1,8 @@
+{
+  "collectionName": "components_shared_media_links",
+  "info": { "displayName": "Media link", "icon": "link" },
+  "attributes": {
+    "platform": { "type": "string", "required": true },
+    "url": { "type": "string", "required": true }
+  }
+}

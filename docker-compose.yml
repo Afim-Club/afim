@@ -1,0 +1,20 @@
+# Local development only. Production runs on Docker Swarm (see infra/).
+services:
+  mariadb:
+    image: mariadb:11
+    environment:
+      MARIADB_DATABASE: ${DATABASE_NAME:-afim}
+      MARIADB_USER: ${DATABASE_USERNAME:-afim}
+      MARIADB_PASSWORD: ${DATABASE_PASSWORD:-change-me}
+      MARIADB_RANDOM_ROOT_PASSWORD: "1"
+    ports:
+      - "3306:3306"
+    volumes:
+      - mariadb-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      retries: 20
+
+volumes:
+  mariadb-data:

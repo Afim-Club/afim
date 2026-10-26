@@ -1,0 +1,9 @@
+{
+  "collectionName": "components_extra_shops",
+  "info": { "displayName": "Shop details", "icon": "shoppingCart" },
+  "attributes": {
+    "openingHours": { "type": "text" },
+    "offersDiscount": { "type": "boolean", "default": false },
+    "discountDetails": { "type": "text" }
+  }
+}

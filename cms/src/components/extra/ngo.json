@@ -1,0 +1,8 @@
+{
+  "collectionName": "components_extra_ngos",
+  "info": { "displayName": "NGO details", "icon": "heart" },
+  "attributes": {
+    "cause": { "type": "string" },
+    "acceptsVolunteers": { "type": "boolean", "default": false }
+  }
+}

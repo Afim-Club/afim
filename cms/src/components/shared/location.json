@@ -1,0 +1,10 @@
+{
+  "collectionName": "components_shared_locations",
+  "info": { "displayName": "Location", "icon": "pin" },
+  "attributes": {
+    "city": { "type": "string" },
+    "state": { "type": "string", "maxLength": 2 },
+    "lat": { "type": "decimal" },
+    "lng": { "type": "decimal" }
+  }
+}

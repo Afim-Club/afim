@@ -1,0 +1,8 @@
+{
+  "collectionName": "components_extra_professionals",
+  "info": { "displayName": "Professional details", "icon": "user" },
+  "attributes": {
+    "seniority": { "type": "enumeration", "enum": ["intern", "junior", "mid", "senior", "lead"] },
+    "openToWork": { "type": "boolean", "default": false }
+  }
+}

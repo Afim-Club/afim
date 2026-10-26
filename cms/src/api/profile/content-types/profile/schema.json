@@ -1,0 +1,17 @@
+{
+  "kind": "collectionType",
+  "collectionName": "profiles",
+  "info": { "singularName": "profile", "pluralName": "profiles", "displayName": "Profile" },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "profileType": { "type": "enumeration", "enum": ["professional", "company", "shop", "ngo"], "required": true },
+    "name": { "type": "string", "required": true },
+    "slug": { "type": "uid", "targetField": "name", "required": true },
+    "description": { "type": "text" },
+    "status": { "type": "enumeration", "enum": ["active", "review", "blocked"], "default": "review", "required": true },
+    "categories": { "type": "relation", "relation": "manyToMany", "target": "api::category.category", "inversedBy": "profiles" },
+    "location": { "type": "component", "repeatable": false, "component": "shared.location" },
+    "mediaLinks": { "type": "component", "repeatable": true, "component": "shared.media-link" },
+    "extra": { "type": "dynamiczone", "components": ["extra.professional", "extra.company", "extra.shop", "extra.ngo"], "max": 1 }
+  }
+}

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Status
 
-`cms/` (Strapi 5, TypeScript) and `web/` (Astro 7, static) are implemented. `partners/` and `infra/` still contain just `.gitkeep`. The product spec: a searchable directory of profiles with hierarchical categories, delivered trunk-based via Jenkins → Docker Swarm/Traefik. Code identifiers are in English; UI copy may be Portuguese.
+`cms/` (Strapi 5, TypeScript) and `web/` (Astro 7, static) are implemented. `infra/` holds the Swarm stack; `partners/` still contains just `.gitkeep`. The product spec: a searchable directory of profiles with hierarchical categories, delivered trunk-based via Jenkins → Docker Swarm/Traefik. Code identifiers are in English; UI copy may be Portuguese.
 
 ## Commands (cms/)
 
@@ -26,6 +26,13 @@ npm run build   # SSG: fetches every category/profile from Strapi at build time
 ```
 
 `web/src/lib/strapi.ts` is the API client (pages through all results; `STRAPI_URL` for build-time fetches, `PUBLIC_STRAPI_URL` for the browser). Routes: `/`, `/categorias/[slug]` (includes subcategories' profiles), `/perfis/[slug]`, `/busca` (client-side search straight against the Strapi REST API). The CMS must be reachable and seeded at build time, and new/changed content requires a rebuild. UI copy and URLs are in Portuguese. `astro check` is not set up (it prompts to install `@astrojs/check`).
+
+## Infra and delivery
+
+- `infra/stack.yml`: Swarm stack (Traefik v3 with Let's Encrypt, MariaDB pinned to a node labelled `db=true`, `cms` and `web` with 2 replicas and `start-first` rolling updates). Needs the external overlay network `proxy`; variables come from the environment (see `.env.example`).
+- `cms/Dockerfile` (multi-stage, runs `strapi start`, verified healthy against MariaDB) and `web/Dockerfile` (Astro build → nginx). The web image renders from the live CMS at build time, so `STRAPI_URL` must be reachable during `docker build`; the web image therefore builds after the CMS is deployed.
+- Root `Jenkinsfile`: Sonar → build → Trivy → push → `docker stack deploy`. Credential ids (`afim-registry-url`, `afim-env`) and the `sonarqube` server name are assumptions; the real Jenkins Shared Library is not wired yet. The stack, the Jenkinsfile and the web image build have not been run against a real Swarm/Jenkins.
+- CMS config reads `PROXY`, `PUBLIC_URL` and `CORS_ORIGINS` for running behind Traefik.
 
 ## CMS data model
 

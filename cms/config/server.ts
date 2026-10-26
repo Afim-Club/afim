@@ -3,6 +3,9 @@ import type { Core } from '@strapi/strapi';
 const config = ({ env }: Core.Config.Shared.ConfigParams): Core.Config.Server => ({
   host: env('HOST', '0.0.0.0'),
   port: env.int('PORT', 1337),
+  // Behind Traefik: trust X-Forwarded-* and build admin/API URLs from the public address.
+  proxy: env.bool('PROXY', false),
+  url: env('PUBLIC_URL', ''),
   app: {
     keys: env.array('APP_KEYS')!,
   },

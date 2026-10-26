@@ -1,10 +1,11 @@
 import type { Core } from '@strapi/strapi';
 
-const config: Core.Config.Middlewares = [
+const config = ({ env }: { env: any }): Core.Config.Middlewares => [
   'strapi::logger',
   'strapi::errors',
   'strapi::security',
-  'strapi::cors',
+  // Public site searches the API from the browser: allow its origin(s).
+  { name: 'strapi::cors', config: { origin: env.array('CORS_ORIGINS', ['http://localhost:4321']) } },
   'strapi::poweredBy',
   'strapi::query',
   'strapi::body',

@@ -1,0 +1,22 @@
+---
+import Layout from '../layouts/Layout.astro';
+import ProfileCard from '../components/ProfileCard.astro';
+import { getCategories, getProfiles } from '../lib/strapi';
+
+const roots = (await getCategories()).filter((c) => !c.parent);
+const recent = (await getProfiles()).slice(0, 6);
+---
+<Layout title="Início">
+  <h1>Encontre quem compartilha seus valores</h1>
+  <h2>Categorias</h2>
+  <ul class="cards">
+    {roots.map((c) => (
+      <li>
+        <a href={`/categorias/${c.slug}`}><strong>{c.name}</strong></a>
+        {c.children?.length ? <div>{c.children.map((s) => s.name).join(', ')}</div> : null}
+      </li>
+    ))}
+  </ul>
+  <h2>Perfis</h2>
+  <ul class="cards">{recent.map((p) => <ProfileCard profile={p} />)}</ul>
+</Layout>

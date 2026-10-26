@@ -1,0 +1,26 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import ProfileCard from '../../components/ProfileCard.astro';
+import { getCategories, profilesBySlugs } from '../../lib/strapi';
+
+export async function getStaticPaths() {
+  const all = await getCategories();
+  return Promise.all(
+    all.map(async (category) => {
+      // A category page also lists profiles from its subcategories.
+      const slugs = [category.slug, ...(category.children ?? []).map((c) => c.slug)];
+      return { params: { slug: category.slug }, props: { category, profiles: await profilesBySlugs(slugs) } };
+    }),
+  );
+}
+
+const { category, profiles } = Astro.props;
+---
+<Layout title={category.name}>
+  {category.parent && <p><a href={`/categorias/${category.parent.slug}`}>← {category.parent.name}</a></p>}
+  <h1>{category.name}</h1>
+  {category.children?.length ? (
+    <p>{category.children.map((c) => <a class="tag" href={`/categorias/${c.slug}`}>{c.name}</a>)}</p>
+  ) : null}
+  {profiles.length ? <ul class="cards">{profiles.map((p) => <ProfileCard profile={p} />)}</ul> : <p>Nenhum perfil ainda.</p>}
+</Layout>

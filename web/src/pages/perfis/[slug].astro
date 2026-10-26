@@ -1,0 +1,23 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { TYPE_LABELS, getProfiles } from '../../lib/strapi';
+
+export async function getStaticPaths() {
+  return (await getProfiles()).map((profile) => ({ params: { slug: profile.slug }, props: { profile } }));
+}
+
+const { profile } = Astro.props;
+const place = [profile.location?.city, profile.location?.state].filter(Boolean).join(' / ');
+const extra = profile.extra?.[0];
+const details = extra ? Object.entries(extra).filter(([k, v]) => !['__component', 'id'].includes(k) && v !== null) : [];
+---
+<Layout title={profile.name}>
+  <h1>{profile.name} <span class="tag">{TYPE_LABELS[profile.profileType]}</span></h1>
+  {place && <p>{place}</p>}
+  {profile.description && <p>{profile.description}</p>}
+  {profile.categories?.length ? <p>{profile.categories.map((c) => <a class="tag" href={`/categorias/${c.slug}`}>{c.name}</a>)}</p> : null}
+  {details.length ? <dl>{details.map(([k, v]) => <><dt>{k}</dt><dd>{String(v)}</dd></>)}</dl> : null}
+  {profile.mediaLinks?.length ? (
+    <ul>{profile.mediaLinks.map((l) => <li><a href={l.url} rel="noopener nofollow">{l.platform}</a></li>)}</ul>
+  ) : null}
+</Layout>

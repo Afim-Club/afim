@@ -1,0 +1,38 @@
+---
+import Layout from '../layouts/Layout.astro';
+const api = import.meta.env.PUBLIC_STRAPI_URL ?? 'http://localhost:1337';
+---
+<Layout title="Buscar">
+  <h1>Buscar</h1>
+  <form id="f">
+    <input name="q" placeholder="Nome ou descrição" />
+    <input name="city" placeholder="Cidade" />
+    <button>Buscar</button>
+  </form>
+  <ul id="results" class="cards"></ul>
+  <script define:vars={{ api }}>
+    const form = document.getElementById('f');
+    const out = document.getElementById('results');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const { q, city } = Object.fromEntries(new FormData(form));
+      const p = new URLSearchParams({ 'populate[location]': 'true' });
+      if (q) {
+        p.set('filters[$or][0][name][$containsi]', q);
+        p.set('filters[$or][1][description][$containsi]', q);
+      }
+      if (city) p.set('filters[location][city][$containsi]', city);
+      const res = await fetch(`${api}/api/profiles?${p}`);
+      const { data } = await res.json();
+      out.replaceChildren(...data.map((x) => {
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = `/perfis/${x.slug}`;
+        a.textContent = x.name;
+        li.append(a, ' ', [x.location?.city, x.location?.state].filter(Boolean).join(' / '));
+        return li;
+      }));
+      if (!data.length) out.textContent = 'Nada encontrado.';
+    });
+  </script>
+</Layout>

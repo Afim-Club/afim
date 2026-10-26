@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Status
 
-Only `cms/` (Strapi 5, TypeScript) is implemented. `web/`, `partners/` and `infra/` still contain just `.gitkeep`. The product spec: a searchable directory of profiles with hierarchical categories, delivered trunk-based via Jenkins → Docker Swarm/Traefik. Code identifiers are in English; UI copy may be Portuguese.
+`cms/` (Strapi 5, TypeScript) and `web/` (Astro 7, static) are implemented. `partners/` and `infra/` still contain just `.gitkeep`. The product spec: a searchable directory of profiles with hierarchical categories, delivered trunk-based via Jenkins → Docker Swarm/Traefik. Code identifiers are in English; UI copy may be Portuguese.
 
 ## Commands (cms/)
 
@@ -16,6 +16,16 @@ npm run build                             # build admin panel
 ```
 
 No lint or test setup exists yet.
+
+## Commands (web/)
+
+```bash
+cd web && npm install
+npm run dev     # needs the CMS running (cms/ on :1337)
+npm run build   # SSG: fetches every category/profile from Strapi at build time
+```
+
+`web/src/lib/strapi.ts` is the API client (pages through all results; `STRAPI_URL` for build-time fetches, `PUBLIC_STRAPI_URL` for the browser). Routes: `/`, `/categorias/[slug]` (includes subcategories' profiles), `/perfis/[slug]`, `/busca` (client-side search straight against the Strapi REST API). The CMS must be reachable and seeded at build time, and new/changed content requires a rebuild. UI copy and URLs are in Portuguese. `astro check` is not set up (it prompts to install `@astrojs/check`).
 
 ## CMS data model
 

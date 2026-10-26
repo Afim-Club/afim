@@ -1,20 +1,27 @@
-// import type { Core } from '@strapi/strapi';
+import type { Core } from '@strapi/strapi';
+import { seed } from './seed';
+
+const PUBLIC_ACTIONS = [
+  'api::profile.profile.find',
+  'api::profile.profile.findOne',
+  'api::category.category.find',
+  'api::category.category.findOne',
+];
+
+async function grantPublicRead(strapi: Core.Strapi) {
+  const role = await strapi.db.query('plugin::users-permissions.role').findOne({ where: { type: 'public' } });
+  if (!role) return;
+  for (const action of PUBLIC_ACTIONS) {
+    const exists = await strapi.db.query('plugin::users-permissions.permission').findOne({ where: { action, role: role.id } });
+    if (!exists) await strapi.db.query('plugin::users-permissions.permission').create({ data: { action, role: role.id } });
+  }
+}
 
 export default {
-  /**
-   * An asynchronous register function that runs before
-   * your application is initialized.
-   *
-   * This gives you an opportunity to extend code.
-   */
-  register(/* { strapi }: { strapi: Core.Strapi } */) {},
+  register() {},
 
-  /**
-   * An asynchronous bootstrap function that runs before
-   * your application gets started.
-   *
-   * This gives you an opportunity to set up your data model,
-   * run jobs, or perform some special logic.
-   */
-  bootstrap(/* { strapi }: { strapi: Core.Strapi } */) {},
+  async bootstrap({ strapi }: { strapi: Core.Strapi }) {
+    await grantPublicRead(strapi);
+    if (process.env.SEED === 'true') await seed(strapi);
+  },
 };

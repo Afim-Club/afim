@@ -21,7 +21,13 @@ No lint or test setup exists yet.
 
 Content types in `cms/src/api/`: `profile` and `category` (draftAndPublish disabled; moderation is the `status` enum `active|review|blocked`, default `review`). Categories self-relate via `parent`/`children` and link many-to-many with profiles. `profileType` is `professional|company|shop|ngo`. Shared components (`cms/src/components/shared`: `location` with city/state/lat/lng, repeatable `media-link`) plus a single-item dynamic zone `extra` holding the per-type component from `cms/src/components/extra`. New per-type attributes go in those components, not in `profile`.
 
-Not done yet: public API permissions (routes return 403 until granted), restricting public reads to `status=active`, search/filter endpoint, seed data.
+Public access: `cms/src/index.ts` bootstrap grants the public role `find`/`findOne` on both types (idempotent). `profile` controller forces `status=active` on `find` and 404s non-active on `findOne`, so review/blocked profiles are only visible in the admin. Filtering works through the REST API, e.g. `filters[location][state][$eq]=SP`, `filters[categories][slug][$eq]=...` (use `curl -g`).
+
+Seed: `SEED=true` loads sample categories/profiles on boot, only when no profiles exist (`cms/src/seed.ts`).
+
+`npm run start` serves the compiled `dist/`: run `npm run build` after editing `src/`, or use `develop`.
+
+Not done yet: dedicated search endpoint (text search currently via `$containsi` filters).
 
 ## Planned architecture
 

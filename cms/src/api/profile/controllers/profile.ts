@@ -23,6 +23,23 @@ export default factories.createCoreController('api::profile.profile', ({ strapi 
   // Public partner sign-up: always lands in moderation (status=review) and only a whitelist of fields is accepted.
   async submit(ctx) {
     const body = (ctx.request.body ?? {}) as Record<string, any>;
+    // Honeypot: real users never see this field. Pretend success so bots learn nothing.
+    if (body.website) {
+      ctx.status = 201;
+      return { data: { received: true } };
+    }
+
+    // Optional Cloudflare Turnstile CAPTCHA, enforced only when TURNSTILE_SECRET is set.
+    const secret = process.env.TURNSTILE_SECRET;
+    if (secret) {
+      const token = typeof body.captchaToken === 'string' ? body.captchaToken : '';
+      const verify = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+        method: 'POST',
+        body: new URLSearchParams({ secret, response: token, remoteip: ctx.ip }),
+      }).then((r) => r.json() as Promise<{ success: boolean }>).catch(() => ({ success: false }));
+      if (!verify.success) return ctx.badRequest('CAPTCHA verification failed');
+    }
+
     const str = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
     const name = str(body.name, 255);
     const contactEmail = str(body.contactEmail, 255);

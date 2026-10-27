@@ -1,5 +1,5 @@
 export default {
   routes: [
-    { method: 'POST', path: '/profiles/submit', handler: 'profile.submit', config: { auth: false } },
+    { method: 'POST', path: '/profiles/submit', handler: 'profile.submit', config: { auth: false, middlewares: ['global::submit-rate-limit'] } },
   ],
 };

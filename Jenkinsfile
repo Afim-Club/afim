@@ -7,6 +7,7 @@ pipeline {
   environment {
     REGISTRY = credentials('afim-registry-url')     // e.g. registry.example.com/afim
     DOMAIN   = 'afim.club'
+    PUBLIC_TURNSTILE_SITE_KEY = credentials('afim-turnstile-site-key') // public site key; use a placeholder credential to disable
     TAG      = "${env.BUILD_NUMBER}-${env.GIT_COMMIT?.take(7)}"
   }
 
@@ -47,7 +48,8 @@ pipeline {
           trivy image --exit-code 1 --severity HIGH,CRITICAL --ignore-unfixed $REGISTRY/afim-web:$TAG
           docker push $REGISTRY/afim-web:$TAG
           docker build -t $REGISTRY/afim-partners:$TAG \
-            --build-arg PUBLIC_STRAPI_URL=https://admin.$DOMAIN partners
+            --build-arg PUBLIC_STRAPI_URL=https://admin.$DOMAIN \
+            --build-arg PUBLIC_TURNSTILE_SITE_KEY=$PUBLIC_TURNSTILE_SITE_KEY partners
           trivy image --exit-code 1 --severity HIGH,CRITICAL --ignore-unfixed $REGISTRY/afim-partners:$TAG
           docker push $REGISTRY/afim-partners:$TAG
         '''

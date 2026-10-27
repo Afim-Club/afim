@@ -67,6 +67,8 @@ services:
       TRANSFER_TOKEN_SALT: ${TRANSFER_TOKEN_SALT}
       JWT_SECRET: ${JWT_SECRET}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      TURNSTILE_SECRET: ${TURNSTILE_SECRET:-}
+      SUBMIT_RATE_MAX: ${SUBMIT_RATE_MAX:-5}
     networks: [proxy, backend]
     deploy:
       replicas: 2

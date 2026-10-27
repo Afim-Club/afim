@@ -1,0 +1,7 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+import { fieldClasses } from './fieldClasses';
+type Props = HTMLAttributes<'select'>;
+const { class: className, ...rest } = Astro.props;
+---
+<select class:list={[fieldClasses, className]} {...rest}><slot /></select>

@@ -1,5 +1,8 @@
 FROM node:22-alpine AS build
 WORKDIR /app
+# Shared design system (a file: dependency at ../design-system), passed with
+# --build-context design-system=design-system
+COPY --from=design-system . ../design-system
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .

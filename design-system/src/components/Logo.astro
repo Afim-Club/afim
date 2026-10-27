@@ -1,0 +1,13 @@
+---
+/** Afim symbol (two circles and their shared ground) plus the wordmark. */
+interface Props { label?: string; href?: string; class?: string }
+const { label = 'Afim', href = '/', class: className } = Astro.props;
+---
+<a href={href} class:list={['inline-flex items-center gap-2 font-bold text-lg text-fg no-underline hover:text-fg', className]}>
+  <svg viewBox="0 0 48 32" class="h-6 w-auto text-brand" aria-hidden="true" fill="none">
+    <circle cx="16" cy="16" r="12" stroke="currentColor" stroke-width="3" />
+    <circle cx="32" cy="16" r="12" stroke="currentColor" stroke-width="3" />
+    <path d="M24 7.06A12 12 0 0 1 24 24.94A12 12 0 0 1 24 7.06Z" fill="currentColor" />
+  </svg>
+  <span>{label}</span>
+</a>

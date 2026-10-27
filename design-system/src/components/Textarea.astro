@@ -1,0 +1,7 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+import { fieldClasses } from './fieldClasses';
+type Props = HTMLAttributes<'textarea'>;
+const { class: className, ...rest } = Astro.props;
+---
+<textarea class:list={[fieldClasses, className]} {...rest}><slot /></textarea>

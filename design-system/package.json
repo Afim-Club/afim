@@ -1,0 +1,27 @@
+{
+  "name": "@afim/design-system",
+  "version": "0.1.0",
+  "description": "Afim design system: Tailwind theme, Astro components and brand assets",
+  "license": "AGPL-3.0-only",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./theme.css": "./src/theme.css",
+    "./components/*": "./src/components/*",
+    "./assets/*": "./assets/*"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "peerDependencies": {
+    "astro": ">=7",
+    "tailwindcss": ">=4"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "astro": "^7.4.2",
+    "tailwindcss": "^4.3.3"
+  }
+}

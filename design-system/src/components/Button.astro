@@ -1,0 +1,22 @@
+---
+/** Button, or a link styled as one when `href` is set. */
+import type { HTMLAttributes } from 'astro/types';
+type Props = HTMLAttributes<'button'> & {
+  variant?: 'primary' | 'secondary' | 'outline';
+  size?: 'sm' | 'md' | 'lg';
+  href?: string;
+};
+const { variant = 'primary', size = 'md', href, class: className, ...rest } = Astro.props;
+const classes = [
+  'inline-flex items-center justify-center gap-2 rounded-afim font-semibold no-underline transition-colors cursor-pointer',
+  'disabled:pointer-events-none disabled:opacity-50',
+  {
+    primary: 'bg-brand text-on-brand hover:bg-brand-hover hover:text-on-brand',
+    secondary: 'bg-brand-soft text-brand hover:text-brand-hover',
+    outline: 'border border-line bg-page text-fg hover:bg-surface hover:text-fg',
+  }[variant],
+  { sm: 'h-8 px-3 text-sm', md: 'h-10 px-4 text-sm', lg: 'h-12 px-6 text-base' }[size],
+  className,
+];
+---
+{href ? <a href={href} class:list={classes}><slot /></a> : <button class:list={classes} {...rest}><slot /></button>}

@@ -1,4 +1,10 @@
 ---
+import Alert from '@afim/design-system/components/Alert.astro';
+import Button from '@afim/design-system/components/Button.astro';
+import FormField from '@afim/design-system/components/FormField.astro';
+import Input from '@afim/design-system/components/Input.astro';
+import Select from '@afim/design-system/components/Select.astro';
+import Textarea from '@afim/design-system/components/Textarea.astro';
 import Layout from '../layouts/Layout.astro';
 const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY;
 const api = import.meta.env.PUBLIC_STRAPI_URL ?? 'http://localhost:1337';
@@ -6,34 +12,51 @@ const api = import.meta.env.PUBLIC_STRAPI_URL ?? 'http://localhost:1337';
 <Layout title="Cadastro">
   {siteKey && <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>}
   <h1>Cadastro de parceiro</h1>
-  <form id="f">
-    <input name="name" placeholder="Nome do negócio" required />
-    <select name="profileType" required>
-      <option value="company">Empresa</option>
-      <option value="shop">Comércio</option>
-      <option value="ngo">ONG</option>
-    </select>
-    <input name="contactEmail" type="email" placeholder="E-mail de contato (não será público)" required />
-    <input name="city" placeholder="Cidade" />
-    <input name="state" placeholder="UF" maxlength="2" />
-    <textarea name="description" rows="4" placeholder="Apresentação"></textarea>
+  <form id="f" class="grid gap-4">
+    <FormField label="Nome do negócio" required><Input name="name" required /></FormField>
+    <FormField label="Tipo" required>
+      <Select name="profileType" required>
+        <option value="company">Empresa</option>
+        <option value="shop">Comércio</option>
+        <option value="ngo">ONG</option>
+      </Select>
+    </FormField>
+    <FormField label="E-mail de contato" hint="Não será público." required><Input name="contactEmail" type="email" required /></FormField>
+    <div class="grid gap-4 sm:grid-cols-[1fr_6rem]">
+      <FormField label="Cidade"><Input name="city" /></FormField>
+      <FormField label="UF"><Input name="state" maxlength="2" /></FormField>
+    </div>
+    <FormField label="Apresentação"><Textarea name="description" rows="4" /></FormField>
     <input name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px" />
     {siteKey && <div class="cf-turnstile" data-sitekey={siteKey}></div>}
-    <button>Enviar para revisão</button>
+    <div><Button>Enviar para revisão</Button></div>
   </form>
-  <p id="msg" role="status"></p>
+  <Alert id="msg" role="status" class="mt-4" />
   <script define:vars={{ api }}>
     const form = document.getElementById('f');
     const msg = document.getElementById('msg');
+    const button = form.querySelector('button');
+    const show = (tone, text) => { msg.dataset.tone = tone; msg.textContent = text; };
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const res = await fetch(`${api}/api/profiles/submit`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...Object.fromEntries(new FormData(form)), captchaToken: form.querySelector('[name="cf-turnstile-response"]')?.value }),
-      });
-      msg.textContent = res.status === 429 ? 'Muitas tentativas. Tente novamente mais tarde.' : res.ok ? 'Recebemos seu cadastro! Ele será analisado em breve.' : 'Não foi possível enviar. Confira os campos.';
-      if (res.ok) form.reset();
+      button.disabled = true; // no double submits
+      show('info', 'Enviando...');
+      try {
+        const res = await fetch(`${api}/api/profiles/submit`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...Object.fromEntries(new FormData(form)), captchaToken: form.querySelector('[name="cf-turnstile-response"]')?.value }),
+        });
+        if (res.status === 429) show('warning', 'Muitas tentativas. Tente novamente mais tarde.');
+        else if (res.ok) show('success', 'Recebemos seu cadastro! Ele será analisado em breve.');
+        else show('danger', 'Não foi possível enviar. Confira os campos e a verificação e tente novamente.');
+        if (res.ok) form.reset();
+      } catch {
+        show('danger', 'Falha de conexão. Tente novamente em instantes.');
+      } finally {
+        window.turnstile?.reset(); // Turnstile tokens are single-use
+        button.disabled = false;
+      }
     });
   </script>
 </Layout>

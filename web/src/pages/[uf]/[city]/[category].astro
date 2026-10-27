@@ -1,0 +1,38 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Badge from '@afim/design-system/components/Badge.astro';
+import Breadcrumbs from '../../../components/Breadcrumbs.astro';
+import ProfileCard from '../../../components/ProfileCard.astro';
+import { cityUrl, getDirectory, inCategory, stateUrl, type City, type State } from '../../../lib/places';
+import type { Category, Profile } from '../../../lib/strapi';
+
+// One page per category (or parent category) that has profiles in the city.
+export async function getStaticPaths() {
+  const { states, categories } = await getDirectory();
+  return states.flatMap((state) =>
+    state.cities.flatMap((city) =>
+      categories
+        .map((category) => ({ category, profiles: inCategory(city.profiles, category) }))
+        .filter((c) => c.profiles.length)
+        .map(({ category, profiles }) => ({
+          params: { uf: state.slug, city: city.slug, category: category.slug },
+          props: { state, city, category, profiles },
+        })),
+    ),
+  );
+}
+
+const { state, city, category, profiles } = Astro.props as { state: State; city: City; category: Category; profiles: Profile[] };
+const base = cityUrl(state, city);
+const children = (category.children ?? []).filter((c) => city.profiles.some((p) => p.categories?.some((pc) => pc.slug === c.slug)));
+---
+<Layout title={`${category.name} em ${city.name} - ${state.uf}`} description={`${category.name} com valores em comum em ${city.name} (${state.uf}).`}>
+  <Breadcrumbs items={[
+    { name: 'Início', href: '/' }, { name: 'Estados', href: '/estados' }, { name: state.name, href: stateUrl(state) },
+    { name: city.name, href: base }, ...(category.parent ? [{ name: category.parent.name, href: `${base}/${category.parent.slug}` }] : []),
+    { name: category.name },
+  ]} />
+  <h1>{category.name} <span class="text-muted">em {city.name} · {state.uf}</span></h1>
+  {children.length ? <p class="mb-4 flex flex-wrap gap-2">{children.map((c) => <Badge href={`${base}/${c.slug}`}>{c.name}</Badge>)}</p> : null}
+  <ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{profiles.map((p) => <ProfileCard profile={p} />)}</ul>
+</Layout>

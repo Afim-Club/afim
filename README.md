@@ -8,6 +8,8 @@
 - Businesses hire people who share their values.
 - Shops and suppliers do business with partners who share their values.
 
+The public site can be browsed by place, like a classic directory: `/estados` lists the states, then `/sp`, `/sp/campinas` and `/sp/campinas/servicos` list the active profiles by state, city and category, with counts and breadcrumbs.
+
 ## Components
 
 | Folder | Description | Planned address |

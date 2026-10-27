@@ -15,6 +15,7 @@ export type Profile = {
   slug: string;
   description?: string;
   categories?: Category[];
+  affinities?: { name: string; slug: string }[];
   location?: { city?: string; state?: string; lat?: number; lng?: number } | null;
   mediaLinks?: { platform: string; url: string }[];
   extra?: ({ __component: string } & Record<string, unknown>)[];
@@ -39,7 +40,7 @@ async function fetchAll<T>(path: string, query: string): Promise<T[]> {
   }
 }
 
-const PROFILE_POPULATE = 'populate[categories]=true&populate[location]=true&populate[mediaLinks]=true&populate[extra][populate]=*';
+const PROFILE_POPULATE = 'populate[categories]=true&populate[affinities]=true&populate[location]=true&populate[mediaLinks]=true&populate[extra][populate]=*';
 
 export const getCategories = () =>
   fetchAll<Category>('categories', 'populate[parent]=true&populate[children]=true&sort=name');

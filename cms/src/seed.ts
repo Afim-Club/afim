@@ -5,6 +5,8 @@ const CATEGORIES: Record<string, string[]> = {
   Tecnologia: ['Desenvolvimento', 'Design'],
   Alimentação: ['Restaurantes', 'Padarias'],
   Saúde: ['Clínicas', 'Terapias'],
+  Serviços: ['Advocacia', 'Contabilidade', 'Construção', 'Imóveis', 'Segurança'],
+  Comércio: ['Moda', 'Mercados', 'Autopeças', 'Agronegócio'],
 };
 
 const slugify = (s: string) =>
@@ -71,6 +73,23 @@ export async function seed(strapi: Core.Strapi) {
       mediaLinks: [], extra: [{ __component: 'extra.ngo', cause: 'Educação', acceptsVolunteers: true }] },
     { profileType: 'shop', name: 'Loja Bloqueada', description: 'Exemplo de perfil bloqueado.', status: 'blocked',
       categories: ['Restaurantes'], affinities: [], location: { city: 'Salvador', state: 'BA' }, mediaLinks: [], extra: [] },
+    // Fictional profiles across the right of the political spectrum, so matching can be tried on that side too.
+    ...([
+      ['professional', 'Eduardo Vasconcelos', 'Contador.', 'Contabilidade', 'Centro-direita', [], 'Campinas', 'SP', -22.9099, -47.0626],
+      ['company', 'AgroForte Insumos', 'Insumos agrícolas.', 'Agronegócio', 'Direita', ['Sustentabilidade'], 'Rio Verde', 'GO', -17.7923, -50.9192],
+      ['shop', 'Churrascaria Fogo Alto', 'Churrascaria.', 'Restaurantes', 'Direita', [], 'Porto Alegre', 'RS', -30.0346, -51.2177],
+      ['professional', 'Fernanda Albuquerque', 'Advogada empresarial.', 'Advocacia', 'Centro-direita', ['Diversidade e inclusão'], 'Florianópolis', 'SC', -27.5954, -48.548],
+      ['shop', 'Armazém do Interior', 'Mercearia.', 'Mercados', 'Centro-direita', ['Comércio justo'], 'Ribeirão Preto', 'SP', -21.1704, -47.8103],
+      ['company', 'Vigilância Sentinela', 'Segurança privada.', 'Segurança', 'Extrema-direita', [], 'Goiânia', 'GO', -16.6869, -49.2648],
+      ['professional', 'Ricardo Bastos', 'Corretor de imóveis.', 'Imóveis', 'Direita', [], 'Joinville', 'SC', -26.3045, -48.8487],
+      ['shop', 'Auto Center Estrada Real', 'Mecânica e autopeças.', 'Autopeças', 'Direita', [], 'Uberlândia', 'MG', -18.9186, -48.2772],
+      ['professional', 'Juliana Prates', 'Personal trainer.', 'Terapias', 'Centro-direita', ['Bem-estar animal'], 'Londrina', 'PR', -23.3045, -51.1696],
+      ['company', 'Construtora Pilar', 'Construção civil.', 'Construção', 'Centro-direita', [], 'Maringá', 'PR', -23.4205, -51.9333],
+      ['shop', 'Boutique Elegance', 'Moda feminina.', 'Moda', 'Extrema-direita', [], 'Balneário Camboriú', 'SC', -26.9906, -48.6348],
+    ] as const).map(([profileType, name, description, category, position, extra, city, state, lat, lng]) => ({
+      profileType, name, description, status: 'active', categories: [category], affinities: [position, ...extra],
+      location: { city, state, lat, lng }, mediaLinks: [], extra: [],
+    })),
   ];
 
   for (const { categories, affinities: names, ...data } of profiles) {

@@ -50,13 +50,10 @@ import Layout from '../layouts/Layout.astro';
         <div class="rounded-afim border border-line p-3">
           <p class="m-0 font-medium">Sua posição: <span id="position">ainda não calculada</span></p>
           <p id="positionDesc" class="mt-1 text-xs text-muted" hidden></p>
-          <fieldset id="politicalFind" class="mt-2 flex flex-wrap gap-4 text-sm">
-            <legend class="sr-only">Quero encontrar</legend>
-            <span class="text-muted">Quero encontrar quem tem a mesma posição:</span>
-            <label class="flex items-center gap-1"><input type="checkbox" data-role="findPeople" checked class="accent-brand" /> Pessoas</label>
-            <label class="flex items-center gap-1"><input type="checkbox" data-role="findCompanies" checked class="accent-brand" /> Empresas e ONGs</label>
-            <label class="flex items-center gap-1"><input type="checkbox" data-role="findShops" checked class="accent-brand" /> Comércios</label>
-          </fieldset>
+        </div>
+        <div>
+          <p class="m-0 text-sm font-medium">Quem você quer encontrar em cada espectro</p>
+          <ul id="spectrums" class="mt-2 grid gap-2"></ul>
         </div>
         <p id="answered" class="m-0 text-sm text-muted"></p>
         <ul id="pautas" class="grid gap-2 sm:grid-cols-2"></ul>
@@ -100,6 +97,16 @@ import Layout from '../layouts/Layout.astro';
       </fieldset>
     </li>
   </template>
+  <template id="spectrumRow">
+    <li class="flex flex-wrap items-center justify-between gap-2 rounded-afim border border-line px-3 py-2 text-sm">
+      <span class="font-medium"></span>
+      <span class="flex flex-wrap gap-4">
+        <label class="flex items-center gap-1"><input type="checkbox" data-role="findPeople" class="accent-brand" /> Pessoas</label>
+        <label class="flex items-center gap-1"><input type="checkbox" data-role="findCompanies" class="accent-brand" /> Empresas e ONGs</label>
+        <label class="flex items-center gap-1"><input type="checkbox" data-role="findShops" class="accent-brand" /> Comércios</label>
+      </span>
+    </li>
+  </template>
   <template id="pautaRow">
     <li class="flex items-center justify-between gap-2 rounded-afim border border-line px-3 py-2 text-sm">
       <span></span>
@@ -124,7 +131,7 @@ import Layout from '../layouts/Layout.astro';
     const pautas = $('pautas');
     const show = (tone: string, text: string) => { msg.dataset.tone = tone; msg.textContent = text; };
     const FIND = ['findPeople', 'findCompanies', 'findShops'] as const;
-    const POSITION_GROUP = 'Política'; // positions are derived from the answers (cms/src/api/member/political.ts)
+    const POSITION_GROUP = 'Política'; // the member's own position is derived from the answers (cms/src/api/member/political.ts)
     const clone = (id: string) => ($(id) as HTMLTemplateElement).content.firstElementChild!.cloneNode(true) as HTMLElement;
     const setFind = (el: HTMLElement, pref: any) => { for (const k of FIND) el.querySelector<HTMLInputElement>(`[data-role=${k}]`)!.checked = pref[k]; };
     const getFind = (el: HTMLElement) => Object.fromEntries(FIND.map((k) => [k, el.querySelector<HTMLInputElement>(`[data-role=${k}]`)!.checked]));
@@ -178,11 +185,21 @@ import Layout from '../layouts/Layout.astro';
         return li;
       }));
       countAnswers();
-      const position = member.affinities.find((p: any) => p.affinity.group === POSITION_GROUP);
-      $('position').textContent = position?.affinity.name ?? 'ainda não calculada';
-      $('positionDesc').hidden = !position?.affinity.description;
-      $('positionDesc').textContent = position?.affinity.description ?? '';
-      if (position) setFind($('politicalFind'), position);
+      const own = member.politicalPosition;
+      $('position').textContent = own?.name ?? 'ainda não calculada';
+      $('positionDesc').hidden = !own?.description;
+      $('positionDesc').textContent = own?.description ?? '';
+
+      // What to find in each political spectrum. On a first visit, suggest the member's own position.
+      const firstTime = !member.affinityConsentAt;
+      $('spectrums').replaceChildren(...affinities.filter((x) => x.group === POSITION_GROUP).map((a) => {
+        const li = clone('spectrumRow');
+        li.dataset.id = a.documentId;
+        li.querySelector('span')!.textContent = a.name + (own?.documentId === a.documentId ? ' (sua posição)' : '');
+        const pref = prefOf(a) ?? (firstTime && own?.documentId === a.documentId ? { findPeople: true, findCompanies: true, findShops: true } : null);
+        if (pref) setFind(li, pref);
+        return li;
+      }));
     }
 
     async function renderMatches() {
@@ -219,6 +236,9 @@ import Layout from '../layouts/Layout.astro';
         ...[...list.querySelectorAll<HTMLElement>('li[data-id]')]
           .filter((li) => li.querySelector<HTMLInputElement>('[data-role=has]')!.checked)
           .map((li) => ({ affinity: li.dataset.id, ...getFind(li) })),
+        ...[...$('spectrums').querySelectorAll<HTMLElement>('li[data-id]')]
+          .map((li) => ({ affinity: li.dataset.id, ...getFind(li) }))
+          .filter((p) => FIND.some((k) => p[k])),
         ...[...pautas.querySelectorAll<HTMLElement>('li[data-id]')]
           .map((li) => ({ affinity: li.dataset.id, stance: li.querySelector('select')!.value }))
           .filter((p) => p.stance),
@@ -228,7 +248,7 @@ import Layout from '../layouts/Layout.astro';
       try {
         const saved = await auth.saveMember({
           displayName: fd.get('displayName'), city: fd.get('city'), state: fd.get('state'),
-          consent, affinities: consent ? chosen : [], politicalFind: getFind($('politicalFind')),
+          consent, affinities: consent ? chosen : [],
         });
         renderMember(saved, await auth.getAffinities());
         show('success', consent ? 'Preferências salvas.' : 'Dados salvos. Nenhuma afinidade foi guardada.');

@@ -140,6 +140,8 @@ import Layout from '../layouts/Layout.astro';
       $('answered').textContent = `${n} pauta(s) respondida(s).`;
     };
     pautas.addEventListener('change', countAnswers);
+    // Matches use the saved preferences, so remind the member to save after any change.
+    form.addEventListener('change', () => show('warning', 'Você tem alterações não salvas. Clique em Salvar para atualizar "Encontrados para você".'));
 
     function renderMember(member: any, affinities: any[]) {
       for (const k of ['displayName', 'city', 'state']) (form.elements.namedItem(k) as HTMLInputElement).value = member[k] ?? '';
@@ -213,7 +215,7 @@ import Layout from '../layouts/Layout.astro';
         li.querySelector('span')!.textContent = [TYPE_LABELS[p.profileType as keyof typeof TYPE_LABELS], ...p.affinities.map((x: any) => x.name)].join(' · ');
         return li;
       }));
-      if (!matches.length) $('matches').textContent = 'Marque afinidades e salve para ver quem tem afinidades em comum com você.';
+      if (!matches.length) $('matches').textContent = 'Nenhum perfil encontrado com as preferências salvas. Marque afinidades ou espectros, escolha o que quer encontrar e clique em Salvar.';
     }
 
     if (!(await auth.restoreSession())) location.replace('/entrar');

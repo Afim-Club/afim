@@ -35,16 +35,28 @@ const api = import.meta.env.PUBLIC_STRAPI_URL ?? 'http://localhost:1337';
   <script define:vars={{ api }}>
     const form = document.getElementById('f');
     const msg = document.getElementById('msg');
+    const button = form.querySelector('button');
+    const show = (tone, text) => { msg.dataset.tone = tone; msg.textContent = text; };
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const res = await fetch(`${api}/api/profiles/submit`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...Object.fromEntries(new FormData(form)), captchaToken: form.querySelector('[name="cf-turnstile-response"]')?.value }),
-      });
-      msg.dataset.tone = res.ok ? 'success' : 'danger';
-      msg.textContent = res.status === 429 ? 'Muitas tentativas. Tente novamente mais tarde.' : res.ok ? 'Recebemos seu cadastro! Ele será analisado em breve.' : 'Não foi possível enviar. Confira os campos.';
-      if (res.ok) form.reset();
+      button.disabled = true; // no double submits
+      show('info', 'Enviando...');
+      try {
+        const res = await fetch(`${api}/api/profiles/submit`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...Object.fromEntries(new FormData(form)), captchaToken: form.querySelector('[name="cf-turnstile-response"]')?.value }),
+        });
+        if (res.status === 429) show('warning', 'Muitas tentativas. Tente novamente mais tarde.');
+        else if (res.ok) show('success', 'Recebemos seu cadastro! Ele será analisado em breve.');
+        else show('danger', 'Não foi possível enviar. Confira os campos e a verificação e tente novamente.');
+        if (res.ok) form.reset();
+      } catch {
+        show('danger', 'Falha de conexão. Tente novamente em instantes.');
+      } finally {
+        window.turnstile?.reset(); // Turnstile tokens are single-use
+        button.disabled = false;
+      }
     });
   </script>
 </Layout>

@@ -60,6 +60,8 @@ cd partners && npm install && npm run dev    # site de parceiros na :4322
 
 Ou suba tudo de uma vez com `./dev.sh` (pare com `./dev.sh stop`; logs em `.tmp/`). Para acessar os servidores de dev por um túnel como o cloudflared, defina `DEV_WEB_HOST`, `DEV_PARTNERS_HOST` e `DEV_CMS_HOST` no `.env` da raiz (ex.: `dev.afim.club`): o script libera esses hostnames, aponta o navegador para `https://$DEV_CMS_HOST` e inclui os sites no CORS do CMS. Nesse modo os sites escutam em todas as interfaces.
 
+> **Pare o CMS antes de trocar de branch** (`./dev.sh stop`). O `strapi develop` recarrega quando os arquivos mudam e, se um checkout remover tipos de conteúdo mesmo por instantes, o Strapi apaga as tabelas deles (com dados e relações).
+
 As portas são fixas porque o CMS só aceita requisições do navegador vindas de `localhost:4321` e `localhost:4322` (`CORS_ORIGINS`). Em dev, o `web/` consulta o CMS a cada requisição, então o Strapi precisa estar rodando. Pare o banco com `docker compose stop`; `docker compose down -v` também apaga os dados.
 
 ## Privacidade e dados
@@ -71,8 +73,8 @@ Os perfis são construídos a partir de informações **declaradas pelos própri
 As pessoas criam a conta no site público (`/entrar`) com e-mail e senha ou login social (Google, Facebook, GitHub, LinkedIn) e completam o cadastro em `/conta`:
 
 - **Afinidades** são valores em comum (ex.: veganismo, sustentabilidade), mantidos no CMS. Empresas e comércios declaram as suas publicamente no perfil.
-- O membro escolhe suas afinidades e, para cada uma, se quer encontrar pessoas, empresas (e ONGs) e comércios. "Encontrados para você" lista os perfis ativos que combinam.
-- Afinidades políticas têm dois níveis: o membro responde a pautas (concordo, discordo ou indiferente) e o CMS calcula sua posição, da extrema-esquerda à extrema-direita. Para cada uma das 7 posições, o membro escolhe se quer encontrar pessoas, empresas e comércios.
+- O membro marca suas afinidades. "Encontrados para você" lista as pessoas, empresas, ONGs e comércios ativos que as compartilham, com as afinidades em comum.
+- Afinidades políticas têm dois níveis: o membro responde a pautas (concordo, discordo ou indiferente) e o CMS calcula sua posição, da extrema-esquerda à extrema-direita. O membro também marca as posições (qualquer uma das 7) cujos perfis quer encontrar.
 - Afinidades podem revelar convicções, então são tratadas como **dados pessoais sensíveis** (LGPD art. 11): só são guardadas com consentimento explícito (data e versão dos termos ficam registradas), nunca são públicas nem listadas pela API (só o próprio membro as lê, via `/api/members/me`), e desmarcar o consentimento as apaga. O membro pode excluir a conta e todos os dados a qualquer momento.
 
 Os provedores sociais são ativados pelo ambiente do CMS (`AUTH_<PROVEDOR>_CLIENT_ID` / `_CLIENT_SECRET`, veja `.env.example`); cadastre `https://admin.<domínio>/api/connect/<provedor>/callback` como URI de redirecionamento em cada provedor.

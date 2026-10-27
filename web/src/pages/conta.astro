@@ -30,12 +30,12 @@ import Layout from '../layouts/Layout.astro';
         <div>
           <h2 class="m-0 text-lg">Suas afinidades</h2>
           <p class="text-sm text-muted">
-            Escolha suas afinidades e, para cada uma, o que você quer encontrar. Afinidades podem revelar convicções e
+            Marque suas afinidades para encontrar pessoas, empresas e comércios que as compartilham. Afinidades podem revelar convicções e
             por isso são dados pessoais sensíveis (LGPD): ficam só na sua conta, nunca aparecem para outras pessoas,
             e você pode alterar ou apagar quando quiser.
           </p>
         </div>
-        <ul id="affinities" class="grid gap-3"></ul>
+        <ul id="affinities" class="grid gap-2 sm:grid-cols-2"></ul>
         <p id="noAffinities" class="text-sm text-muted" hidden>Ainda não há afinidades cadastradas. Elas são criadas no painel do CMS (Content Manager → Affinity).</p>
       </Card>
 
@@ -52,8 +52,8 @@ import Layout from '../layouts/Layout.astro';
           <p id="positionDesc" class="mt-1 text-xs text-muted" hidden></p>
         </div>
         <div>
-          <p class="m-0 text-sm font-medium">Quem você quer encontrar em cada espectro</p>
-          <ul id="spectrums" class="mt-2 grid gap-2"></ul>
+          <p class="m-0 text-sm font-medium">Marque os espectros em que quer encontrar pessoas, empresas e comércios</p>
+          <ul id="spectrums" class="mt-2 grid gap-2 sm:grid-cols-2"></ul>
         </div>
         <p id="answered" class="m-0 text-sm text-muted"></p>
         <ul id="pautas" class="grid gap-2 sm:grid-cols-2"></ul>
@@ -85,26 +85,9 @@ import Layout from '../layouts/Layout.astro';
     </Card>
   </div>
 
-  <template id="affinityRow">
-    <li class="rounded-afim border border-line p-3">
+  <template id="checkRow">
+    <li class="rounded-afim border border-line px-3 py-2">
       <label class="flex items-center gap-2 font-medium"><input type="checkbox" data-role="has" class="accent-brand" /> <span></span></label>
-      <fieldset class="mt-2 flex flex-wrap gap-4 text-sm disabled:opacity-50" disabled>
-        <legend class="sr-only">Quero encontrar</legend>
-        <span class="text-muted">Quero encontrar:</span>
-        <label class="flex items-center gap-1"><input type="checkbox" data-role="findPeople" checked class="accent-brand" /> Pessoas</label>
-        <label class="flex items-center gap-1"><input type="checkbox" data-role="findCompanies" checked class="accent-brand" /> Empresas e ONGs</label>
-        <label class="flex items-center gap-1"><input type="checkbox" data-role="findShops" checked class="accent-brand" /> Comércios</label>
-      </fieldset>
-    </li>
-  </template>
-  <template id="spectrumRow">
-    <li class="flex flex-wrap items-center justify-between gap-2 rounded-afim border border-line px-3 py-2 text-sm">
-      <span class="font-medium"></span>
-      <span class="flex flex-wrap gap-4">
-        <label class="flex items-center gap-1"><input type="checkbox" data-role="findPeople" class="accent-brand" /> Pessoas</label>
-        <label class="flex items-center gap-1"><input type="checkbox" data-role="findCompanies" class="accent-brand" /> Empresas e ONGs</label>
-        <label class="flex items-center gap-1"><input type="checkbox" data-role="findShops" class="accent-brand" /> Comércios</label>
-      </span>
     </li>
   </template>
   <template id="pautaRow">
@@ -130,11 +113,21 @@ import Layout from '../layouts/Layout.astro';
     const list = $('affinities');
     const pautas = $('pautas');
     const show = (tone: string, text: string) => { msg.dataset.tone = tone; msg.textContent = text; };
-    const FIND = ['findPeople', 'findCompanies', 'findShops'] as const;
+    // A checked row finds every kind of profile (people, companies/NGOs and shops).
+    const ALL = { findPeople: true, findCompanies: true, findShops: true };
     const POSITION_GROUP = 'Política'; // the member's own position is derived from the answers (cms/src/api/member/political.ts)
     const clone = (id: string) => ($(id) as HTMLTemplateElement).content.firstElementChild!.cloneNode(true) as HTMLElement;
-    const setFind = (el: HTMLElement, pref: any) => { for (const k of FIND) el.querySelector<HTMLInputElement>(`[data-role=${k}]`)!.checked = pref[k]; };
-    const getFind = (el: HTMLElement) => Object.fromEntries(FIND.map((k) => [k, el.querySelector<HTMLInputElement>(`[data-role=${k}]`)!.checked]));
+    const checkRow = (a: any, label: string, checked: boolean) => {
+      const li = clone('checkRow');
+      li.dataset.id = a.documentId;
+      li.querySelector('span')!.textContent = label;
+      li.querySelector<HTMLInputElement>('[data-role=has]')!.checked = checked;
+      return li;
+    };
+    const checkedIds = (ul: HTMLElement) =>
+      [...ul.querySelectorAll<HTMLElement>('li[data-id]')]
+        .filter((li) => li.querySelector<HTMLInputElement>('[data-role=has]')!.checked)
+        .map((li) => ({ affinity: li.dataset.id, ...ALL }));
     const countAnswers = () => {
       const n = [...pautas.querySelectorAll('select')].filter((s) => s.value).length;
       $('answered').textContent = `${n} pauta(s) respondida(s).`;
@@ -156,22 +149,12 @@ import Layout from '../layouts/Layout.astro';
       for (const a of affinities.filter((x) => x.lean === null && x.group !== POSITION_GROUP)) {
         if (a.group && a.group !== group) {
           const h = document.createElement('li');
-          h.className = 'mt-2 text-sm font-semibold text-muted';
+          h.className = 'mt-2 text-sm font-semibold text-muted sm:col-span-2';
           h.textContent = a.group;
           rows.push(h);
         }
         group = a.group;
-        const li = clone('affinityRow');
-        const pref = prefOf(a);
-        li.dataset.id = a.documentId;
-        li.querySelector('span')!.textContent = a.name;
-        const has = li.querySelector<HTMLInputElement>('[data-role=has]')!;
-        const fieldset = li.querySelector('fieldset')!;
-        has.checked = !!pref;
-        fieldset.disabled = !pref;
-        has.addEventListener('change', () => (fieldset.disabled = !has.checked));
-        if (pref) setFind(li, pref);
-        rows.push(li);
+        rows.push(checkRow(a, a.name, !!prefOf(a)));
       }
       list.replaceChildren(...rows);
       $('noAffinities').hidden = affinities.length > 0;
@@ -195,12 +178,8 @@ import Layout from '../layouts/Layout.astro';
       // What to find in each political spectrum. On a first visit, suggest the member's own position.
       const firstTime = !member.affinityConsentAt;
       $('spectrums').replaceChildren(...affinities.filter((x) => x.group === POSITION_GROUP).map((a) => {
-        const li = clone('spectrumRow');
-        li.dataset.id = a.documentId;
-        li.querySelector('span')!.textContent = a.name + (own?.documentId === a.documentId ? ' (sua posição)' : '');
-        const pref = prefOf(a) ?? (firstTime && own?.documentId === a.documentId ? { findPeople: true, findCompanies: true, findShops: true } : null);
-        if (pref) setFind(li, pref);
-        return li;
+        const isOwn = own?.documentId === a.documentId;
+        return checkRow(a, a.name + (isOwn ? ' (sua posição)' : ''), !!prefOf(a) || (firstTime && isOwn));
       }));
     }
 
@@ -212,7 +191,7 @@ import Layout from '../layouts/Layout.astro';
         const a = li.querySelector('a')!;
         a.href = `/perfis/${p.slug}`;
         a.textContent = p.name;
-        li.querySelector('span')!.textContent = [TYPE_LABELS[p.profileType as keyof typeof TYPE_LABELS], ...p.affinities.map((x: any) => x.name)].join(' · ');
+        li.querySelector('span')!.textContent = `${TYPE_LABELS[p.profileType as keyof typeof TYPE_LABELS]} · Em comum: ${p.matchedAffinities.map((x: any) => x.name).join(', ')}`;
         return li;
       }));
       if (!matches.length) $('matches').textContent = 'Nenhum perfil encontrado com as preferências salvas. Marque afinidades ou espectros, escolha o que quer encontrar e clique em Salvar.';
@@ -235,12 +214,8 @@ import Layout from '../layouts/Layout.astro';
       e.preventDefault();
       const fd = new FormData(form);
       const chosen = [
-        ...[...list.querySelectorAll<HTMLElement>('li[data-id]')]
-          .filter((li) => li.querySelector<HTMLInputElement>('[data-role=has]')!.checked)
-          .map((li) => ({ affinity: li.dataset.id, ...getFind(li) })),
-        ...[...$('spectrums').querySelectorAll<HTMLElement>('li[data-id]')]
-          .map((li) => ({ affinity: li.dataset.id, ...getFind(li) }))
-          .filter((p) => FIND.some((k) => p[k])),
+        ...checkedIds(list),
+        ...checkedIds($('spectrums')),
         ...[...pautas.querySelectorAll<HTMLElement>('li[data-id]')]
           .map((li) => ({ affinity: li.dataset.id, stance: li.querySelector('select')!.value }))
           .filter((p) => p.stance),

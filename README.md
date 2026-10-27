@@ -60,6 +60,8 @@ cd partners && npm install && npm run dev    # partner site on :4322
 
 Or start everything at once with `./dev.sh` (stop with `./dev.sh stop`; logs in `.tmp/`). To reach the dev servers through a tunnel such as cloudflared, set `DEV_WEB_HOST`, `DEV_PARTNERS_HOST` and `DEV_CMS_HOST` in the root `.env` (e.g. `dev.afim.club`): the script then allows those hostnames, points the browser at `https://$DEV_CMS_HOST` and adds the sites to the CMS CORS list. The sites then listen on all interfaces.
 
+> **Stop the CMS before switching branches** (`./dev.sh stop`). `strapi develop` reloads on file changes, and if a checkout briefly removes content types, Strapi drops their tables (data and relations included).
+
 The ports are fixed because the CMS only accepts browser requests from `localhost:4321` and `localhost:4322` (`CORS_ORIGINS`). `web/` reads the CMS at request time in dev, so it needs Strapi running. Stop the database with `docker compose stop`; `docker compose down -v` also deletes its data.
 
 ## Privacy and data
@@ -71,8 +73,8 @@ Profiles are built from information **declared by the users themselves** (opt-in
 People sign up on the public site (`/entrar`) with email and password or a social login (Google, Facebook, GitHub, LinkedIn), then complete their account at `/conta`:
 
 - **Affinities** are shared values (e.g. veganism, sustainability) curated in the CMS. Businesses and shops declare theirs publicly on their profile.
-- A member picks their affinities and, for each one, whether they want to find people, companies (and NGOs) and shops. "Found for you" lists the active profiles that match.
-- Political affinities have two levels: the member answers political issues (agree, disagree or neutral) and the CMS calculates their position, from far left to far right. For each of the 7 positions, the member chooses whether to find people, companies and shops there.
+- A member ticks their affinities. "Found for you" lists the active people, companies, NGOs and shops that share them, with the affinities in common.
+- Political affinities have two levels: the member answers political issues (agree, disagree or neutral) and the CMS calculates their position, from far left to far right. The member also ticks the positions (any of the 7) whose profiles they want to find.
 - Affinities can reveal beliefs, so they are treated as **sensitive personal data** (LGPD art. 11): they are stored only after explicit consent (date and terms version are recorded), are never public or listed by the API (only the member reads them, through `/api/members/me`), and unticking the consent erases them. Members can delete their account and all their data at any time.
 
 Social providers are enabled from the CMS environment (`AUTH_<PROVIDER>_CLIENT_ID` / `_CLIENT_SECRET`, see `.env.example`); register `https://admin.<domain>/api/connect/<provider>/callback` as the redirect URI at each provider.

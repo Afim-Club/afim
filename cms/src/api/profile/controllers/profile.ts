@@ -1,4 +1,5 @@
 import { factories } from '@strapi/strapi';
+import { uniqueSlug } from '../slug';
 
 // Public reads only ever see active profiles; review/blocked stay in the backoffice.
 export default factories.createCoreController('api::profile.profile', ({ strapi }) => ({
@@ -47,7 +48,7 @@ export default factories.createCoreController('api::profile.profile', ({ strapi 
     if (!name || !/^\S+@\S+\.\S+$/.test(contactEmail) || !['company', 'shop', 'ngo'].includes(profileType)) {
       return ctx.badRequest('name, a valid contactEmail and profileType (company|shop|ngo) are required');
     }
-    const slug = `${name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}-${Date.now().toString(36)}`;
+    const slug = uniqueSlug(name);
     await strapi.documents('api::profile.profile').create({
       data: {
         name, slug, contactEmail, profileType,

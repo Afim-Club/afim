@@ -11,6 +11,7 @@ import { PROVIDER_LABELS, enabledProviders } from '../../lib/providers';
 <Layout title="Entrar">
   <div class="mx-auto grid max-w-md gap-6 pt-8">
     <h1>Entrar</h1>
+    <Alert id="invited" tone="success" hidden>Você recebeu um convite para o Afim. Crie sua conta para aceitar.</Alert>
     {enabledProviders.length > 0 && (
       <div class="grid gap-2">
         {enabledProviders.map((p) => <Button variant="outline" href={`${API}/api/connect/${p}`}>Continuar com {PROVIDER_LABELS[p]}</Button>)}
@@ -30,7 +31,13 @@ import { PROVIDER_LABELS, enabledProviders } from '../../lib/providers';
     <Alert id="msg" role="status" />
   </div>
   <script>
-    import { login, register, restoreSession } from '../../lib/auth';
+    import { keepInvite, login, register, restoreSession } from '../../lib/auth';
+    // An invite link (/entrar?convite=CODE): /conta records it once the account exists, whichever way the person signs in.
+    const invite = new URLSearchParams(location.search).get('convite');
+    if (invite) {
+      keepInvite(invite);
+      document.getElementById('invited')!.hidden = false;
+    }
     const form = document.getElementById('f') as HTMLFormElement;
     const msg = document.getElementById('msg')!;
     const show = (tone: string, text: string) => { msg.dataset.tone = tone; msg.textContent = text; };

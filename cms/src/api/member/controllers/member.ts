@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import { factories } from '@strapi/strapi';
 import { POSITION_GROUP, positionIndex, type Stance } from '../political';
 
@@ -8,6 +9,9 @@ export const CONSENT_VERSION = '2026-10-27';
 const TYPES = { findPeople: ['professional'], findCompanies: ['company', 'ngo'], findShops: ['shop'] } as const;
 
 type Pref = { affinity: { documentId: string; name: string; slug: string; group: string | null; lean: number | null }; stance: Stance | null; findPeople: boolean; findCompanies: boolean; findShops: boolean };
+
+// An invite only counts for accounts created this recently, so old members can't attach themselves to someone.
+const INVITE_WINDOW_MS = 24 * 3_600_000;
 
 const POPULATE = { affinities: { populate: { affinity: { fields: ['name', 'slug', 'group', 'lean', 'description'] } } } };
 
@@ -104,11 +108,46 @@ export default factories.createCoreController('api::member.member', ({ strapi })
       return { data: await withPosition(saved) };
     },
 
-    // LGPD right to erasure: removes the member data, the login and every session.
+    // The member's personal invite code (created on first use) and how many people signed up with it.
+    // Only the count is returned: members are never shown to each other.
+    async invite(ctx) {
+      const userId = ctx.state.user.id;
+      const docs = strapi.documents('api::member.member');
+      let me = await docs.findFirst({ filters: { user: { id: userId } } as any, fields: ['inviteCode'] as any });
+      if (!me) me = await docs.create({ data: { user: userId } as any, fields: ['inviteCode'] as any });
+      let code = (me as any).inviteCode as string | null;
+      if (!code) {
+        code = randomBytes(6).toString('base64url');
+        await docs.update({ documentId: me.documentId, data: { inviteCode: code } as any });
+      }
+      const accepted = await docs.count({ filters: { invitedBy: { documentId: me.documentId } } as any });
+      return { data: { code, accepted } };
+    },
+
+    // Records who invited a new account. Only once, only for recent accounts, and never yourself.
+    async acceptInvite(ctx) {
+      const userId = ctx.state.user.id;
+      const code = (ctx.request.body as any)?.code;
+      if (typeof code !== 'string' || !code) return ctx.badRequest('code is required');
+      const docs = strapi.documents('api::member.member');
+      const inviter = await docs.findFirst({ filters: { inviteCode: code } as any, populate: { user: { fields: ['id'] } } as any });
+      if (!inviter) return ctx.notFound('Invite not found');
+      if ((inviter as any).user?.id === userId) return ctx.badRequest('You cannot accept your own invite');
+      const user = await strapi.db.query('plugin::users-permissions.user').findOne({ where: { id: userId }, select: ['createdAt'] });
+      if (Date.now() - new Date(user.createdAt).getTime() > INVITE_WINDOW_MS) return ctx.badRequest('Invites are only for new accounts');
+      let me = await docs.findFirst({ filters: { user: { id: userId } } as any, populate: { invitedBy: { fields: ['id'] } } as any });
+      if (!me) me = await docs.create({ data: { user: userId } as any });
+      if (!(me as any).invitedBy) await docs.update({ documentId: me.documentId, data: { invitedBy: inviter.documentId } as any });
+      return { data: { accepted: true } };
+    },
+
+    // LGPD right to erasure: removes the member data, the profiles they registered, the login and every session.
     async deleteMe(ctx) {
       const userId = ctx.state.user.id;
       const current = await findMine(userId);
       if (current) await strapi.documents('api::member.member').delete({ documentId: current.documentId });
+      const owned = await strapi.documents('api::profile.profile').findMany({ filters: { owner: { id: userId } } as any, fields: ['id'] as any });
+      for (const p of owned) await strapi.documents('api::profile.profile').delete({ documentId: p.documentId });
       await strapi.sessionManager('users-permissions').invalidateRefreshToken(String(userId));
       await strapi.db.query('plugin::users-permissions.user').delete({ where: { id: userId } });
       ctx.status = 204;

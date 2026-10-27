@@ -1,0 +1,186 @@
+---
+import Alert from '@afim/design-system/components/Alert.astro';
+import Button from '@afim/design-system/components/Button.astro';
+import Card from '@afim/design-system/components/Card.astro';
+import FormField from '@afim/design-system/components/FormField.astro';
+import Input from '@afim/design-system/components/Input.astro';
+import Select from '@afim/design-system/components/Select.astro';
+import Textarea from '@afim/design-system/components/Textarea.astro';
+import Layout from '../../layouts/Layout.astro';
+---
+<Layout title="Meus negócios">
+  <div id="root" class="grid gap-6 pt-8" hidden>
+    <div>
+      <a href="/conta" class="text-sm">← Minha conta</a>
+      <h1 class="mb-1">Meus negócios</h1>
+      <p class="text-sm text-muted">
+        Empresas, comércios e ONGs que você cadastrou. Todo cadastro e toda alteração passam por revisão antes de
+        aparecer no Afim, e a página pública é publicada na próxima atualização do site.
+      </p>
+    </div>
+
+    <ul id="list" class="grid gap-3 sm:grid-cols-2"></ul>
+    <p id="empty" class="text-sm text-muted" hidden>Você ainda não cadastrou nenhum negócio.</p>
+
+    <Card class="grid gap-4">
+      <h2 id="formTitle" class="m-0 text-lg">Cadastrar negócio</h2>
+      <form id="f" class="grid gap-4">
+        <FormField label="Nome do negócio" required><Input name="name" maxlength="255" required /></FormField>
+        <FormField label="Tipo" required>
+          <Select name="profileType" required>
+            <option value="company">Empresa</option>
+            <option value="shop">Comércio</option>
+            <option value="ngo">ONG</option>
+          </Select>
+        </FormField>
+        <div class="grid gap-4 sm:grid-cols-[1fr_6rem]">
+          <FormField label="Cidade"><Input name="city" maxlength="120" /></FormField>
+          <FormField label="UF"><Input name="state" maxlength="2" /></FormField>
+        </div>
+        <FormField label="Apresentação"><Textarea name="description" rows="4" maxlength="2000" /></FormField>
+        <div>
+          <p class="m-0 text-sm font-medium">Afinidades do negócio</p>
+          <p class="mt-1 text-xs text-muted">São públicas: aparecem na página do negócio e servem para pessoas com as mesmas afinidades o encontrarem.</p>
+          <ul id="affinities" class="mt-2 grid gap-2 sm:grid-cols-2"></ul>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <Button>Enviar para revisão</Button>
+          <Button id="cancel" type="button" variant="outline" hidden>Cancelar edição</Button>
+        </div>
+      </form>
+    </Card>
+    <Alert id="msg" role="status" />
+  </div>
+
+  <template id="item">
+    <Card as="li" class="grid gap-2">
+      <div class="flex items-start justify-between gap-2">
+        <strong data-role="name"></strong>
+        <span data-role="status" class="rounded-full border border-line px-2 py-0.5 text-xs font-medium"></span>
+      </div>
+      <span data-role="meta" class="text-sm text-muted"></span>
+      <div class="flex flex-wrap gap-2">
+        <Button data-role="edit" type="button" variant="outline" size="sm">Editar</Button>
+        <Button data-role="delete" type="button" variant="outline" size="sm" class="text-danger">Excluir</Button>
+      </div>
+    </Card>
+  </template>
+  <template id="checkRow">
+    <li class="rounded-afim border border-line px-3 py-2 text-sm">
+      <label class="flex items-center gap-2"><input type="checkbox" class="accent-brand" /> <span></span></label>
+    </li>
+  </template>
+
+  <script>
+    import * as auth from '../../lib/auth';
+    import { TYPE_LABELS } from '../../lib/strapi';
+
+    const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
+    const form = $<HTMLFormElement>('f');
+    const msg = $('msg');
+    const show = (tone: string, text: string) => { msg.dataset.tone = tone; msg.textContent = text; };
+    const clone = (id: string) => ($(id) as HTMLTemplateElement).content.firstElementChild!.cloneNode(true) as HTMLElement;
+    const STATUS = { review: 'Em revisão', active: 'Publicado', blocked: 'Bloqueado' } as Record<string, string>;
+    const field = (name: string) => form.elements.namedItem(name) as HTMLInputElement;
+    let editing: string | null = null;
+    let profiles: any[] = [];
+
+    // Affinities a business can declare: plain ones and the political spectrums, never the political issues.
+    function renderAffinities(affinities: any[]) {
+      const rows: HTMLElement[] = [];
+      let group: string | null | undefined;
+      for (const a of affinities.filter((x) => x.lean === null)) {
+        if (a.group && a.group !== group) {
+          const h = document.createElement('li');
+          h.className = 'mt-2 text-sm font-semibold text-muted sm:col-span-2';
+          h.textContent = a.group;
+          rows.push(h);
+        }
+        group = a.group;
+        const li = clone('checkRow');
+        li.querySelector('input')!.value = a.documentId;
+        li.querySelector('span')!.textContent = a.name;
+        rows.push(li);
+      }
+      $('affinities').replaceChildren(...rows);
+    }
+
+    function fill(p: any | null) {
+      editing = p?.documentId ?? null;
+      form.reset();
+      for (const k of ['name', 'profileType', 'city', 'state', 'description']) if (p) field(k).value = p[k] ?? '';
+      const chosen = new Set((p?.affinities ?? []).map((a: any) => a.documentId));
+      $('affinities').querySelectorAll('input').forEach((i) => (i.checked = chosen.has(i.value)));
+      $('formTitle').textContent = p ? `Editar ${p.name}` : 'Cadastrar negócio';
+      $('cancel').hidden = !p;
+    }
+
+    function renderList() {
+      $('empty').hidden = profiles.length > 0;
+      $('list').replaceChildren(...profiles.map((p) => {
+        const li = clone('item');
+        const q = (role: string) => li.querySelector<HTMLElement>(`[data-role=${role}]`)!;
+        q('name').textContent = p.name;
+        q('status').textContent = STATUS[p.status] ?? p.status;
+        if (p.status === 'active') q('status').classList.add('text-success');
+        if (p.status === 'blocked') q('status').classList.add('text-danger');
+        q('meta').textContent = [TYPE_LABELS[p.profileType as keyof typeof TYPE_LABELS], [p.city, p.state].filter(Boolean).join('/'),
+          p.affinities.map((a: any) => a.name).join(', ')].filter(Boolean).join(' · ');
+        // Moderation blocked it: the owner can only delete it.
+        q('edit').hidden = p.status === 'blocked';
+        q('edit').addEventListener('click', () => { fill(p); form.scrollIntoView({ behavior: 'smooth' }); });
+        q('delete').addEventListener('click', async () => {
+          if (!confirm(`Excluir ${p.name}? Isso não pode ser desfeito.`)) return;
+          try {
+            await auth.deleteMyProfile(p.documentId);
+            profiles = profiles.filter((x) => x.documentId !== p.documentId);
+            if (editing === p.documentId) fill(null);
+            renderList();
+            show('success', `${p.name} foi excluído.`);
+          } catch {
+            show('danger', 'Não foi possível excluir agora. Tente novamente.');
+          }
+        });
+        return li;
+      }));
+    }
+
+    if (!(await auth.restoreSession())) location.replace('/entrar');
+    else {
+      $('root').hidden = false;
+      try {
+        const [list, affinities] = await Promise.all([auth.getMyProfiles(), auth.getAffinities()]);
+        profiles = list;
+        renderAffinities(affinities);
+        renderList();
+      } catch {
+        show('danger', 'Não foi possível carregar seus negócios. Confira se o CMS está atualizado e no ar, e recarregue a página.');
+      }
+    }
+
+    $('cancel').addEventListener('click', () => fill(null));
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(form);
+      const data = {
+        name: fd.get('name'), profileType: fd.get('profileType'), city: fd.get('city'), state: fd.get('state'), description: fd.get('description'),
+        affinities: [...$('affinities').querySelectorAll('input')].filter((i) => i.checked).map((i) => i.value),
+      };
+      const button = form.querySelector<HTMLButtonElement>('button:not([type=button])')!;
+      button.disabled = true;
+      try {
+        const saved = await auth.saveMyProfile(data, editing ?? undefined);
+        profiles = [...profiles.filter((x) => x.documentId !== saved.documentId), saved].sort((a, b) => a.name.localeCompare(b.name));
+        renderList();
+        fill(null);
+        show('success', `${saved.name} foi enviado para revisão. Ele aparece no Afim depois de aprovado.`);
+      } catch (err) {
+        show('danger', String((err as Error).message).includes('up to')
+          ? 'Você atingiu o limite de negócios por conta.' : 'Não foi possível salvar. Confira os dados e tente novamente.');
+      } finally {
+        button.disabled = false;
+      }
+    });
+  </script>
+</Layout>

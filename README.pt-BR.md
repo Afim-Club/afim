@@ -76,6 +76,8 @@ As pessoas criam a conta no site público (`/entrar`) com e-mail e senha ou logi
 - O membro marca suas afinidades. "Encontrados para você" lista as pessoas, empresas, ONGs e comércios ativos que as compartilham, com as afinidades em comum.
 - Afinidades políticas têm dois níveis: o membro responde a pautas (concordo, discordo ou indiferente) e o CMS calcula sua posição, da extrema-esquerda à extrema-direita. O membro também marca as posições (qualquer uma das 7) cujos perfis quer encontrar.
 - Afinidades podem revelar convicções, então são tratadas como **dados pessoais sensíveis** (LGPD art. 11): só são guardadas com consentimento explícito (data e versão dos termos ficam registradas), nunca são públicas nem listadas pela API (só o próprio membro as lê, via `/api/members/me`), e desmarcar o consentimento as apaga. O membro pode excluir a conta e todos os dados a qualquer momento.
+- **Negócios dos membros**: em `/conta/negocios` o membro cadastra as empresas, comércios e ONGs que representa (até 10), com as afinidades que cada um declara publicamente. Todos passam por moderação (`review`); editar volta para revisão, um negócio bloqueado só pode ser excluído, e excluir a conta exclui os negócios também.
+- **Convites**: cada membro tem um link pessoal (`/entrar?convite=CODIGO`) para copiar ou enviar pelo WhatsApp, já que ainda não há provedor de e-mail. Uma conta nova criada por ele registra quem convidou (uma vez, até 24 horas após o cadastro). Quem convidou vê só quantas pessoas entraram, nunca quem.
 
 Os provedores sociais são ativados pelo ambiente do CMS (`AUTH_<PROVEDOR>_CLIENT_ID` / `_CLIENT_SECRET`, veja `.env.example`); cadastre `https://admin.<domínio>/api/connect/<provedor>/callback` como URI de redirecionamento em cada provedor.
 

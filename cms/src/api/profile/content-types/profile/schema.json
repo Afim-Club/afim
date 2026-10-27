@@ -77,6 +77,12 @@
     "contactEmail": {
       "type": "email",
       "private": true
+    },
+    "owner": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "private": true
     }
   }
 }

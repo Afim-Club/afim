@@ -9,15 +9,24 @@ const CATEGORIES: Record<string, string[]> = {
 const slugify = (s: string) =>
   s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
-const AFFINITIES = ['Sustentabilidade', 'Veganismo', 'Diversidade e inclusão', 'Comércio justo', 'Software livre', 'Bem-estar animal'];
+// Starter affinities by group ('' = no group), in display order. Each group is created only while it
+// has no affinities, so edits and deletions made in the admin are kept.
+const AFFINITIES: Record<string, string[]> = {
+  '': ['Sustentabilidade', 'Veganismo', 'Diversidade e inclusão', 'Comércio justo', 'Software livre', 'Bem-estar animal'],
+  Política: ['Extrema-esquerda', 'Esquerda', 'Centro-esquerda', 'Centro', 'Centro-direita', 'Direita', 'Extrema-direita'],
+};
 
-// Starter affinities, only when none exist (the list is curated in the admin after that).
 export async function seedAffinities(strapi: Core.Strapi) {
-  if ((await strapi.documents('api::affinity.affinity').count({})) > 0) return;
-  for (const name of AFFINITIES) {
-    await strapi.documents('api::affinity.affinity').create({ data: { name, slug: slugify(name) } });
+  for (const [group, names] of Object.entries(AFFINITIES)) {
+    const filters = group ? { group: { $eq: group } } : { group: { $null: true } };
+    if ((await strapi.documents('api::affinity.affinity').count({ filters } as any)) > 0) continue;
+    for (const [i, name] of names.entries()) {
+      await strapi.documents('api::affinity.affinity').create({
+        data: { name, slug: slugify(group ? `${group} ${name}` : name), group: group || null, sortOrder: i } as any,
+      });
+    }
+    strapi.log.info(`Seeded starter affinities${group ? ` (${group})` : ''}`);
   }
-  strapi.log.info('Seeded sample affinities');
 }
 
 export async function seed(strapi: Core.Strapi) {

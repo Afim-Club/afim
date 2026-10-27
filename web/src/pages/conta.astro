@@ -94,7 +94,22 @@ import Layout from '../layouts/Layout.astro';
       $('consentInfo').textContent = member.affinityConsentAt
         ? `Consentimento dado em ${new Date(member.affinityConsentAt).toLocaleString('pt-BR')}.` : '';
       const tpl = ($('affinityRow') as HTMLTemplateElement).content.firstElementChild!;
-      list.replaceChildren(...affinities.map((a) => {
+      const rows: HTMLElement[] = [];
+      let group: string | null | undefined;
+      for (const a of affinities) {
+        if (a.group && a.group !== group) {
+          const h = document.createElement('li');
+          h.className = 'mt-2 text-sm font-semibold text-muted';
+          h.textContent = a.group;
+          rows.push(h);
+        }
+        group = a.group;
+        rows.push(row(a));
+      }
+      list.replaceChildren(...rows);
+      $('noAffinities').hidden = affinities.length > 0;
+
+      function row(a: any) {
         const li = tpl.cloneNode(true) as HTMLElement;
         const pref = member.affinities.find((p: any) => p.affinity.documentId === a.documentId);
         li.dataset.id = a.documentId;
@@ -106,8 +121,7 @@ import Layout from '../layouts/Layout.astro';
         has.addEventListener('change', () => (fieldset.disabled = !has.checked));
         if (pref) for (const k of FIND) li.querySelector<HTMLInputElement>(`[data-role=${k}]`)!.checked = pref[k];
         return li;
-      }));
-      $('noAffinities').hidden = affinities.length > 0;
+      }
     }
 
     async function renderMatches() {
@@ -140,7 +154,7 @@ import Layout from '../layouts/Layout.astro';
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const fd = new FormData(form);
-      const chosen = [...list.querySelectorAll<HTMLElement>('li')]
+      const chosen = [...list.querySelectorAll<HTMLElement>('li[data-id]')]
         .filter((li) => li.querySelector<HTMLInputElement>('[data-role=has]')!.checked)
         .map((li) => ({
           affinity: li.dataset.id,

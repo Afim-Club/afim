@@ -33,7 +33,31 @@
    ```
 2. Nunca versione o `.env` nem qualquer segredo no repositório.
 
-As instruções detalhadas serão adicionadas conforme cada componente for criado.
+## Desenvolvimento local
+
+Pré-requisitos: Docker (com Compose) e Node.js 20–26. O MariaDB roda no Docker; o CMS e os dois sites Astro rodam na máquina, com recarga automática.
+
+```bash
+docker compose up -d --wait                  # MariaDB na :3306
+cp cms/.env.example cms/.env                 # valores só para dev, carrega dados de exemplo (SEED=true)
+cd cms && npm install && npm run develop     # Strapi na :1337
+```
+
+Em outros terminais:
+
+```bash
+cd web && npm install && npm run dev         # site público na :4321
+cd partners && npm install && npm run dev    # site de parceiros na :4322
+```
+
+| Endereço | O quê |
+| --- | --- |
+| http://localhost:1337/admin | Admin do Strapi (crie o primeiro usuário admin no primeiro acesso) |
+| http://localhost:1337/api/profiles | API REST |
+| http://localhost:4321 | Site público (`web/`) |
+| http://localhost:4322 | Site de parceiros (`partners/`) |
+
+As portas são fixas porque o CMS só aceita requisições do navegador vindas de `localhost:4321` e `localhost:4322` (`CORS_ORIGINS`). Em dev, o `web/` consulta o CMS a cada requisição, então o Strapi precisa estar rodando. Pare o banco com `docker compose stop`; `docker compose down -v` também apaga os dados.
 
 ## Privacidade e dados
 

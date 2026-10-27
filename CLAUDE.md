@@ -10,8 +10,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 docker compose up -d --wait               # MariaDB for local dev (repo root)
+cp cms/.env.example cms/.env              # dev values (DATABASE_HOST=127.0.0.1, SEED=true); skip if cms/.env exists
 cd cms && npm install
-DATABASE_HOST=127.0.0.1 npm run develop   # cms/.env defaults DATABASE_HOST=mariadb (compose service name); override on the host
+npm run develop                           # an older cms/.env may say DATABASE_HOST=mariadb: prefix DATABASE_HOST=127.0.0.1
 npm run build                             # build admin panel
 ```
 
@@ -21,7 +22,7 @@ No lint or test setup exists yet.
 
 ```bash
 cd web && npm install
-npm run dev     # needs the CMS running (cms/ on :1337)
+npm run dev     # needs the CMS running (cms/ on :1337); web on :4321, partners on :4322 (fixed in astro.config.mjs to match CORS_ORIGINS)
 npm run build   # SSG: fetches every category/profile from Strapi at build time
 ```
 

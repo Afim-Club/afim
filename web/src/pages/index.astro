@@ -1,11 +1,13 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Card from '@afim/design-system/components/Card.astro';
+import AffinityFilter from '../components/AffinityFilter.astro';
 import ProfileCard from '../components/ProfileCard.astro';
 import { getCategories, getProfiles } from '../lib/strapi';
 
 const roots = (await getCategories()).filter((c) => !c.parent);
-const recent = (await getProfiles()).slice(0, 6);
+// Every profile is rendered so the affinity filter can still fill the first 6 slots.
+const profiles = await getProfiles();
 ---
 <Layout title="Início">
   <h1>Encontre quem compartilha seus valores</h1>
@@ -19,5 +21,6 @@ const recent = (await getProfiles()).slice(0, 6);
     ))}
   </ul>
   <h2>Perfis</h2>
-  <ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{recent.map((p) => <ProfileCard profile={p} />)}</ul>
+  <AffinityFilter />
+  <ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" data-limit="6">{profiles.map((p) => <ProfileCard profile={p} />)}</ul>
 </Layout>

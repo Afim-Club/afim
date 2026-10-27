@@ -50,3 +50,10 @@ export const getProfiles = (filters = '') =>
 
 export const profilesBySlugs = (slugs: string[]) =>
   getProfiles(slugs.map((s, i) => `filters[categories][slug][$in][${i}]=${encodeURIComponent(s)}`).join('&'));
+
+export type Affinity = { name: string; slug: string; group?: string | null; lean?: number | null };
+
+/** Affinities a profile can declare: political issues (with a `lean`) are only answered by members. */
+export const getProfileAffinities = async () =>
+  (await fetchAll<Affinity>('affinities', 'fields[0]=name&fields[1]=slug&fields[2]=group&fields[3]=lean&sort[0]=group&sort[1]=sortOrder&sort[2]=name'))
+    .filter((a) => a.lean === null || a.lean === undefined);

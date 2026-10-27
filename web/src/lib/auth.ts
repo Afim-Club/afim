@@ -5,6 +5,17 @@ export const API = import.meta.env.PUBLIC_STRAPI_URL ?? 'http://localhost:1337';
 
 let jwt: string | null = null;
 
+// Public pages only ask for a session when this browser signed in before, so anonymous visitors
+// don't send a refresh request on every page. It is just a flag: no token, no personal data.
+const SESSION_HINT = 'afim.session';
+function setJwt(token: string | null) {
+  jwt = token;
+  try { token ? localStorage.setItem(SESSION_HINT, '1') : localStorage.removeItem(SESSION_HINT); } catch {}
+}
+export function mayHaveSession() {
+  try { return localStorage.getItem(SESSION_HINT) === '1'; } catch { return false; }
+}
+
 async function call(path: string, init: RequestInit = {}) {
   return fetch(`${API}/api${path}`, {
     ...init,
@@ -22,12 +33,12 @@ async function json(res: Response) {
 /** Returns true when the visitor has a session (and loads an access token). */
 export async function restoreSession() {
   const res = await call('/auth/refresh', { method: 'POST', body: '{}' });
-  jwt = res.ok ? (await res.json()).jwt : null;
+  setJwt(res.ok ? (await res.json()).jwt : null);
   return !!jwt;
 }
 
 export async function login(identifier: string, password: string) {
-  jwt = (await json(await call('/auth/local', { method: 'POST', body: JSON.stringify({ identifier, password }) }))).jwt;
+  setJwt((await json(await call('/auth/local', { method: 'POST', body: JSON.stringify({ identifier, password }) }))).jwt);
 }
 
 // Strapi's register response does not set the refresh cookie, so sign in right after.
@@ -38,12 +49,12 @@ export async function register(email: string, password: string) {
 
 /** Finishes a social login: Strapi keeps the provider tokens in its session cookie after the redirect. */
 export async function finishProviderLogin(provider: string) {
-  jwt = (await json(await call(`/auth/${provider}/callback`))).jwt;
+  setJwt((await json(await call(`/auth/${provider}/callback`))).jwt);
 }
 
 export async function logout() {
   await call('/auth/logout', { method: 'POST', body: '{}' }).catch(() => {});
-  jwt = null;
+  setJwt(null);
 }
 
 export const getUser = async () => json(await call('/users/me'));
@@ -52,7 +63,7 @@ export const saveMember = async (data: unknown) => (await json(await call('/memb
 export async function deleteAccount() {
   const res = await call('/members/me', { method: 'DELETE' });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  jwt = null;
+  setJwt(null);
 }
 export const getMatches = async () => (await json(await call('/members/me/matches'))).data;
 export const getAffinities = async () => (await json(await call('/affinities?sort[0]=group&sort[1]=sortOrder&sort[2]=name&pagination[pageSize]=100'))).data;

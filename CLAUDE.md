@@ -25,7 +25,7 @@ npm run dev     # needs the CMS running (cms/ on :1337)
 npm run build   # SSG: fetches every category/profile from Strapi at build time
 ```
 
-`web/src/lib/strapi.ts` is the API client (pages through all results; `STRAPI_URL` for build-time fetches, `PUBLIC_STRAPI_URL` for the browser). Routes: `/`, `/categorias/[slug]` (includes subcategories' profiles), `/perfis/[slug]`, `/busca` (client-side search straight against the Strapi REST API). The CMS must be reachable and seeded at build time, and new/changed content requires a rebuild. UI copy and URLs are in Portuguese. `astro check` is not set up (it prompts to install `@astrojs/check`).
+`web/src/lib/strapi.ts` is the API client (pages through all results; `STRAPI_URL` for build-time fetches, `PUBLIC_STRAPI_URL` for the browser). Routes: `/`, `/categorias/[slug]` (includes subcategories' profiles), `/perfis/[slug]`, `/busca` (client-side search straight against the Strapi REST API). `/mapa` is a Leaflet map (OpenStreetMap tiles from `tile.openstreetmap.org`, so the browser contacts OSM) of every profile with `location.lat/lng`, embedded at build time, with a profile-type filter. Note: `lat`/`lng` are Strapi `decimal` fields, which MariaDB stores with 2 decimal places (about 1 km). The CMS must be reachable and seeded at build time, and new/changed content requires a rebuild. UI copy and URLs are in Portuguese. `astro check` is not set up (it prompts to install `@astrojs/check`).
 
 ## Design system
 

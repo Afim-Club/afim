@@ -117,15 +117,17 @@ export default factories.createCoreController('api::member.member', ({ strapi })
     // Active profiles sharing the member's affinities, limited to the profile types they chose for each one.
     // Answers on political issues don't match profiles by themselves; the chosen political spectrums do.
     // Done server side so the affinities never travel in a public, logged URL.
+    // Each profile comes with `matchedAffinities`: only the affinities that made it match.
     async matches(ctx) {
       const prefs = view(await findMine(ctx.state.user.id)).affinities;
-      const $or = prefs
-        .filter((p) => p.stance === null)
-        .map((p) => ({
-          affinities: { documentId: p.affinity.documentId },
-          profileType: { $in: (Object.keys(TYPES) as (keyof typeof TYPES)[]).filter((k) => p[k]).flatMap((k) => TYPES[k]) },
-        }))
-        .filter((f) => f.profileType.$in.length);
+      const wantedTypes = new Map(
+        prefs
+          .filter((p) => p.stance === null)
+          .map((p) => [p.affinity.documentId, (Object.keys(TYPES) as (keyof typeof TYPES)[]).filter((k) => p[k]).flatMap((k) => TYPES[k]) as string[]]),
+      );
+      const $or = [...wantedTypes]
+        .filter(([, types]) => types.length)
+        .map(([documentId, types]) => ({ affinities: { documentId }, profileType: { $in: types } }));
       if (!$or.length) return { data: [] };
       const profiles = await strapi.documents('api::profile.profile').findMany({
         filters: { $and: [{ status: 'active' }, { $or }] } as any,
@@ -134,7 +136,12 @@ export default factories.createCoreController('api::member.member', ({ strapi })
         sort: 'name',
         limit: 100,
       });
-      return { data: profiles };
+      return {
+        data: profiles.map((p: any) => ({
+          ...p,
+          matchedAffinities: (p.affinities ?? []).filter((a: any) => wantedTypes.get(a.documentId)?.includes(p.profileType)),
+        })),
+      };
     },
   };
 });

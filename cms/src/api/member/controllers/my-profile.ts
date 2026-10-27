@@ -1,10 +1,12 @@
 import type { Core } from '@strapi/strapi';
 import { uniqueSlug } from '../../profile/slug';
 
-// Companies, shops and NGOs a member registers and owns (profile.owner, a private field).
-// They always go to moderation: new and edited profiles are saved with status=review.
-const TYPES = ['company', 'shop', 'ngo'];
+// Profiles a member registers and owns (profile.owner, a private field): their own professional profile (one at most)
+// and the companies, shops and NGOs they represent. They always go to moderation: new and edited profiles are saved
+// with status=review.
+const TYPES = ['professional', 'company', 'shop', 'ngo'];
 export const MAX_OWNED = 10;
+const TYPE_ERROR = 'name and profileType (professional|company|shop|ngo) are required';
 
 const FIELDS = ['name', 'slug', 'profileType', 'description', 'status'];
 const POPULATE = { location: true, affinities: { fields: ['name', 'slug', 'group'] } };
@@ -12,6 +14,7 @@ const POPULATE = { location: true, affinities: { fields: ['name', 'slug', 'group
 const view = (p: any) => ({
   documentId: p.documentId, name: p.name, slug: p.slug, profileType: p.profileType, description: p.description ?? '', status: p.status,
   city: p.location?.city ?? '', state: p.location?.state ?? '',
+  lat: p.location?.lat ?? null, lng: p.location?.lng ?? null,
   affinities: (p.affinities ?? []).map((a: any) => ({ documentId: a.documentId, name: a.name, group: a.group ?? null })),
 });
 
@@ -29,6 +32,10 @@ export default ({ strapi }: { strapi: Core.Strapi }) => {
     const profileType = str(body.profileType, 20);
     if (!name || !TYPES.includes(profileType)) return null;
     const ids = (Array.isArray(body.affinities) ? body.affinities : []).filter((id: unknown) => typeof id === 'string').slice(0, 100);
+    // Map position, rounded to 2 decimals (about 1 km) so a professional's exact address is never stored.
+    const coord = (v: unknown, max: number) => (typeof v === 'number' && Math.abs(v) <= max ? Math.round(v * 100) / 100 : null);
+    const lat = coord(body.lat, 90);
+    const lng = coord(body.lng, 180);
     const affinities = ids.length
       ? await strapi.documents('api::affinity.affinity').findMany({ filters: { documentId: { $in: ids }, lean: { $null: true } } as any, fields: ['id'] as any })
       : [];
@@ -37,6 +44,7 @@ export default ({ strapi }: { strapi: Core.Strapi }) => {
       description: str(body.description, 2000),
       city: str(body.city, 120),
       state: str(body.state, 2).toUpperCase(),
+      ...(lat !== null && lng !== null ? { lat, lng } : { lat: null, lng: null }),
       affinities: affinities.map((a: any) => a.id),
     };
   }
@@ -52,15 +60,18 @@ export default ({ strapi }: { strapi: Core.Strapi }) => {
     async create(ctx: any) {
       const userId = ctx.state.user.id;
       const data = await input(ctx);
-      if (!data) return ctx.badRequest('name and profileType (company|shop|ngo) are required');
-      const owned = await profiles().count({ filters: { owner: { id: userId } } as any });
-      if (owned >= MAX_OWNED) return ctx.badRequest(`A member can register up to ${MAX_OWNED} profiles`);
-      const { city, state, ...rest } = data;
+      if (!data) return ctx.badRequest(TYPE_ERROR);
+      const owned = await profiles().findMany({ filters: { owner: { id: userId } } as any, fields: ['profileType'] as any });
+      if (owned.length >= MAX_OWNED) return ctx.badRequest(`A member can register up to ${MAX_OWNED} profiles`);
+      if (data.profileType === 'professional' && owned.some((p: any) => p.profileType === 'professional')) {
+        return ctx.badRequest('A member can have only one professional profile');
+      }
+      const { city, state, lat, lng, ...rest } = data;
       const created = await profiles().create({
         data: {
           ...rest, slug: uniqueSlug(data.name), status: 'review', owner: userId,
           // Moderators reach the owner through the login e-mail (private, never returned by the API).
-          contactEmail: ctx.state.user.email, location: { city, state },
+          contactEmail: ctx.state.user.email, location: { city, state, lat, lng },
         } as any,
         fields: FIELDS as any, populate: POPULATE as any,
       });
@@ -74,14 +85,14 @@ export default ({ strapi }: { strapi: Core.Strapi }) => {
       if (!current) return ctx.notFound();
       if ((current as any).status === 'blocked') return ctx.forbidden('This profile was blocked by moderation');
       const data = await input(ctx);
-      if (!data) return ctx.badRequest('name and profileType (company|shop|ngo) are required');
-      const { city, state, ...rest } = data;
-      const loc = (current as any).location ?? {};
-      // Keep the map coordinates set by moderation unless the place changed.
-      const samePlace = loc.city === city && loc.state === state;
+      if (!data) return ctx.badRequest(TYPE_ERROR);
+      // The type is fixed after creation, so the one-professional-profile rule holds.
+      if (data.profileType !== (current as any).profileType) return ctx.badRequest('profileType cannot be changed');
+      const { city, state, lat, lng, ...rest } = data;
+      // The page sends back the current position, so leaving lat/lng out removes the profile from the map.
       const updated = await profiles().update({
         documentId: current.documentId,
-        data: { ...rest, status: 'review', location: { city, state, ...(samePlace ? { lat: loc.lat, lng: loc.lng } : {}) } } as any,
+        data: { ...rest, status: 'review', location: { city, state, lat, lng } } as any,
         fields: FIELDS as any, populate: POPULATE as any,
       });
       return { data: view(updated) };

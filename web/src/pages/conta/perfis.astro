@@ -8,39 +8,49 @@ import Select from '@afim/design-system/components/Select.astro';
 import Textarea from '@afim/design-system/components/Textarea.astro';
 import Layout from '../../layouts/Layout.astro';
 ---
-<Layout title="Meus negócios">
+<Layout title="Meus perfis">
   <div id="root" class="grid gap-6 pt-8" hidden>
     <div>
       <a href="/conta" class="text-sm">← Minha conta</a>
-      <h1 class="mb-1">Meus negócios</h1>
+      <h1 class="mb-1">Meus perfis</h1>
       <p class="text-sm text-muted">
-        Empresas, comércios e ONGs que você cadastrou. Todo cadastro e toda alteração passam por revisão antes de
-        aparecer no Afim, e a página pública é publicada na próxima atualização do site.
+        Seu perfil profissional e as empresas, comércios e ONGs que você representa. Todo cadastro e toda alteração
+        passam por revisão antes de aparecer no Afim, e a página pública é publicada na próxima atualização do site.
       </p>
     </div>
 
     <ul id="list" class="grid gap-3 sm:grid-cols-2"></ul>
-    <p id="empty" class="text-sm text-muted" hidden>Você ainda não cadastrou nenhum negócio.</p>
+    <p id="empty" class="text-sm text-muted" hidden>Você ainda não cadastrou nenhum perfil.</p>
 
     <Card class="grid gap-4">
-      <h2 id="formTitle" class="m-0 text-lg">Cadastrar negócio</h2>
+      <h2 id="formTitle" class="m-0 text-lg">Cadastrar perfil</h2>
       <form id="f" class="grid gap-4">
-        <FormField label="Nome do negócio" required><Input name="name" maxlength="255" required /></FormField>
-        <FormField label="Tipo" required>
+        <FormField label="Tipo" hint="Não pode ser alterado depois." required>
           <Select name="profileType" required>
+            <option value="professional">Profissional (você)</option>
             <option value="company">Empresa</option>
             <option value="shop">Comércio</option>
             <option value="ngo">ONG</option>
           </Select>
         </FormField>
+        <FormField label="Nome" required><Input name="name" maxlength="255" required /></FormField>
         <div class="grid gap-4 sm:grid-cols-[1fr_6rem]">
           <FormField label="Cidade"><Input name="city" maxlength="120" /></FormField>
           <FormField label="UF"><Input name="state" maxlength="2" /></FormField>
         </div>
+        <div class="grid gap-2">
+          <p class="m-0 text-sm font-medium">Posição no mapa</p>
+          <p class="m-0 text-xs text-muted">Opcional. Guardamos só uma posição aproximada (cerca de 1 km), nunca o endereço exato.</p>
+          <p id="where" class="m-0 text-sm"></p>
+          <div class="flex flex-wrap gap-2">
+            <Button id="locate" type="button" variant="outline" size="sm">Usar minha localização atual</Button>
+            <Button id="unlocate" type="button" variant="outline" size="sm" hidden>Tirar do mapa</Button>
+          </div>
+        </div>
         <FormField label="Apresentação"><Textarea name="description" rows="4" maxlength="2000" /></FormField>
         <div>
-          <p class="m-0 text-sm font-medium">Afinidades do negócio</p>
-          <p class="mt-1 text-xs text-muted">São públicas: aparecem na página do negócio e servem para pessoas com as mesmas afinidades o encontrarem.</p>
+          <p class="m-0 text-sm font-medium">Afinidades</p>
+          <p class="mt-1 text-xs text-muted">São públicas: aparecem na página do perfil e servem para pessoas com as mesmas afinidades o encontrarem.</p>
           <ul id="affinities" class="mt-2 grid gap-2 sm:grid-cols-2"></ul>
         </div>
         <div class="flex flex-wrap gap-2">
@@ -84,6 +94,24 @@ import Layout from '../../layouts/Layout.astro';
     const field = (name: string) => form.elements.namedItem(name) as HTMLInputElement;
     let editing: string | null = null;
     let profiles: any[] = [];
+    let pos: { lat: number; lng: number } | null = null;
+    const typeSelect = field('profileType') as unknown as HTMLSelectElement;
+    const professionalOption = typeSelect.querySelector<HTMLOptionElement>('option[value=professional]')!;
+
+    function renderPos(text?: string) {
+      $('where').textContent = text ?? (pos ? `No mapa, perto de ${pos.lat.toFixed(2)}, ${pos.lng.toFixed(2)}.` : 'Fora do mapa.');
+      $('unlocate').hidden = !pos;
+    }
+    // Rounded like the CMS does (2 decimals, about 1 km).
+    $('locate').addEventListener('click', () => {
+      if (!navigator.geolocation) return renderPos('Seu navegador não informa a localização.');
+      renderPos('Buscando sua localização...');
+      navigator.geolocation.getCurrentPosition(
+        (g) => { pos = { lat: Math.round(g.coords.latitude * 100) / 100, lng: Math.round(g.coords.longitude * 100) / 100 }; renderPos(); },
+        () => renderPos('Não foi possível obter sua localização. Confira a permissão do navegador.'),
+      );
+    });
+    $('unlocate').addEventListener('click', () => { pos = null; renderPos(); });
 
     // Affinities a business can declare: plain ones and the political spectrums, never the political issues.
     function renderAffinities(affinities: any[]) {
@@ -111,7 +139,13 @@ import Layout from '../../layouts/Layout.astro';
       for (const k of ['name', 'profileType', 'city', 'state', 'description']) if (p) field(k).value = p[k] ?? '';
       const chosen = new Set((p?.affinities ?? []).map((a: any) => a.documentId));
       $('affinities').querySelectorAll('input').forEach((i) => (i.checked = chosen.has(i.value)));
-      $('formTitle').textContent = p ? `Editar ${p.name}` : 'Cadastrar negócio';
+      $('formTitle').textContent = p ? `Editar ${p.name}` : 'Cadastrar perfil';
+      pos = p && p.lat !== null && p.lng !== null ? { lat: Number(p.lat), lng: Number(p.lng) } : null;
+      renderPos();
+      // The type can't change after creation, and a member has at most one professional profile.
+      typeSelect.disabled = !!p;
+      professionalOption.disabled = !p && profiles.some((x) => x.profileType === 'professional');
+      if (!p && professionalOption.disabled) typeSelect.value = 'company';
       $('cancel').hidden = !p;
     }
 
@@ -136,7 +170,8 @@ import Layout from '../../layouts/Layout.astro';
             profiles = profiles.filter((x) => x.documentId !== p.documentId);
             if (editing === p.documentId) fill(null);
             renderList();
-            show('success', `${p.name} foi excluído.`);
+            if (!editing) fill(null);
+            show('success', `Perfil excluído: ${p.name}.`);
           } catch {
             show('danger', 'Não foi possível excluir agora. Tente novamente.');
           }
@@ -153,8 +188,10 @@ import Layout from '../../layouts/Layout.astro';
         profiles = list;
         renderAffinities(affinities);
         renderList();
+        fill(null);
+
       } catch {
-        show('danger', 'Não foi possível carregar seus negócios. Confira se o CMS está atualizado e no ar, e recarregue a página.');
+        show('danger', 'Não foi possível carregar seus perfis. Confira se o CMS está atualizado e no ar, e recarregue a página.');
       }
     }
 
@@ -164,7 +201,7 @@ import Layout from '../../layouts/Layout.astro';
       e.preventDefault();
       const fd = new FormData(form);
       const data = {
-        name: fd.get('name'), profileType: fd.get('profileType'), city: fd.get('city'), state: fd.get('state'), description: fd.get('description'),
+        name: fd.get('name'), profileType: typeSelect.value, lat: pos?.lat ?? null, lng: pos?.lng ?? null, city: fd.get('city'), state: fd.get('state'), description: fd.get('description'),
         affinities: [...$('affinities').querySelectorAll('input')].filter((i) => i.checked).map((i) => i.value),
       };
       const button = form.querySelector<HTMLButtonElement>('button:not([type=button])')!;
@@ -174,10 +211,11 @@ import Layout from '../../layouts/Layout.astro';
         profiles = [...profiles.filter((x) => x.documentId !== saved.documentId), saved].sort((a, b) => a.name.localeCompare(b.name));
         renderList();
         fill(null);
-        show('success', `${saved.name} foi enviado para revisão. Ele aparece no Afim depois de aprovado.`);
+        show('success', `Perfil enviado para revisão: ${saved.name}. Ele aparece no Afim depois de aprovado.`);
       } catch (err) {
         show('danger', String((err as Error).message).includes('up to')
-          ? 'Você atingiu o limite de negócios por conta.' : 'Não foi possível salvar. Confira os dados e tente novamente.');
+          ? 'Você atingiu o limite de perfis por conta.' : String((err as Error).message).includes('only one')
+          ? 'Você já tem um perfil profissional.' : 'Não foi possível salvar. Confira os dados e tente novamente.');
       } finally {
         button.disabled = false;
       }

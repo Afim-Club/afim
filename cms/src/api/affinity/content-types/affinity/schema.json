@@ -28,6 +28,11 @@
       "type": "integer",
       "default": 0
     },
+    "lean": {
+      "type": "integer",
+      "min": -2,
+      "max": 2
+    },
     "description": {
       "type": "text"
     },

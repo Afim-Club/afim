@@ -37,15 +37,40 @@ import Layout from '../layouts/Layout.astro';
         </div>
         <ul id="affinities" class="grid gap-3"></ul>
         <p id="noAffinities" class="text-sm text-muted" hidden>Ainda não há afinidades cadastradas. Elas são criadas no painel do CMS (Content Manager → Affinity).</p>
-        <label class="flex items-start gap-2 text-sm">
-          <input type="checkbox" name="consent" class="mt-1 accent-brand" />
-          <span>
-            Autorizo o Afim a guardar as afinidades que marquei, apenas para me mostrar pessoas, empresas e comércios
-            com afinidades em comum. Posso retirar este consentimento a qualquer momento desmarcando esta opção.
-          </span>
-        </label>
-        <p id="consentInfo" class="text-xs text-muted"></p>
       </Card>
+
+      <div id="politics" hidden><Card class="grid gap-4">
+        <div>
+          <h2 class="m-0 text-lg">Posição política</h2>
+          <p class="text-sm text-muted">
+            Diga se concorda, discorda ou é indiferente a cada pauta. Sua posição é calculada a partir das respostas
+            (é preciso responder pelo menos 5). Deixe sem resposta o que preferir não informar.
+          </p>
+        </div>
+        <div class="rounded-afim border border-line p-3">
+          <p class="m-0 font-medium">Sua posição: <span id="position">ainda não calculada</span></p>
+          <p id="positionDesc" class="mt-1 text-xs text-muted" hidden></p>
+          <fieldset id="politicalFind" class="mt-2 flex flex-wrap gap-4 text-sm">
+            <legend class="sr-only">Quero encontrar</legend>
+            <span class="text-muted">Quero encontrar quem tem a mesma posição:</span>
+            <label class="flex items-center gap-1"><input type="checkbox" data-role="findPeople" checked class="accent-brand" /> Pessoas</label>
+            <label class="flex items-center gap-1"><input type="checkbox" data-role="findCompanies" checked class="accent-brand" /> Empresas e ONGs</label>
+            <label class="flex items-center gap-1"><input type="checkbox" data-role="findShops" checked class="accent-brand" /> Comércios</label>
+          </fieldset>
+        </div>
+        <p id="answered" class="m-0 text-sm text-muted"></p>
+        <ul id="pautas" class="grid gap-2 sm:grid-cols-2"></ul>
+      </Card></div>
+
+      <label class="flex items-start gap-2 text-sm">
+        <input type="checkbox" name="consent" class="mt-1 accent-brand" />
+        <span>
+          Autorizo o Afim a guardar as afinidades e as respostas sobre pautas que marquei, apenas para me mostrar
+          pessoas, empresas e comércios com afinidades em comum. Posso retirar este consentimento a qualquer momento
+          desmarcando esta opção.
+        </span>
+      </label>
+      <p id="consentInfo" class="-mt-4 text-xs text-muted"></p>
 
       <div><Button>Salvar</Button></div>
     </form>
@@ -75,6 +100,17 @@ import Layout from '../layouts/Layout.astro';
       </fieldset>
     </li>
   </template>
+  <template id="pautaRow">
+    <li class="flex items-center justify-between gap-2 rounded-afim border border-line px-3 py-2 text-sm">
+      <span></span>
+      <select data-role="stance" class="rounded-afim border border-line bg-page px-2 py-1 text-sm">
+        <option value="">Sem resposta</option>
+        <option value="agrees">Concordo</option>
+        <option value="disagrees">Discordo</option>
+        <option value="neutral">Indiferente</option>
+      </select>
+    </li>
+  </template>
   <template id="matchCard"><Card as="li"><a class="font-semibold"></a> <span class="block text-sm text-muted"></span></Card></template>
 
   <script>
@@ -85,18 +121,30 @@ import Layout from '../layouts/Layout.astro';
     const form = $<HTMLFormElement>('f');
     const msg = $('msg');
     const list = $('affinities');
+    const pautas = $('pautas');
     const show = (tone: string, text: string) => { msg.dataset.tone = tone; msg.textContent = text; };
     const FIND = ['findPeople', 'findCompanies', 'findShops'] as const;
+    const POSITION_GROUP = 'Política'; // positions are derived from the answers (cms/src/api/member/political.ts)
+    const clone = (id: string) => ($(id) as HTMLTemplateElement).content.firstElementChild!.cloneNode(true) as HTMLElement;
+    const setFind = (el: HTMLElement, pref: any) => { for (const k of FIND) el.querySelector<HTMLInputElement>(`[data-role=${k}]`)!.checked = pref[k]; };
+    const getFind = (el: HTMLElement) => Object.fromEntries(FIND.map((k) => [k, el.querySelector<HTMLInputElement>(`[data-role=${k}]`)!.checked]));
+    const countAnswers = () => {
+      const n = [...pautas.querySelectorAll('select')].filter((s) => s.value).length;
+      $('answered').textContent = `${n} pauta(s) respondida(s).`;
+    };
+    pautas.addEventListener('change', countAnswers);
 
     function renderMember(member: any, affinities: any[]) {
       for (const k of ['displayName', 'city', 'state']) (form.elements.namedItem(k) as HTMLInputElement).value = member[k] ?? '';
       (form.elements.namedItem('consent') as HTMLInputElement).checked = !!member.affinityConsentAt;
       $('consentInfo').textContent = member.affinityConsentAt
         ? `Consentimento dado em ${new Date(member.affinityConsentAt).toLocaleString('pt-BR')}.` : '';
-      const tpl = ($('affinityRow') as HTMLTemplateElement).content.firstElementChild!;
+      const prefOf = (a: any) => member.affinities.find((p: any) => p.affinity.documentId === a.documentId);
+
+      // Plain affinities: a checkbox and what to find, grouped under a heading when they have a group.
       const rows: HTMLElement[] = [];
       let group: string | null | undefined;
-      for (const a of affinities) {
+      for (const a of affinities.filter((x) => x.lean === null && x.group !== POSITION_GROUP)) {
         if (a.group && a.group !== group) {
           const h = document.createElement('li');
           h.className = 'mt-2 text-sm font-semibold text-muted';
@@ -104,14 +152,8 @@ import Layout from '../layouts/Layout.astro';
           rows.push(h);
         }
         group = a.group;
-        rows.push(row(a));
-      }
-      list.replaceChildren(...rows);
-      $('noAffinities').hidden = affinities.length > 0;
-
-      function row(a: any) {
-        const li = tpl.cloneNode(true) as HTMLElement;
-        const pref = member.affinities.find((p: any) => p.affinity.documentId === a.documentId);
+        const li = clone('affinityRow');
+        const pref = prefOf(a);
         li.dataset.id = a.documentId;
         li.querySelector('span')!.textContent = a.name;
         const has = li.querySelector<HTMLInputElement>('[data-role=has]')!;
@@ -119,9 +161,28 @@ import Layout from '../layouts/Layout.astro';
         has.checked = !!pref;
         fieldset.disabled = !pref;
         has.addEventListener('change', () => (fieldset.disabled = !has.checked));
-        if (pref) for (const k of FIND) li.querySelector<HTMLInputElement>(`[data-role=${k}]`)!.checked = pref[k];
-        return li;
+        if (pref) setFind(li, pref);
+        rows.push(li);
       }
+      list.replaceChildren(...rows);
+      $('noAffinities').hidden = affinities.length > 0;
+
+      // Political issues: one answer each. The position is calculated by the CMS when saving.
+      const issues = affinities.filter((x) => x.lean !== null);
+      $('politics').hidden = !issues.length;
+      pautas.replaceChildren(...issues.map((a) => {
+        const li = clone('pautaRow');
+        li.dataset.id = a.documentId;
+        li.querySelector('span')!.textContent = a.name;
+        li.querySelector('select')!.value = prefOf(a)?.stance ?? '';
+        return li;
+      }));
+      countAnswers();
+      const position = member.affinities.find((p: any) => p.affinity.group === POSITION_GROUP);
+      $('position').textContent = position?.affinity.name ?? 'ainda não calculada';
+      $('positionDesc').hidden = !position?.affinity.description;
+      $('positionDesc').textContent = position?.affinity.description ?? '';
+      if (position) setFind($('politicalFind'), position);
     }
 
     async function renderMatches() {
@@ -154,18 +215,20 @@ import Layout from '../layouts/Layout.astro';
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const fd = new FormData(form);
-      const chosen = [...list.querySelectorAll<HTMLElement>('li[data-id]')]
-        .filter((li) => li.querySelector<HTMLInputElement>('[data-role=has]')!.checked)
-        .map((li) => ({
-          affinity: li.dataset.id,
-          ...Object.fromEntries(FIND.map((k) => [k, li.querySelector<HTMLInputElement>(`[data-role=${k}]`)!.checked])),
-        }));
+      const chosen = [
+        ...[...list.querySelectorAll<HTMLElement>('li[data-id]')]
+          .filter((li) => li.querySelector<HTMLInputElement>('[data-role=has]')!.checked)
+          .map((li) => ({ affinity: li.dataset.id, ...getFind(li) })),
+        ...[...pautas.querySelectorAll<HTMLElement>('li[data-id]')]
+          .map((li) => ({ affinity: li.dataset.id, stance: li.querySelector('select')!.value }))
+          .filter((p) => p.stance),
+      ];
       const consent = fd.get('consent') === 'on';
-      if (chosen.length && !consent) return show('warning', 'Para guardar suas afinidades, marque a autorização.');
+      if (chosen.length && !consent) return show('warning', 'Para guardar suas afinidades e respostas, marque a autorização.');
       try {
         const saved = await auth.saveMember({
           displayName: fd.get('displayName'), city: fd.get('city'), state: fd.get('state'),
-          consent, affinities: consent ? chosen : [],
+          consent, affinities: consent ? chosen : [], politicalFind: getFind($('politicalFind')),
         });
         renderMember(saved, await auth.getAffinities());
         show('success', consent ? 'Preferências salvas.' : 'Dados salvos. Nenhuma afinidade foi guardada.');

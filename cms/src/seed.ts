@@ -1,4 +1,5 @@
 import type { Core } from '@strapi/strapi';
+import { STARTER_AFFINITIES } from './starter-affinities';
 
 const CATEGORIES: Record<string, string[]> = {
   Tecnologia: ['Desenvolvimento', 'Design'],
@@ -9,23 +10,26 @@ const CATEGORIES: Record<string, string[]> = {
 const slugify = (s: string) =>
   s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
-// Starter affinities by group ('' = no group), in display order. Each group is created only while it
-// has no affinities, so edits and deletions made in the admin are kept.
-const AFFINITIES: Record<string, string[]> = {
-  '': ['Sustentabilidade', 'Veganismo', 'Diversidade e inclusão', 'Comércio justo', 'Software livre', 'Bem-estar animal'],
-  Política: ['Extrema-esquerda', 'Esquerda', 'Centro-esquerda', 'Centro', 'Centro-direita', 'Direita', 'Extrema-direita'],
-};
-
+// Each starter group is created only while it has no affinities, so edits and deletions made in the
+// admin are kept. Starter descriptions also fill affinities whose description is still empty.
 export async function seedAffinities(strapi: Core.Strapi) {
-  for (const [group, names] of Object.entries(AFFINITIES)) {
+  const docs = strapi.documents('api::affinity.affinity');
+  for (const [group, items] of Object.entries(STARTER_AFFINITIES)) {
     const filters = group ? { group: { $eq: group } } : { group: { $null: true } };
-    if ((await strapi.documents('api::affinity.affinity').count({ filters } as any)) > 0) continue;
-    for (const [i, name] of names.entries()) {
-      await strapi.documents('api::affinity.affinity').create({
-        data: { name, slug: slugify(group ? `${group} ${name}` : name), group: group || null, sortOrder: i } as any,
-      });
+    if ((await docs.count({ filters } as any)) === 0) {
+      for (const [i, { name, description, lean }] of items.entries()) {
+        await docs.create({
+          data: { name, description, lean, slug: slugify(group ? `${group} ${name}` : name), group: group || null, sortOrder: i } as any,
+        });
+      }
+      strapi.log.info(`Seeded starter affinities${group ? ` (${group})` : ''}`);
+      continue;
     }
-    strapi.log.info(`Seeded starter affinities${group ? ` (${group})` : ''}`);
+    for (const { name, description } of items) {
+      if (!description) continue;
+      const found = await docs.findFirst({ filters: { slug: slugify(group ? `${group} ${name}` : name), description: { $null: true } } as any });
+      if (found) await docs.update({ documentId: found.documentId, data: { description } as any });
+    }
   }
 }
 

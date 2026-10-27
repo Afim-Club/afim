@@ -153,33 +153,41 @@ export default factories.createCoreController('api::member.member', ({ strapi })
       ctx.status = 204;
     },
 
-    // Active profiles sharing the member's affinities, limited to the profile types they chose for each one.
-    // Answers on political issues don't match profiles by themselves; the chosen political spectrums do.
+    // Active profiles that have every affinity the member chose (intersection), each for the profile types chosen
+    // for it. A profile has a single political position, so the chosen spectrums count as one requirement: any of them.
+    // Answers on political issues don't match profiles by themselves.
     // Done server side so the affinities never travel in a public, logged URL.
-    // Each profile comes with `matchedAffinities`: only the affinities that made it match.
+    // Each profile comes with `matchedAffinities`: the member's affinities it has.
     async matches(ctx) {
-      const prefs = view(await findMine(ctx.state.user.id)).affinities;
-      const wantedTypes = new Map(
-        prefs
-          .filter((p) => p.stance === null)
-          .map((p) => [p.affinity.documentId, (Object.keys(TYPES) as (keyof typeof TYPES)[]).filter((k) => p[k]).flatMap((k) => TYPES[k]) as string[]]),
-      );
-      const $or = [...wantedTypes]
-        .filter(([, types]) => types.length)
-        .map(([documentId, types]) => ({ affinities: { documentId }, profileType: { $in: types } }));
-      if (!$or.length) return { data: [] };
-      const profiles = await strapi.documents('api::profile.profile').findMany({
-        filters: { $and: [{ moderationStatus: 'active' }, { $or }] } as any,
+      const prefs = view(await findMine(ctx.state.user.id)).affinities.filter((p) => p.stance === null);
+      const typesOf = (p: Pref) => (Object.keys(TYPES) as (keyof typeof TYPES)[]).filter((k) => p[k]).flatMap((k) => TYPES[k]) as string[];
+      // Each requirement: affinity documentId -> profile types it finds.
+      const spectrums = new Map<string, string[]>();
+      const reqs: Map<string, string[]>[] = [];
+      for (const p of prefs) {
+        const types = typesOf(p);
+        if (!types.length) continue;
+        if (p.affinity.group === POSITION_GROUP) spectrums.set(p.affinity.documentId, types);
+        else reqs.push(new Map([[p.affinity.documentId, types]]));
+      }
+      if (spectrums.size) reqs.push(spectrums);
+      if (!reqs.length) return { data: [] };
+      // Candidates have at least one of the affinities; the intersection is applied below.
+      const candidates = await strapi.documents('api::profile.profile').findMany({
+        filters: { $and: [{ moderationStatus: 'active' }, { affinities: { documentId: { $in: prefs.map((p) => p.affinity.documentId) } } }] } as any,
         fields: ['name', 'slug', 'profileType', 'description'],
         populate: { affinities: { fields: ['name', 'slug'] }, location: true } as any,
         sort: 'name',
-        limit: 100,
       });
+      const fits = (p: any, req: Map<string, string[]>) => (p.affinities ?? []).some((a: any) => req.get(a.documentId)?.includes(p.profileType));
       return {
-        data: profiles.map((p: any) => ({
-          ...p,
-          matchedAffinities: (p.affinities ?? []).filter((a: any) => wantedTypes.get(a.documentId)?.includes(p.profileType)),
-        })),
+        data: candidates
+          .filter((p: any) => reqs.every((req) => fits(p, req)))
+          .slice(0, 100)
+          .map((p: any) => ({
+            ...p,
+            matchedAffinities: (p.affinities ?? []).filter((a: any) => reqs.some((req) => req.get(a.documentId)?.includes(p.profileType))),
+          })),
       };
     },
   };

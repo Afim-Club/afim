@@ -2,11 +2,12 @@
 # so STRAPI_URL must point to a reachable, populated CMS during `docker build`.
 FROM node:22-alpine AS build
 WORKDIR /app
+# Shared design system (a file: dependency at ../design-system), passed with
+# --build-context design-system=design-system
+COPY --from=design-system . ../design-system
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
-# Shared CSS from the repo root, passed with --build-context design-system=design-system
-COPY --from=design-system . ../design-system
 ARG STRAPI_URL
 ARG PUBLIC_STRAPI_URL
 ENV STRAPI_URL=$STRAPI_URL PUBLIC_STRAPI_URL=$PUBLIC_STRAPI_URL

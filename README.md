@@ -16,7 +16,7 @@
 | `partners/` | Site for affiliates: businesses and shops (Astro) | `partners.afim.club` |
 | `cms/` | Backoffice and API (Strapi) | `admin.afim.club` |
 | `infra/` | Docker Swarm, Traefik and Jenkins configuration | - |
-| `design-system/` | Shared CSS design tokens and base components used by `web/` and `partners/` | - |
+| `design-system/` | Design system: Tailwind theme, Astro components and brand assets used by `web/` and `partners/` | - |
 
 ## Stack
 

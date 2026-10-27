@@ -1,5 +1,8 @@
 ---
-import '../../../design-system/afim.css';
+import '../styles/global.css';
+import Container from '@afim/design-system/components/Container.astro';
+import SiteFooter from '@afim/design-system/components/SiteFooter.astro';
+import SiteHeader from '@afim/design-system/components/SiteHeader.astro';
 interface Props { title: string }
 const { title } = Astro.props;
 ---
@@ -12,15 +15,8 @@ const { title } = Astro.props;
     <title>{title} · Afim</title>
   </head>
   <body>
-    <header class="site-header">
-      <div class="container">
-        <a href="/" class="brand">Afim</a>
-        <nav><a href="/busca">Buscar</a></nav>
-      </div>
-    </header>
-    <main class="container"><slot /></main>
-    <footer class="site-footer">
-      <div class="container">Afim — diretório open source de pessoas, negócios e comércios com valores em comum.</div>
-    </footer>
+    <SiteHeader><a href="/busca">Buscar</a></SiteHeader>
+    <Container><main class="py-2"><slot /></main></Container>
+    <SiteFooter>Afim — diretório open source de pessoas, negócios e comércios com valores em comum.</SiteFooter>
   </body>
 </html>

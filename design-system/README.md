@@ -2,43 +2,75 @@
 
 [Português](README.pt-BR.md)
 
-Plain CSS shared by `web/` and `partners/`. No build step, no dependencies, no external fonts (system font stack, so no third-party requests).
+Tailwind v4 theme, Astro components and brand assets shared by `web/` and `partners/`. Modeled on the SiteTune design system, but native to Astro: components render to static HTML with no client-side JavaScript, and nothing is published to a registry (the sites use it as a local `file:` dependency).
 
-| File | Content |
+```bash
+cd design-system && npm install
+npm run dev     # component catalog at http://localhost:4321
+npm run build   # static catalog in dist/
+```
+
+## What's in here
+
+| Path | |
 | --- | --- |
-| `tokens.css` | Design tokens as CSS custom properties (`--afim-*`): colors, typography, spacing, radius, layout. Dark mode via `prefers-color-scheme`. |
-| `base.css` | Element defaults and the components below. |
-| `afim.css` | Entry point that imports both. |
+| `src/theme.css` | **Single source of truth** for tokens: `primary` (green, `600` = `#2f7d5b`) and `neutral` ramps, semantic colors, font, radius, base styles |
+| `src/components/` | Astro components: `Logo`, `SiteHeader`, `SiteFooter`, `Container`, `Button`, `Badge`, `Card`, `FormField`, `Input`, `Select`, `Textarea`, `Alert`, `EmptyState` |
+| `src/pages/index.astro` | The catalog: every token and component, in light and dark |
+| `assets/brand/` | `afim-mark.svg` (symbol) and `favicon.svg` (adapts to dark mode) |
 
-## Usage
+The symbol is two circles and the ground they share: affinity.
 
-Each site imports the entry point once, in its layout:
+## Tokens
+
+Components use **semantic colors**, which switch with the OS color scheme (`prefers-color-scheme`), so they need no `dark:` variants:
+
+| Class suffix | Role |
+| --- | --- |
+| `page`, `surface` | Page background, card/panel background |
+| `fg`, `muted` | Body text, secondary text |
+| `line` | Borders |
+| `brand`, `brand-hover`, `brand-soft`, `on-brand` | Actions and links, hover, tinted background, text on brand |
+| `success`, `warning`, `danger` | Status |
+
+Use them as `bg-surface`, `text-muted`, `border-line`, `bg-brand text-on-brand`, ... The raw ramps (`bg-primary-600`, `text-neutral-500`) are there for the rare case a semantic color does not fit. Prefer token classes over hex or arbitrary values.
+
+Fonts are the system stack, so pages make no third-party font requests.
+
+## Using it in a site
+
+```bash
+npm install file:../design-system tailwindcss @tailwindcss/vite
+```
+
+```js
+// astro.config.mjs
+import tailwindcss from '@tailwindcss/vite';
+export default defineConfig({ vite: { plugins: [tailwindcss()] } });
+```
+
+```css
+/* src/styles/global.css, imported by the layout */
+@import "tailwindcss";
+@import "@afim/design-system/theme.css";
+@source "../../../design-system/src"; /* Tailwind skips node_modules */
+```
 
 ```astro
 ---
-import '../../../design-system/afim.css';
+import Button from '@afim/design-system/components/Button.astro';
 ---
+<Button href="/cadastro">Cadastre seu negócio</Button>
 ```
 
-Docker builds use the site folder as context, so the folder is passed as a named build context:
+`Alert` takes its tone from `data-tone`, so a script can switch it: `el.dataset.tone = 'danger'`.
+
+## Docker
+
+The site Dockerfiles use the site folder as build context and get this folder as a named context, copied to `../design-system` before `npm ci`:
 
 ```bash
 docker build --build-context design-system=design-system web
 ```
 
-## Components (CSS classes)
-
-| Class | Use |
-| --- | --- |
-| `.container` | Centered page column (`--afim-container` sets the width) |
-| `.site-header`, `.brand`, `.site-footer` | Page shell |
-| `.btn`, `.btn-secondary` | Buttons and button-like links (`<button>` is styled by default) |
-| `.form`, `.field` | Form grid and label + input pair (inputs are styled by default) |
-| `.cards`, `.card` | Responsive card grid and card |
-| `.tag` | Pill label (also works on links) |
-| `.alert`, `.alert-success`, `.alert-error` | Status messages (hidden while empty) |
-| `.muted` | Secondary text |
-
-## Changing the brand
-
-Edit the tokens in `tokens.css` (light values in `:root`, dark values in the media query). The primary color is `#2f7d5b` (green). Keep text/background contrast at WCAG AA (4.5:1) or better.
+Components must not import packages at runtime (type-only imports are fine): in the image the design system has no `node_modules` of its own, and the site's `astro` and `tailwindcss` do the work.

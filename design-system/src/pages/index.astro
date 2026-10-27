@@ -1,0 +1,107 @@
+---
+// Component catalog: the living reference of the design system (`npm run dev`).
+import '../styles/global.css';
+import Alert from '../components/Alert.astro';
+import Badge from '../components/Badge.astro';
+import Button from '../components/Button.astro';
+import Card from '../components/Card.astro';
+import Container from '../components/Container.astro';
+import EmptyState from '../components/EmptyState.astro';
+import FormField from '../components/FormField.astro';
+import Input from '../components/Input.astro';
+import Logo from '../components/Logo.astro';
+import Select from '../components/Select.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import Textarea from '../components/Textarea.astro';
+
+const ramps = ['primary', 'neutral'];
+const steps = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
+const semantic = ['page', 'surface', 'fg', 'muted', 'line', 'brand', 'brand-soft', 'on-brand', 'success', 'warning', 'danger'];
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Afim design system</title>
+  </head>
+  <body>
+    <SiteHeader label="Afim design system"><a href="#tokens">Tokens</a><a href="#components">Components</a></SiteHeader>
+    <Container>
+      <h1>Afim design system</h1>
+      <p class="text-muted">Tailwind v4 theme, Astro components and brand assets shared by <code>web/</code> and <code>partners/</code>. Switch your OS to dark mode to see the dark theme.</p>
+
+      <h2 id="tokens">Color ramps</h2>
+      {ramps.map((r) => (
+        <div class="mb-3">
+          <p class="mb-1 text-sm font-medium">{r}</p>
+          <div class="grid grid-cols-11 gap-1">
+            {steps.map((s) => (
+              <div>
+                <div class="h-10 rounded border border-line" style={`background: var(--color-${r}-${s})`}></div>
+                <span class="text-xs text-muted">{s}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+
+      <h2>Semantic colors</h2>
+      <p class="text-sm text-muted">Use these in components (<code>bg-surface</code>, <code>text-muted</code>, <code>border-line</code>, ...). They switch with light/dark.</p>
+      <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {semantic.map((c) => (
+          <div class="flex items-center gap-2">
+            <span class="size-8 rounded border border-line" style={`background: var(--afim-${c})`}></span>
+            <code class="text-sm">{c}</code>
+          </div>
+        ))}
+      </div>
+
+      <h2>Brand</h2>
+      <Card class="flex items-center gap-6"><Logo /><Logo label="Afim Parceiros" /></Card>
+
+      <h2 id="components">Button</h2>
+      <div class="flex flex-wrap items-center gap-3">
+        <Button>Primary</Button>
+        <Button variant="secondary">Secondary</Button>
+        <Button variant="outline">Outline</Button>
+        <Button href="#">Link as button</Button>
+        <Button size="sm">Small</Button>
+        <Button size="lg">Large</Button>
+        <Button disabled>Disabled</Button>
+      </div>
+
+      <h2>Badge</h2>
+      <div class="flex gap-2"><Badge>Profissional</Badge><Badge tone="brand">Empresa</Badge><Badge href="#">Link</Badge></div>
+
+      <h2>Card</h2>
+      <ul class="grid gap-3 sm:grid-cols-3">
+        {['Ana Souza', 'Estúdio Alvo', 'Padaria Pão'].map((n) => (
+          <Card as="li"><a href="#" class="font-semibold">{n}</a> <Badge>Tipo</Badge><p class="text-sm text-muted">São Paulo / SP</p></Card>
+        ))}
+      </ul>
+
+      <h2>Form</h2>
+      <form class="grid max-w-md gap-4">
+        <FormField label="Name" required><Input placeholder="Business name" /></FormField>
+        <FormField label="Type"><Select><option>Company</option><option>Shop</option></Select></FormField>
+        <FormField label="About" hint="Shown on the public profile."><Textarea rows={3} /></FormField>
+        <div><Button type="button">Submit</Button></div>
+      </form>
+
+      <h2>Alert</h2>
+      <div class="grid gap-2">
+        <Alert>Info message.</Alert>
+        <Alert tone="success">Saved!</Alert>
+        <Alert tone="warning">Check the fields.</Alert>
+        <Alert tone="danger">Something went wrong.</Alert>
+      </div>
+
+      <h2>Empty state</h2>
+      <EmptyState title="Nothing found">Try another search.</EmptyState>
+    </Container>
+    <SiteFooter>SiteFooter: Afim, open source directory.</SiteFooter>
+  </body>
+</html>

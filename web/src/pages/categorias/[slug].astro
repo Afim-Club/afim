@@ -1,5 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import Badge from '@afim/design-system/components/Badge.astro';
+import EmptyState from '@afim/design-system/components/EmptyState.astro';
 import ProfileCard from '../../components/ProfileCard.astro';
 import { getCategories, profilesBySlugs } from '../../lib/strapi';
 
@@ -20,7 +22,7 @@ const { category, profiles } = Astro.props;
   {category.parent && <p><a href={`/categorias/${category.parent.slug}`}>← {category.parent.name}</a></p>}
   <h1>{category.name}</h1>
   {category.children?.length ? (
-    <p>{category.children.map((c) => <a class="tag" href={`/categorias/${c.slug}`}>{c.name}</a>)}</p>
+    <p class="flex flex-wrap gap-2">{category.children.map((c) => <Badge href={`/categorias/${c.slug}`}>{c.name}</Badge>)}</p>
   ) : null}
-  {profiles.length ? <ul class="cards">{profiles.map((p) => <ProfileCard profile={p} />)}</ul> : <p>Nenhum perfil ainda.</p>}
+  {profiles.length ? <ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{profiles.map((p) => <ProfileCard profile={p} />)}</ul> : <EmptyState title="Nenhum perfil ainda." />}
 </Layout>

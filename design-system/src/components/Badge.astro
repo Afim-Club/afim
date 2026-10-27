@@ -1,0 +1,12 @@
+---
+/** Small pill label. Becomes a link when `href` is set. */
+interface Props { href?: string; tone?: 'neutral' | 'brand'; class?: string }
+const { href, tone = 'neutral', class: className } = Astro.props;
+const classes = [
+  'inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium no-underline align-middle',
+  tone === 'brand' ? 'border-transparent bg-brand-soft text-brand' : 'border-line bg-page text-fg hover:text-fg',
+  href && 'hover:border-brand',
+  className,
+];
+---
+{href ? <a href={href} class:list={classes}><slot /></a> : <span class:list={classes}><slot /></span>}

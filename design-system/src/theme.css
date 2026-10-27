@@ -1,0 +1,102 @@
+/*
+ * Afim theme: the single source of truth for design tokens (Tailwind v4).
+ * Sites import it after Tailwind:
+ *   @import "tailwindcss";
+ *   @import "@afim/design-system/theme.css";
+ */
+
+/* Raw palettes: full ramps, usable as bg-primary-600, text-neutral-500, ...
+   `static` keeps every step as a CSS variable even when no class uses it. */
+@theme static {
+  /* Primary green, anchored at 600 = #2f7d5b */
+  --color-primary-50: #eff8f3;
+  --color-primary-100: #d8eee2;
+  --color-primary-200: #b3dcc6;
+  --color-primary-300: #82c3a3;
+  --color-primary-400: #5fbf93;
+  --color-primary-500: #3b9169;
+  --color-primary-600: #2f7d5b;
+  --color-primary-700: #25654a;
+  --color-primary-800: #22503c;
+  --color-primary-900: #1d4233;
+  --color-primary-950: #0f251c;
+
+  /* Neutral ramp with a slight green cast */
+  --color-neutral-50: #f6f7f6;
+  --color-neutral-100: #eceeed;
+  --color-neutral-200: #dde2df;
+  --color-neutral-300: #c3cbc7;
+  --color-neutral-400: #a3aea9;
+  --color-neutral-500: #77837e;
+  --color-neutral-600: #5b6662;
+  --color-neutral-700: #444e4a;
+  --color-neutral-800: #2e3733;
+  --color-neutral-900: #1b211e;
+  --color-neutral-950: #121614;
+
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  --radius-afim: 0.5rem;
+}
+
+/*
+ * Semantic tokens: what components use. They switch with the color scheme,
+ * so components never need `dark:` variants.
+ * Classes: bg-page, bg-surface, text-fg, text-muted, border-line,
+ * bg-brand, text-brand, text-on-brand, text-danger, ...
+ */
+:root {
+  --afim-page: var(--color-white);
+  --afim-surface: var(--color-neutral-50);
+  --afim-fg: var(--color-neutral-900);
+  --afim-muted: var(--color-neutral-600);
+  --afim-line: var(--color-neutral-200);
+  --afim-brand: var(--color-primary-600);
+  --afim-brand-hover: var(--color-primary-700);
+  --afim-brand-soft: var(--color-primary-50);
+  --afim-on-brand: var(--color-white);
+  --afim-success: var(--color-primary-700);
+  --afim-warning: var(--color-amber-700);
+  --afim-danger: var(--color-red-700);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --afim-page: var(--color-neutral-950);
+    --afim-surface: var(--color-neutral-900);
+    --afim-fg: var(--color-neutral-100);
+    --afim-muted: var(--color-neutral-400);
+    --afim-line: var(--color-neutral-800);
+    --afim-brand: var(--color-primary-400);
+    --afim-brand-hover: var(--color-primary-300);
+    --afim-brand-soft: color-mix(in oklab, var(--color-primary-400) 15%, transparent);
+    --afim-on-brand: var(--color-neutral-950);
+    --afim-success: var(--color-primary-300);
+    --afim-warning: var(--color-amber-300);
+    --afim-danger: var(--color-red-300);
+  }
+}
+
+@theme inline {
+  --color-page: var(--afim-page);
+  --color-surface: var(--afim-surface);
+  --color-fg: var(--afim-fg);
+  --color-muted: var(--afim-muted);
+  --color-line: var(--afim-line);
+  --color-brand: var(--afim-brand);
+  --color-brand-hover: var(--afim-brand-hover);
+  --color-brand-soft: var(--afim-brand-soft);
+  --color-on-brand: var(--afim-on-brand);
+  --color-success: var(--afim-success);
+  --color-warning: var(--afim-warning);
+  --color-danger: var(--afim-danger);
+}
+
+@layer base {
+  html { color-scheme: light dark; }
+  body { @apply bg-page text-fg font-sans antialiased; }
+  h1 { @apply text-3xl font-bold tracking-tight mt-8 mb-4; }
+  h2 { @apply text-xl font-semibold mt-8 mb-3; }
+  a { @apply text-brand hover:text-brand-hover; }
+  :focus-visible { @apply outline-2 outline-offset-2 outline-brand; }
+}

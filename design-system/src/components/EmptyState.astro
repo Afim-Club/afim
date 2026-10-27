@@ -1,0 +1,9 @@
+---
+/** Placeholder for an empty list or search. */
+interface Props { title: string; class?: string }
+const { title, class: className } = Astro.props;
+---
+<div class:list={['rounded-afim border border-dashed border-line px-6 py-10 text-center', className]}>
+  <p class="font-semibold">{title}</p>
+  <div class="mt-1 text-sm text-muted"><slot /></div>
+</div>

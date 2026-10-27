@@ -1,0 +1,170 @@
+---
+import Alert from '@afim/design-system/components/Alert.astro';
+import Button from '@afim/design-system/components/Button.astro';
+import Card from '@afim/design-system/components/Card.astro';
+import FormField from '@afim/design-system/components/FormField.astro';
+import Input from '@afim/design-system/components/Input.astro';
+import Layout from '../layouts/Layout.astro';
+---
+<Layout title="Minha conta">
+  <div id="root" class="grid gap-6 pt-8" hidden>
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <h1 class="mb-1">Minha conta</h1>
+        <p id="email" class="text-sm text-muted"></p>
+      </div>
+      <Button id="logout" variant="outline" size="sm" type="button">Sair</Button>
+    </div>
+
+    <form id="f" class="grid gap-6">
+      <Card class="grid gap-4">
+        <h2 class="m-0 text-lg">Seus dados</h2>
+        <FormField label="Como quer ser chamada(o)"><Input name="displayName" maxlength="120" autocomplete="nickname" /></FormField>
+        <div class="grid gap-4 sm:grid-cols-[1fr_6rem]">
+          <FormField label="Cidade"><Input name="city" maxlength="120" /></FormField>
+          <FormField label="UF"><Input name="state" maxlength="2" /></FormField>
+        </div>
+      </Card>
+
+      <Card class="grid gap-4">
+        <div>
+          <h2 class="m-0 text-lg">Suas afinidades</h2>
+          <p class="text-sm text-muted">
+            Escolha suas afinidades e, para cada uma, o que você quer encontrar. Afinidades podem revelar convicções e
+            por isso são dados pessoais sensíveis (LGPD): ficam só na sua conta, nunca aparecem para outras pessoas,
+            e você pode alterar ou apagar quando quiser.
+          </p>
+        </div>
+        <ul id="affinities" class="grid gap-3"></ul>
+        <label class="flex items-start gap-2 text-sm">
+          <input type="checkbox" name="consent" class="mt-1 accent-brand" />
+          <span>
+            Autorizo o Afim a guardar as afinidades que marquei, apenas para me mostrar pessoas, empresas e comércios
+            com afinidades em comum. Posso retirar este consentimento a qualquer momento desmarcando esta opção.
+          </span>
+        </label>
+        <p id="consentInfo" class="text-xs text-muted"></p>
+      </Card>
+
+      <div><Button>Salvar</Button></div>
+    </form>
+    <Alert id="msg" role="status" />
+
+    <section class="grid gap-3">
+      <h2 class="m-0 text-lg">Encontrados para você</h2>
+      <ul id="matches" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"></ul>
+    </section>
+
+    <Card class="grid gap-2">
+      <h2 class="m-0 text-lg">Excluir conta</h2>
+      <p class="text-sm text-muted">Apaga seu login, seus dados e suas afinidades. Não pode ser desfeito.</p>
+      <div><Button id="delete" variant="outline" type="button" class="text-danger">Excluir minha conta</Button></div>
+    </Card>
+  </div>
+
+  <template id="affinityRow">
+    <li class="rounded-afim border border-line p-3">
+      <label class="flex items-center gap-2 font-medium"><input type="checkbox" data-role="has" class="accent-brand" /> <span></span></label>
+      <fieldset class="mt-2 flex flex-wrap gap-4 text-sm disabled:opacity-50" disabled>
+        <legend class="sr-only">Quero encontrar</legend>
+        <span class="text-muted">Quero encontrar:</span>
+        <label class="flex items-center gap-1"><input type="checkbox" data-role="findPeople" checked class="accent-brand" /> Pessoas</label>
+        <label class="flex items-center gap-1"><input type="checkbox" data-role="findCompanies" checked class="accent-brand" /> Empresas e ONGs</label>
+        <label class="flex items-center gap-1"><input type="checkbox" data-role="findShops" checked class="accent-brand" /> Comércios</label>
+      </fieldset>
+    </li>
+  </template>
+  <template id="matchCard"><Card as="li"><a class="font-semibold"></a> <span class="block text-sm text-muted"></span></Card></template>
+
+  <script>
+    import * as auth from '../lib/auth';
+    import { TYPE_LABELS } from '../lib/strapi';
+
+    const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
+    const form = $<HTMLFormElement>('f');
+    const msg = $('msg');
+    const list = $('affinities');
+    const show = (tone: string, text: string) => { msg.dataset.tone = tone; msg.textContent = text; };
+    const FIND = ['findPeople', 'findCompanies', 'findShops'] as const;
+
+    function renderMember(member: any, affinities: any[]) {
+      for (const k of ['displayName', 'city', 'state']) (form.elements.namedItem(k) as HTMLInputElement).value = member[k] ?? '';
+      (form.elements.namedItem('consent') as HTMLInputElement).checked = !!member.affinityConsentAt;
+      $('consentInfo').textContent = member.affinityConsentAt
+        ? `Consentimento dado em ${new Date(member.affinityConsentAt).toLocaleString('pt-BR')}.` : '';
+      const tpl = ($('affinityRow') as HTMLTemplateElement).content.firstElementChild!;
+      list.replaceChildren(...affinities.map((a) => {
+        const li = tpl.cloneNode(true) as HTMLElement;
+        const pref = member.affinities.find((p: any) => p.affinity.documentId === a.documentId);
+        li.dataset.id = a.documentId;
+        li.querySelector('span')!.textContent = a.name;
+        const has = li.querySelector<HTMLInputElement>('[data-role=has]')!;
+        const fieldset = li.querySelector('fieldset')!;
+        has.checked = !!pref;
+        fieldset.disabled = !pref;
+        has.addEventListener('change', () => (fieldset.disabled = !has.checked));
+        if (pref) for (const k of FIND) li.querySelector<HTMLInputElement>(`[data-role=${k}]`)!.checked = pref[k];
+        return li;
+      }));
+    }
+
+    async function renderMatches() {
+      const tpl = ($('matchCard') as HTMLTemplateElement).content.firstElementChild!;
+      const matches = await auth.getMatches();
+      $('matches').replaceChildren(...matches.map((p: any) => {
+        const li = tpl.cloneNode(true) as HTMLElement;
+        const a = li.querySelector('a')!;
+        a.href = `/perfis/${p.slug}`;
+        a.textContent = p.name;
+        li.querySelector('span')!.textContent = [TYPE_LABELS[p.profileType as keyof typeof TYPE_LABELS], ...p.affinities.map((x: any) => x.name)].join(' · ');
+        return li;
+      }));
+      if (!matches.length) $('matches').textContent = 'Marque afinidades e salve para ver quem tem afinidades em comum com você.';
+    }
+
+    if (!(await auth.restoreSession())) location.replace('/entrar');
+    else {
+      const [user, member, affinities] = await Promise.all([auth.getUser(), auth.getMember(), auth.getAffinities()]);
+      $('email').textContent = user.email;
+      renderMember(member, affinities);
+      $('root').hidden = false;
+      renderMatches();
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(form);
+      const chosen = [...list.querySelectorAll<HTMLElement>('li')]
+        .filter((li) => li.querySelector<HTMLInputElement>('[data-role=has]')!.checked)
+        .map((li) => ({
+          affinity: li.dataset.id,
+          ...Object.fromEntries(FIND.map((k) => [k, li.querySelector<HTMLInputElement>(`[data-role=${k}]`)!.checked])),
+        }));
+      const consent = fd.get('consent') === 'on';
+      if (chosen.length && !consent) return show('warning', 'Para guardar suas afinidades, marque a autorização.');
+      try {
+        const saved = await auth.saveMember({
+          displayName: fd.get('displayName'), city: fd.get('city'), state: fd.get('state'),
+          consent, affinities: consent ? chosen : [],
+        });
+        renderMember(saved, await auth.getAffinities());
+        show('success', consent ? 'Preferências salvas.' : 'Dados salvos. Nenhuma afinidade foi guardada.');
+        renderMatches();
+      } catch {
+        show('danger', 'Não foi possível salvar. Entre novamente e tente outra vez.');
+      }
+    });
+
+    $('logout').addEventListener('click', async () => { await auth.logout(); location.assign('/'); });
+
+    $('delete').addEventListener('click', async () => {
+      if (!confirm('Excluir sua conta e todos os seus dados? Isso não pode ser desfeito.')) return;
+      try {
+        await auth.deleteAccount();
+        location.assign('/');
+      } catch {
+        show('danger', 'Não foi possível excluir a conta agora. Tente novamente.');
+      }
+    });
+  </script>
+</Layout>

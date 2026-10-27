@@ -1,0 +1,28 @@
+---
+// Strapi sends the browser here after a social login (the provider's "callback" URL in the CMS).
+import Alert from '@afim/design-system/components/Alert.astro';
+import Layout from '../../layouts/Layout.astro';
+import { PROVIDER_LABELS } from '../../lib/providers';
+
+export const getStaticPaths = () => Object.keys(PROVIDER_LABELS).map((provider) => ({ params: { provider } }));
+const { provider } = Astro.params;
+---
+<Layout title="Entrando">
+  <div class="mx-auto max-w-md pt-8" data-provider={provider} id="root">
+    <h1>Entrando com {PROVIDER_LABELS[provider]}...</h1>
+    <Alert id="msg" role="status" />
+  </div>
+  <script>
+    import { finishProviderLogin } from '../../lib/auth';
+    const provider = document.getElementById('root')!.dataset.provider!;
+    const msg = document.getElementById('msg')!;
+    try {
+      if (new URLSearchParams(location.search).has('error')) throw new Error('cancelled');
+      await finishProviderLogin(provider);
+      location.replace('/conta');
+    } catch {
+      msg.dataset.tone = 'danger';
+      msg.innerHTML = 'Não foi possível entrar. Se você já tem conta com este e-mail, entre com e-mail e senha. <a href="/entrar">Voltar</a>';
+    }
+  </script>
+</Layout>

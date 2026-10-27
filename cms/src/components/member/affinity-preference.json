@@ -1,0 +1,11 @@
+{
+  "collectionName": "components_member_affinity_preferences",
+  "info": { "displayName": "Affinity preference", "description": "An affinity a member declared and which kinds of profiles they want to find for it." },
+  "options": {},
+  "attributes": {
+    "affinity": { "type": "relation", "relation": "oneToOne", "target": "api::affinity.affinity" },
+    "findPeople": { "type": "boolean", "default": true, "required": true },
+    "findCompanies": { "type": "boolean", "default": true, "required": true },
+    "findShops": { "type": "boolean", "default": true, "required": true }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "kind": "collectionType",
+  "collectionName": "members",
+  "info": {
+    "singularName": "member",
+    "pluralName": "members",
+    "displayName": "Member",
+    "description": "Personal data of a signed-up person. Affinities are sensitive data (LGPD): only the member reads or changes them, through /api/members/me."
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": {},
+  "attributes": {
+    "user": { "type": "relation", "relation": "oneToOne", "target": "plugin::users-permissions.user", "private": true },
+    "displayName": { "type": "string", "maxLength": 120 },
+    "city": { "type": "string", "maxLength": 120 },
+    "state": { "type": "string", "maxLength": 2 },
+    "affinityConsentAt": { "type": "datetime" },
+    "affinityConsentVersion": { "type": "string" },
+    "affinities": { "type": "component", "repeatable": true, "component": "member.affinity-preference" }
+  }
+}

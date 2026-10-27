@@ -59,21 +59,21 @@ export async function seed(strapi: Core.Strapi) {
   );
 
   const profiles = [
-    { profileType: 'professional', name: 'Ana Souza', description: 'Desenvolvedora full stack.', status: 'active',
+    { profileType: 'professional', name: 'Ana Souza', description: 'Desenvolvedora full stack.', moderationStatus: 'active',
       categories: ['Desenvolvimento'], affinities: ['Software livre', 'Diversidade e inclusão'], location: { city: 'São Paulo', state: 'SP', lat: -23.5505, lng: -46.6333 },
       mediaLinks: [{ platform: 'GitHub', url: 'https://github.com/example' }],
       extra: [{ __component: 'extra.professional', seniority: 'senior', openToWork: true }] },
-    { profileType: 'shop', name: 'Padaria Pão Afim', description: 'Pães artesanais e café.', status: 'active',
+    { profileType: 'shop', name: 'Padaria Pão Afim', description: 'Pães artesanais e café.', moderationStatus: 'active',
       categories: ['Padarias'], affinities: ['Veganismo', 'Comércio justo'], location: { city: 'Curitiba', state: 'PR', lat: -25.4284, lng: -49.2733 },
       mediaLinks: [{ platform: 'Instagram', url: 'https://instagram.com/example' }],
       extra: [{ __component: 'extra.shop', openingHours: 'Seg-Sáb 6h-19h', offersDiscount: true, discountDetails: '10% para membros' }] },
-    { profileType: 'company', name: 'Estúdio Alvo', description: 'Estúdio de design e tecnologia.', status: 'active',
+    { profileType: 'company', name: 'Estúdio Alvo', description: 'Estúdio de design e tecnologia.', moderationStatus: 'active',
       categories: ['Tecnologia', 'Design'], affinities: ['Software livre', 'Sustentabilidade'], location: { city: 'Belo Horizonte', state: 'MG', lat: -19.9167, lng: -43.9345 },
       mediaLinks: [], extra: [{ __component: 'extra.company', legalName: 'Alvo Ltda', employeeRange: '11-50', hiring: true }] },
-    { profileType: 'ngo', name: 'Instituto Horizonte', description: 'Educação comunitária.', status: 'review',
+    { profileType: 'ngo', name: 'Instituto Horizonte', description: 'Educação comunitária.', moderationStatus: 'review',
       categories: ['Terapias'], affinities: ['Sustentabilidade'], location: { city: 'Recife', state: 'PE', lat: -8.0476, lng: -34.877 },
       mediaLinks: [], extra: [{ __component: 'extra.ngo', cause: 'Educação', acceptsVolunteers: true }] },
-    { profileType: 'shop', name: 'Loja Bloqueada', description: 'Exemplo de perfil bloqueado.', status: 'blocked',
+    { profileType: 'shop', name: 'Loja Bloqueada', description: 'Exemplo de perfil bloqueado.', moderationStatus: 'blocked',
       categories: ['Restaurantes'], affinities: [], location: { city: 'Salvador', state: 'BA' }, mediaLinks: [], extra: [] },
     // Fictional profiles across the political spectrum, so matching can be tried on both sides.
     // [type, name, description, category, political position, other affinities, city, state, lat, lng]
@@ -114,7 +114,7 @@ export async function seed(strapi: Core.Strapi) {
       ['company', 'Construtora Pilar', 'Construção civil.', 'Construção', 'Centro-direita', [], 'Maringá', 'PR', -23.4205, -51.9333],
       ['shop', 'Boutique Elegance', 'Moda feminina.', 'Moda', 'Extrema-direita', [], 'Balneário Camboriú', 'SC', -26.9906, -48.6348],
     ] as const).map(([profileType, name, description, category, position, extra, city, state, lat, lng]) => ({
-      profileType, name, description, status: 'active', categories: [category], affinities: [position, ...extra],
+      profileType, name, description, moderationStatus: 'active', categories: [category], affinities: [position, ...extra],
       location: { city, state, lat, lng }, mediaLinks: [], extra: [],
     })),
   ];

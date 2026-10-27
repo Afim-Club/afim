@@ -169,7 +169,7 @@ export default factories.createCoreController('api::member.member', ({ strapi })
         .map(([documentId, types]) => ({ affinities: { documentId }, profileType: { $in: types } }));
       if (!$or.length) return { data: [] };
       const profiles = await strapi.documents('api::profile.profile').findMany({
-        filters: { $and: [{ status: 'active' }, { $or }] } as any,
+        filters: { $and: [{ moderationStatus: 'active' }, { $or }] } as any,
         fields: ['name', 'slug', 'profileType', 'description'],
         populate: { affinities: { fields: ['name', 'slug'] }, location: true } as any,
         sort: 'name',

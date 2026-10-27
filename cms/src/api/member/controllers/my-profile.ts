@@ -3,16 +3,16 @@ import { uniqueSlug } from '../../profile/slug';
 
 // Profiles a member registers and owns (profile.owner, a private field): their own professional profile (one at most)
 // and the companies, shops and NGOs they represent. They always go to moderation: new and edited profiles are saved
-// with status=review.
+// with moderationStatus=review.
 const TYPES = ['professional', 'company', 'shop', 'ngo'];
 export const MAX_OWNED = 10;
 const TYPE_ERROR = 'name and profileType (professional|company|shop|ngo) are required';
 
-const FIELDS = ['name', 'slug', 'profileType', 'description', 'status'];
+const FIELDS = ['name', 'slug', 'profileType', 'description', 'moderationStatus'];
 const POPULATE = { location: true, affinities: { fields: ['name', 'slug', 'group'] } };
 
 const view = (p: any) => ({
-  documentId: p.documentId, name: p.name, slug: p.slug, profileType: p.profileType, description: p.description ?? '', status: p.status,
+  documentId: p.documentId, name: p.name, slug: p.slug, profileType: p.profileType, description: p.description ?? '', status: p.moderationStatus,
   city: p.location?.city ?? '', state: p.location?.state ?? '',
   lat: p.location?.lat ?? null, lng: p.location?.lng ?? null,
   affinities: (p.affinities ?? []).map((a: any) => ({ documentId: a.documentId, name: a.name, group: a.group ?? null })),
@@ -69,7 +69,7 @@ export default ({ strapi }: { strapi: Core.Strapi }) => {
       const { city, state, lat, lng, ...rest } = data;
       const created = await profiles().create({
         data: {
-          ...rest, slug: uniqueSlug(data.name), status: 'review', owner: userId,
+          ...rest, slug: uniqueSlug(data.name), moderationStatus: 'review', owner: userId,
           // Moderators reach the owner through the login e-mail (private, never returned by the API).
           contactEmail: ctx.state.user.email, location: { city, state, lat, lng },
         } as any,
@@ -83,7 +83,7 @@ export default ({ strapi }: { strapi: Core.Strapi }) => {
     async update(ctx: any) {
       const current = await findOwned(ctx.state.user.id, ctx.params.id);
       if (!current) return ctx.notFound();
-      if ((current as any).status === 'blocked') return ctx.forbidden('This profile was blocked by moderation');
+      if ((current as any).moderationStatus === 'blocked') return ctx.forbidden('This profile was blocked by moderation');
       const data = await input(ctx);
       if (!data) return ctx.badRequest(TYPE_ERROR);
       // The type is fixed after creation, so the one-professional-profile rule holds.
@@ -92,7 +92,7 @@ export default ({ strapi }: { strapi: Core.Strapi }) => {
       // The page sends back the current position, so leaving lat/lng out removes the profile from the map.
       const updated = await profiles().update({
         documentId: current.documentId,
-        data: { ...rest, status: 'review', location: { city, state, lat, lng } } as any,
+        data: { ...rest, moderationStatus: 'review', location: { city, state, lat, lng } } as any,
         fields: FIELDS as any, populate: POPULATE as any,
       });
       return { data: view(updated) };

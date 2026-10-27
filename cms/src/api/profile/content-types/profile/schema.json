@@ -32,7 +32,7 @@
     "description": {
       "type": "text"
     },
-    "status": {
+    "moderationStatus": {
       "type": "enumeration",
       "enum": [
         "active",

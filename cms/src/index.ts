@@ -37,9 +37,8 @@ export default {
     await grant(strapi, 'public', PUBLIC_ACTIONS);
     await grant(strapi, 'authenticated', AUTHENTICATED_ACTIONS);
     await configureAuthProviders(strapi);
-    if (process.env.SEED === 'true') {
-      await seedAffinities(strapi);
-      await seed(strapi);
-    }
+    // A starter list of affinities when there are none, so /conta always has options (edit them in the admin).
+    await seedAffinities(strapi);
+    if (process.env.SEED === 'true') await seed(strapi);
   },
 };

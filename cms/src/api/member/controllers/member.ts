@@ -1,4 +1,5 @@
 import { factories } from '@strapi/strapi';
+import { POSITION_GROUP, positionIndex, type Stance } from '../political';
 
 // Bump when the consent text shown in web/src/pages/conta.astro changes.
 export const CONSENT_VERSION = '2026-10-27';
@@ -6,9 +7,9 @@ export const CONSENT_VERSION = '2026-10-27';
 // Which profile types each preference finds. NGOs count as organizations, with companies.
 const TYPES = { findPeople: ['professional'], findCompanies: ['company', 'ngo'], findShops: ['shop'] } as const;
 
-type Pref = { affinity: { documentId: string; name: string; slug: string }; findPeople: boolean; findCompanies: boolean; findShops: boolean };
+type Pref = { affinity: { documentId: string; name: string; slug: string; group: string | null; lean: number | null }; stance: Stance | null; findPeople: boolean; findCompanies: boolean; findShops: boolean };
 
-const POPULATE = { affinities: { populate: { affinity: { fields: ['name', 'slug'] } } } };
+const POPULATE = { affinities: { populate: { affinity: { fields: ['name', 'slug', 'group', 'lean', 'description'] } } } };
 
 export default factories.createCoreController('api::member.member', ({ strapi }) => {
   const findMine = (userId: number) =>
@@ -23,7 +24,11 @@ export default factories.createCoreController('api::member.member', ({ strapi })
     affinities: ((m?.affinities ?? []) as any[])
       .filter((a: any) => a.affinity)
       .map((a: any) => ({
-        affinity: { documentId: a.affinity.documentId, name: a.affinity.name, slug: a.affinity.slug },
+        affinity: {
+          documentId: a.affinity.documentId, name: a.affinity.name, slug: a.affinity.slug,
+          group: a.affinity.group ?? null, lean: a.affinity.lean ?? null, description: a.affinity.description ?? null,
+        },
+        stance: a.stance ?? null,
         findPeople: a.findPeople, findCompanies: a.findCompanies, findShops: a.findShops,
       })) as Pref[],
   });
@@ -34,7 +39,8 @@ export default factories.createCoreController('api::member.member', ({ strapi })
     },
 
     // Whitelisted fields only. Affinities (sensitive data under LGPD) are stored only with explicit consent;
-    // sending consent=false withdraws it and erases the affinities.
+    // sending consent=false withdraws it and erases the affinities. The political position is never sent by the
+    // client: it is derived from the answers on political issues (see ../political.ts).
     async updateMe(ctx) {
       const body = ((ctx.request.body as any)?.data ?? {}) as Record<string, any>;
       const str = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
@@ -44,13 +50,31 @@ export default factories.createCoreController('api::member.member', ({ strapi })
 
       const ids = [...new Set(wanted.map((a: any) => a?.affinity).filter((id: unknown) => typeof id === 'string'))] as string[];
       const known = ids.length
-        ? await strapi.documents('api::affinity.affinity').findMany({ filters: { documentId: { $in: ids } }, fields: ['id'] })
+        ? await strapi.documents('api::affinity.affinity').findMany({ filters: { documentId: { $in: ids } }, fields: ['id', 'group', 'lean'] as any })
         : [];
-      const idByDoc = new Map(known.map((a: any) => [a.documentId, a.id]));
-      const affinities = ids.filter((id) => idByDoc.has(id)).map((id) => {
+      const byDoc = new Map(known.map((a: any) => [a.documentId, a]));
+      const flags = (a: any) => ({ findPeople: a?.findPeople === true, findCompanies: a?.findCompanies === true, findShops: a?.findShops === true });
+      const affinities: Record<string, any>[] = [];
+      const answers: { lean: number; stance: Stance }[] = [];
+      for (const id of ids) {
         const a = wanted.find((w: any) => w?.affinity === id);
-        return { affinity: idByDoc.get(id), findPeople: a.findPeople === true, findCompanies: a.findCompanies === true, findShops: a.findShops === true };
-      });
+        const k = byDoc.get(id) as any;
+        if (!k || k.group === POSITION_GROUP) continue;
+        if (k.lean === null || k.lean === undefined) {
+          affinities.push({ affinity: k.id, stance: null, ...flags(a) });
+        } else if (['agrees', 'disagrees', 'neutral'].includes(a.stance)) {
+          affinities.push({ affinity: k.id, stance: a.stance, ...flags(null) });
+          answers.push({ lean: k.lean, stance: a.stance });
+        }
+      }
+      const index = positionIndex(answers);
+      if (index !== null) {
+        const positions = await strapi.documents('api::affinity.affinity').findMany({
+          filters: { group: { $eq: POSITION_GROUP } } as any, fields: ['id'] as any, sort: ['sortOrder:asc', 'name:asc'] as any,
+        });
+        const position = positions[Math.min(index, positions.length - 1)] as any;
+        if (position) affinities.push({ affinity: position.id, stance: null, ...flags(body.politicalFind ?? { findPeople: true, findCompanies: true, findShops: true }) });
+      }
 
       const current = await findMine(ctx.state.user.id);
       const data: Record<string, any> = {
@@ -81,10 +105,12 @@ export default factories.createCoreController('api::member.member', ({ strapi })
     },
 
     // Active profiles sharing the member's affinities, limited to the profile types they chose for each one.
+    // Answers on political issues don't match profiles by themselves; the derived position does.
     // Done server side so the affinities never travel in a public, logged URL.
     async matches(ctx) {
       const prefs = view(await findMine(ctx.state.user.id)).affinities;
       const $or = prefs
+        .filter((p) => p.stance === null)
         .map((p) => ({
           affinities: { documentId: p.affinity.documentId },
           profileType: { $in: (Object.keys(TYPES) as (keyof typeof TYPES)[]).filter((k) => p[k]).flatMap((k) => TYPES[k]) },

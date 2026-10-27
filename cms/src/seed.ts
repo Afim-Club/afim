@@ -1,4 +1,5 @@
 import type { Core } from '@strapi/strapi';
+import { STARTER_AFFINITIES } from './starter-affinities';
 
 const CATEGORIES: Record<string, string[]> = {
   Tecnologia: ['Desenvolvimento', 'Design'],
@@ -9,15 +10,27 @@ const CATEGORIES: Record<string, string[]> = {
 const slugify = (s: string) =>
   s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
-const AFFINITIES = ['Sustentabilidade', 'Veganismo', 'Diversidade e inclusão', 'Comércio justo', 'Software livre', 'Bem-estar animal'];
-
-// Sample affinities, only when none exist (the real list is curated in the admin).
+// Each starter group is created only while it has no affinities, so edits and deletions made in the
+// admin are kept. Starter descriptions also fill affinities whose description is still empty.
 export async function seedAffinities(strapi: Core.Strapi) {
-  if ((await strapi.documents('api::affinity.affinity').count({})) > 0) return;
-  for (const name of AFFINITIES) {
-    await strapi.documents('api::affinity.affinity').create({ data: { name, slug: slugify(name) } });
+  const docs = strapi.documents('api::affinity.affinity');
+  for (const [group, items] of Object.entries(STARTER_AFFINITIES)) {
+    const filters = group ? { group: { $eq: group } } : { group: { $null: true } };
+    if ((await docs.count({ filters } as any)) === 0) {
+      for (const [i, { name, description, lean }] of items.entries()) {
+        await docs.create({
+          data: { name, description, lean, slug: slugify(group ? `${group} ${name}` : name), group: group || null, sortOrder: i } as any,
+        });
+      }
+      strapi.log.info(`Seeded starter affinities${group ? ` (${group})` : ''}`);
+      continue;
+    }
+    for (const { name, description } of items) {
+      if (!description) continue;
+      const found = await docs.findFirst({ filters: { slug: slugify(group ? `${group} ${name}` : name), description: { $null: true } } as any });
+      if (found) await docs.update({ documentId: found.documentId, data: { description } as any });
+    }
   }
-  strapi.log.info('Seeded sample affinities');
 }
 
 export async function seed(strapi: Core.Strapi) {

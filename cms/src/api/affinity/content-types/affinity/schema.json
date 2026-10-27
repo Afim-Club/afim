@@ -1,12 +1,46 @@
 {
   "kind": "collectionType",
   "collectionName": "affinities",
-  "info": { "singularName": "affinity", "pluralName": "affinities", "displayName": "Affinity", "description": "Shared values people and businesses can declare (e.g. veganism, sustainability)." },
-  "options": { "draftAndPublish": false },
+  "info": {
+    "singularName": "affinity",
+    "pluralName": "affinities",
+    "displayName": "Affinity",
+    "description": "Shared values people and businesses can declare (e.g. veganism, sustainability)."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
   "attributes": {
-    "name": { "type": "string", "required": true },
-    "slug": { "type": "uid", "targetField": "name", "required": true },
-    "description": { "type": "text" },
-    "profiles": { "type": "relation", "relation": "manyToMany", "target": "api::profile.profile", "mappedBy": "affinities" }
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "name",
+      "required": true
+    },
+    "group": {
+      "type": "string",
+      "maxLength": 60
+    },
+    "sortOrder": {
+      "type": "integer",
+      "default": 0
+    },
+    "lean": {
+      "type": "integer",
+      "min": -2,
+      "max": 2
+    },
+    "description": {
+      "type": "text"
+    },
+    "profiles": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::profile.profile",
+      "mappedBy": "affinities"
+    }
   }
 }

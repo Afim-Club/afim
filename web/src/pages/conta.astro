@@ -79,8 +79,27 @@ import Layout from '../layouts/Layout.astro';
     </section>
 
     <Card class="grid gap-2">
+      <h2 class="m-0 text-lg">Suas empresas e comércios</h2>
+      <p class="text-sm text-muted">Cadastre empresas, comércios e ONGs que você representa. Eles passam por revisão antes de aparecer no Afim.</p>
+      <div><Button href="/conta/negocios" variant="outline">Gerenciar meus negócios</Button></div>
+    </Card>
+
+    <Card class="grid gap-3">
+      <div>
+        <h2 class="m-0 text-lg">Convide pessoas</h2>
+        <p class="text-sm text-muted">Envie seu link de convite. Você vê só quantas pessoas entraram por ele, nunca quem.</p>
+      </div>
+      <Input id="inviteLink" readonly aria-label="Seu link de convite" />
+      <div class="flex flex-wrap items-center gap-2">
+        <Button id="copyInvite" type="button" variant="outline" size="sm">Copiar link</Button>
+        <Button id="whatsInvite" href="https://wa.me/" variant="outline" size="sm" target="_blank" rel="noopener">Enviar pelo WhatsApp</Button>
+        <span id="inviteCount" class="text-sm text-muted"></span>
+      </div>
+    </Card>
+
+    <Card class="grid gap-2">
       <h2 class="m-0 text-lg">Excluir conta</h2>
-      <p class="text-sm text-muted">Apaga seu login, seus dados e suas afinidades. Não pode ser desfeito.</p>
+      <p class="text-sm text-muted">Apaga seu login, seus dados, suas afinidades e os negócios que você cadastrou. Não pode ser desfeito.</p>
       <div><Button id="delete" variant="outline" type="button" class="text-danger">Excluir minha conta</Button></div>
     </Card>
   </div>
@@ -197,14 +216,29 @@ import Layout from '../layouts/Layout.astro';
       if (!matches.length) $('matches').textContent = 'Nenhum perfil encontrado com as preferências salvas. Marque afinidades ou espectros, escolha o que quer encontrar e clique em Salvar.';
     }
 
+    async function renderInvite() {
+      const { code, accepted } = await auth.getInvite();
+      const link = `${location.origin}/entrar?convite=${encodeURIComponent(code)}`;
+      $<HTMLInputElement>('inviteLink').value = link;
+      $<HTMLAnchorElement>('whatsInvite').href = `https://wa.me/?text=${encodeURIComponent(`Vem para o Afim, onde pessoas, empresas e comércios se encontram por afinidades: ${link}`)}`;
+      $('inviteCount').textContent = accepted === 1 ? '1 pessoa entrou pelo seu convite.' : `${accepted} pessoas entraram pelo seu convite.`;
+    }
+    $('copyInvite').addEventListener('click', async () => {
+      const input = $<HTMLInputElement>('inviteLink');
+      try { await navigator.clipboard.writeText(input.value); } catch { input.select(); document.execCommand('copy'); }
+      $('copyInvite').textContent = 'Copiado!';
+    });
+
     if (!(await auth.restoreSession())) location.replace('/entrar');
     else {
       $('root').hidden = false;
       try {
+        await auth.acceptPendingInvite();
         const [user, member, affinities] = await Promise.all([auth.getUser(), auth.getMember(), auth.getAffinities()]);
         $('email').textContent = user.email;
         renderMember(member, affinities);
         renderMatches();
+        renderInvite();
       } catch {
         show('danger', 'Não foi possível carregar sua conta. Confira se o CMS está atualizado e no ar, e recarregue a página.');
       }

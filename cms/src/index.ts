@@ -19,6 +19,12 @@ const AUTHENTICATED_ACTIONS = [
   'api::member.member.updateMe',
   'api::member.member.deleteMe',
   'api::member.member.matches',
+  'api::member.member.invite',
+  'api::member.member.acceptInvite',
+  'api::member.my-profile.find',
+  'api::member.my-profile.create',
+  'api::member.my-profile.update',
+  'api::member.my-profile.delete',
 ];
 
 async function grant(strapi: Core.Strapi, roleType: string, actions: string[]) {

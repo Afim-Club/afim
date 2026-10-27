@@ -16,6 +16,8 @@
     "state": { "type": "string", "maxLength": 2 },
     "affinityConsentAt": { "type": "datetime" },
     "affinityConsentVersion": { "type": "string" },
-    "affinities": { "type": "component", "repeatable": true, "component": "member.affinity-preference" }
+    "affinities": { "type": "component", "repeatable": true, "component": "member.affinity-preference" },
+    "inviteCode": { "type": "string", "unique": true, "private": true },
+    "invitedBy": { "type": "relation", "relation": "manyToOne", "target": "api::member.member", "private": true }
   }
 }

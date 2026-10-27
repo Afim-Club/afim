@@ -55,4 +55,4 @@ export async function deleteAccount() {
   jwt = null;
 }
 export const getMatches = async () => (await json(await call('/members/me/matches'))).data;
-export const getAffinities = async () => (await json(await call('/affinities?sort=name&pagination[pageSize]=100'))).data;
+export const getAffinities = async () => (await json(await call('/affinities?sort[0]=group&sort[1]=sortOrder&sort[2]=name&pagination[pageSize]=100'))).data;

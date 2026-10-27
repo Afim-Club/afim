@@ -3,9 +3,9 @@ import { TYPE_LABELS, type Profile } from '../lib/strapi';
 const { profile } = Astro.props as { profile: Profile };
 const place = [profile.location?.city, profile.location?.state].filter(Boolean).join(' / ');
 ---
-<li>
+<li class="card">
   <a href={`/perfis/${profile.slug}`}><strong>{profile.name}</strong></a>
   <span class="tag">{TYPE_LABELS[profile.profileType]}</span>
-  {place && <div>{place}</div>}
+  {place && <div class="muted">{place}</div>}
   {profile.description && <p>{profile.description}</p>}
 </li>

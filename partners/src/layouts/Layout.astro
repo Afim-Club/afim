@@ -1,4 +1,5 @@
 ---
+import '../../../design-system/afim.css';
 interface Props { title: string }
 const { title } = Astro.props;
 ---
@@ -10,18 +11,16 @@ const { title } = Astro.props;
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title} · Afim Parceiros</title>
   </head>
-  <body>
-    <header><a href="/" class="brand">Afim Parceiros</a><nav><a href="/cadastro">Cadastrar</a></nav></header>
-    <main><slot /></main>
-    <footer>Afim — diretório open source. Dados tratados conforme a LGPD.</footer>
+  <body style="--afim-container: 48rem">
+    <header class="site-header">
+      <div class="container">
+        <a href="/" class="brand">Afim Parceiros</a>
+        <nav><a href="/cadastro">Cadastrar</a></nav>
+      </div>
+    </header>
+    <main class="container"><slot /></main>
+    <footer class="site-footer">
+      <div class="container">Afim — diretório open source. Dados tratados conforme a LGPD.</div>
+    </footer>
   </body>
 </html>
-<style is:global>
-  body { font-family: system-ui, sans-serif; margin: 0 auto; max-width: 48rem; padding: 0 1rem; line-height: 1.5; }
-  header { display: flex; justify-content: space-between; padding: 1rem 0; border-bottom: 1px solid #ddd; }
-  .brand { font-weight: 700; text-decoration: none; }
-  main { padding: 1.5rem 0; }
-  footer { padding: 1rem 0; border-top: 1px solid #ddd; color: #666; font-size: .9rem; }
-  form { display: grid; gap: .75rem; }
-  input, select, textarea, button { font: inherit; padding: .5rem; }
-</style>

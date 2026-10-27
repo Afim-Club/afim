@@ -1,0 +1,96 @@
+/* Afim base styles and components. Plain CSS, built on tokens.css. */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { color-scheme: light dark; }
+
+body {
+  margin: 0;
+  background: var(--afim-color-bg);
+  color: var(--afim-color-text);
+  font-family: var(--afim-font-sans);
+  font-size: var(--afim-font-size-md);
+  line-height: var(--afim-line-height);
+}
+
+h1, h2, h3 { line-height: 1.2; margin: var(--afim-space-6) 0 var(--afim-space-3); }
+h1 { font-size: var(--afim-font-size-2xl); }
+h2 { font-size: var(--afim-font-size-xl); }
+h3 { font-size: var(--afim-font-size-lg); }
+
+a { color: var(--afim-color-primary); }
+a:hover { color: var(--afim-color-primary-hover); }
+:focus-visible { outline: 2px solid var(--afim-color-primary); outline-offset: 2px; }
+
+/* Layout: page shell */
+.container { max-width: var(--afim-container); margin: 0 auto; padding: 0 var(--afim-space-4); }
+.site-header { border-bottom: 1px solid var(--afim-color-border); }
+.site-header .container { display: flex; justify-content: space-between; align-items: center; padding-block: var(--afim-space-4); }
+.site-header nav { display: flex; gap: var(--afim-space-4); }
+.brand { font-weight: 700; font-size: var(--afim-font-size-lg); color: var(--afim-color-text); text-decoration: none; }
+main.container { padding-block: var(--afim-space-6); }
+.site-footer { border-top: 1px solid var(--afim-color-border); color: var(--afim-color-muted); font-size: var(--afim-font-size-sm); }
+.site-footer .container { padding-block: var(--afim-space-4); }
+.muted { color: var(--afim-color-muted); }
+
+/* Button */
+.btn, button {
+  display: inline-block;
+  font: inherit;
+  font-weight: 600;
+  padding: var(--afim-space-2) var(--afim-space-4);
+  border: 1px solid var(--afim-color-primary);
+  border-radius: var(--afim-radius-sm);
+  background: var(--afim-color-primary);
+  color: var(--afim-color-on-primary);
+  text-decoration: none;
+  cursor: pointer;
+}
+.btn:hover, button:hover { background: var(--afim-color-primary-hover); border-color: var(--afim-color-primary-hover); color: var(--afim-color-on-primary); }
+.btn-secondary { background: transparent; color: var(--afim-color-primary); }
+.btn-secondary:hover { background: var(--afim-color-surface); color: var(--afim-color-primary-hover); }
+
+/* Form fields */
+.form { display: grid; gap: var(--afim-space-3); }
+.field { display: grid; gap: var(--afim-space-1); font-weight: 600; font-size: var(--afim-font-size-sm); }
+input, select, textarea {
+  font: inherit;
+  width: 100%;
+  padding: var(--afim-space-2) var(--afim-space-3);
+  border: 1px solid var(--afim-color-border);
+  border-radius: var(--afim-radius-sm);
+  background: var(--afim-color-bg);
+  color: var(--afim-color-text);
+}
+
+/* Card list */
+.cards { list-style: none; padding: 0; display: grid; gap: var(--afim-space-3); grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); }
+.card {
+  background: var(--afim-color-surface);
+  border: 1px solid var(--afim-color-border);
+  border-radius: var(--afim-radius-md);
+  padding: var(--afim-space-3) var(--afim-space-4);
+  box-shadow: var(--afim-shadow);
+}
+.card p { margin: var(--afim-space-2) 0 0; }
+
+/* Tag */
+.tag {
+  display: inline-block;
+  font-size: var(--afim-font-size-sm);
+  background: var(--afim-color-surface);
+  border: 1px solid var(--afim-color-border);
+  border-radius: var(--afim-radius-pill);
+  padding: 0 var(--afim-space-2);
+  margin: 0 var(--afim-space-1);
+  color: var(--afim-color-text);
+  text-decoration: none;
+  font-weight: 400;
+  vertical-align: middle;
+}
+a.tag:hover { border-color: var(--afim-color-primary); }
+
+/* Status message */
+.alert { padding: var(--afim-space-3) var(--afim-space-4); border-radius: var(--afim-radius-sm); border: 1px solid currentColor; }
+.alert:empty { display: none; }
+.alert-success { color: var(--afim-color-success); }
+.alert-error { color: var(--afim-color-error); }

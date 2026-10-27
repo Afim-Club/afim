@@ -11,9 +11,9 @@ const recent = (await getProfiles()).slice(0, 6);
   <h2>Categorias</h2>
   <ul class="cards">
     {roots.map((c) => (
-      <li>
+      <li class="card">
         <a href={`/categorias/${c.slug}`}><strong>{c.name}</strong></a>
-        {c.children?.length ? <div>{c.children.map((s) => s.name).join(', ')}</div> : null}
+        {c.children?.length ? <div class="muted">{c.children.map((s) => s.name).join(', ')}</div> : null}
       </li>
     ))}
   </ul>

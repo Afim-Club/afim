@@ -4,7 +4,7 @@ const api = import.meta.env.PUBLIC_STRAPI_URL ?? 'http://localhost:1337';
 ---
 <Layout title="Buscar">
   <h1>Buscar</h1>
-  <form id="f">
+  <form id="f" class="form">
     <input name="q" placeholder="Nome ou descrição" />
     <input name="city" placeholder="Cidade" />
     <button>Buscar</button>
@@ -29,6 +29,7 @@ const api = import.meta.env.PUBLIC_STRAPI_URL ?? 'http://localhost:1337';
         const a = document.createElement('a');
         a.href = `/perfis/${x.slug}`;
         a.textContent = x.name;
+        li.className = 'card';
         li.append(a, ' ', [x.location?.city, x.location?.state].filter(Boolean).join(' / '));
         return li;
       }));

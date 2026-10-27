@@ -6,7 +6,7 @@ const api = import.meta.env.PUBLIC_STRAPI_URL ?? 'http://localhost:1337';
 <Layout title="Cadastro">
   {siteKey && <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>}
   <h1>Cadastro de parceiro</h1>
-  <form id="f">
+  <form id="f" class="form">
     <input name="name" placeholder="Nome do negócio" required />
     <select name="profileType" required>
       <option value="company">Empresa</option>
@@ -19,9 +19,9 @@ const api = import.meta.env.PUBLIC_STRAPI_URL ?? 'http://localhost:1337';
     <textarea name="description" rows="4" placeholder="Apresentação"></textarea>
     <input name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px" />
     {siteKey && <div class="cf-turnstile" data-sitekey={siteKey}></div>}
-    <button>Enviar para revisão</button>
+    <div><button>Enviar para revisão</button></div>
   </form>
-  <p id="msg" role="status"></p>
+  <p id="msg" class="alert" role="status"></p>
   <script define:vars={{ api }}>
     const form = document.getElementById('f');
     const msg = document.getElementById('msg');
@@ -32,6 +32,7 @@ const api = import.meta.env.PUBLIC_STRAPI_URL ?? 'http://localhost:1337';
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...Object.fromEntries(new FormData(form)), captchaToken: form.querySelector('[name="cf-turnstile-response"]')?.value }),
       });
+      msg.className = `alert ${res.ok ? 'alert-success' : 'alert-error'}`;
       msg.textContent = res.status === 429 ? 'Muitas tentativas. Tente novamente mais tarde.' : res.ok ? 'Recebemos seu cadastro! Ele será analisado em breve.' : 'Não foi possível enviar. Confira os campos.';
       if (res.ok) form.reset();
     });

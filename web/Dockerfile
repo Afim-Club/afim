@@ -5,6 +5,8 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
+# Shared CSS from the repo root, passed with --build-context design-system=design-system
+COPY --from=design-system . ../design-system
 ARG STRAPI_URL
 ARG PUBLIC_STRAPI_URL
 ENV STRAPI_URL=$STRAPI_URL PUBLIC_STRAPI_URL=$PUBLIC_STRAPI_URL

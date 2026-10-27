@@ -1,0 +1,59 @@
+/* Afim design tokens. Change the brand here; every site picks it up. */
+:root {
+  /* Brand */
+  --afim-color-primary: #2f7d5b;
+  --afim-color-primary-hover: #25654a;
+  --afim-color-on-primary: #ffffff;
+
+  /* Neutrals */
+  --afim-color-bg: #ffffff;
+  --afim-color-surface: #f6f7f6;
+  --afim-color-text: #1c2421;
+  --afim-color-muted: #5b6662;
+  --afim-color-border: #dde2df;
+
+  /* Feedback */
+  --afim-color-success: #2f7d5b;
+  --afim-color-error: #b3261e;
+
+  /* Typography: system fonts, no external requests */
+  --afim-font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --afim-font-size-sm: 0.875rem;
+  --afim-font-size-md: 1rem;
+  --afim-font-size-lg: 1.25rem;
+  --afim-font-size-xl: 1.75rem;
+  --afim-font-size-2xl: 2.25rem;
+  --afim-line-height: 1.5;
+
+  /* Spacing scale */
+  --afim-space-1: 0.25rem;
+  --afim-space-2: 0.5rem;
+  --afim-space-3: 0.75rem;
+  --afim-space-4: 1rem;
+  --afim-space-6: 1.5rem;
+  --afim-space-8: 2rem;
+
+  /* Shape */
+  --afim-radius-sm: 0.375rem;
+  --afim-radius-md: 0.75rem;
+  --afim-radius-pill: 999px;
+  --afim-shadow: 0 1px 3px rgb(0 0 0 / 0.08);
+
+  /* Layout */
+  --afim-container: 56rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --afim-color-primary: #5fbf93;
+    --afim-color-primary-hover: #7fd0aa;
+    --afim-color-on-primary: #0e1a15;
+    --afim-color-bg: #121614;
+    --afim-color-surface: #1b211e;
+    --afim-color-text: #e6ebe8;
+    --afim-color-muted: #a3aea9;
+    --afim-color-border: #2e3733;
+    --afim-color-success: #5fbf93;
+    --afim-color-error: #f2b8b5;
+  }
+}

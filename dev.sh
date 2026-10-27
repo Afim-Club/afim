@@ -45,6 +45,8 @@ api="http://localhost:1337"
   cd cms
   export DATABASE_HOST=127.0.0.1 CORS_ORIGINS="$cors"
   if [ -n "${DEV_CMS_HOST:-}" ]; then export PROXY=true PUBLIC_URL="$api"; fi
+  # Social logins redirect back to the public site
+  if [ -n "${DEV_WEB_HOST:-}" ]; then export WEB_URL="https://$DEV_WEB_HOST"; fi
   setsid nohup npm run develop > ../.tmp/cms.log 2>&1 &
   echo $! > ../.tmp/cms.pid
 )

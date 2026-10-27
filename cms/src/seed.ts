@@ -3,10 +3,12 @@ import { STARTER_AFFINITIES } from './starter-affinities';
 
 const CATEGORIES: Record<string, string[]> = {
   Tecnologia: ['Desenvolvimento', 'Design'],
-  Alimentação: ['Restaurantes', 'Padarias'],
-  Saúde: ['Clínicas', 'Terapias'],
-  Serviços: ['Advocacia', 'Contabilidade', 'Construção', 'Imóveis', 'Segurança'],
-  Comércio: ['Moda', 'Mercados', 'Autopeças', 'Agronegócio'],
+  Alimentação: ['Restaurantes', 'Padarias', 'Doces', 'Buffet'],
+  Saúde: ['Clínicas', 'Terapias', 'Psicologia', 'Laboratórios'],
+  'Bem-estar': ['Yoga', 'Fitness', 'Dança'],
+  Beleza: ['Estética', 'Maquiagem'],
+  Serviços: ['Advocacia', 'Contabilidade', 'Construção', 'Imóveis', 'Segurança', 'Turismo', 'Marcenaria'],
+  Comércio: ['Varejo', 'Moda', 'Mercados', 'Autopeças', 'Agronegócio', 'Artesanato', 'Postos de combustível'],
 };
 
 const slugify = (s: string) =>
@@ -73,8 +75,33 @@ export async function seed(strapi: Core.Strapi) {
       mediaLinks: [], extra: [{ __component: 'extra.ngo', cause: 'Educação', acceptsVolunteers: true }] },
     { profileType: 'shop', name: 'Loja Bloqueada', description: 'Exemplo de perfil bloqueado.', status: 'blocked',
       categories: ['Restaurantes'], affinities: [], location: { city: 'Salvador', state: 'BA' }, mediaLinks: [], extra: [] },
-    // Fictional profiles across the right of the political spectrum, so matching can be tried on that side too.
+    // Fictional profiles across the political spectrum, so matching can be tried on both sides.
+    // [type, name, description, category, political position, other affinities, city, state, lat, lng]
     ...([
+      ['company', 'Rede Varejo Popular', 'Rede de varejo.', 'Varejo', 'Esquerda', [], 'Franca', 'SP', -20.5386, -47.4008],
+      ['professional', 'Rafael Moura', 'Personal trainer (bodyhealth).', 'Fitness', 'Centro-esquerda', [], 'Recife', 'PE', -8.0476, -34.877],
+      ['professional', 'Carla Mendes', 'Doces.', 'Doces', 'Esquerda', [], 'Salvador', 'BA', -12.9777, -38.5016],
+      ['professional', 'Patrícia Alves', 'Psicóloga.', 'Psicologia', 'Centro-esquerda', [], 'Fortaleza', 'CE', -3.7319, -38.5267],
+      ['professional', 'Bruna Costa', 'Professora de yoga.', 'Yoga', 'Esquerda', [], 'Rio de Janeiro', 'RJ', -22.9068, -43.1729],
+      ['professional', 'Helena Duarte', 'Professora de dança.', 'Dança', 'Centro-esquerda', [], 'Belém', 'PA', -1.4558, -48.4902],
+      ['professional', 'Renata Lopes', 'Psicóloga.', 'Psicologia', 'Esquerda', [], 'São Luís', 'MA', -2.5307, -44.3068],
+      ['professional', 'Diego Martins', 'Personal trainer.', 'Fitness', 'Centro-esquerda', [], 'Natal', 'RN', -5.7945, -35.211],
+      ['professional', 'Vanessa Prado', 'Terapias naturais.', 'Terapias', 'Esquerda', [], 'Niterói', 'RJ', -22.8832, -43.1034],
+      ['professional', 'Camila Torres', 'Alongamento de cílios.', 'Estética', 'Centro-esquerda', [], 'João Pessoa', 'PB', -7.1195, -34.845],
+      ['company', 'Rota Viva Turismo', 'Agência de turismo.', 'Turismo', 'Esquerda', [], 'Maceió', 'AL', -9.6658, -35.735],
+      ['professional', 'Larissa Nunes', 'Influenciadora e maquiadora.', 'Maquiagem', 'Centro-esquerda', [], 'Teresina', 'PI', -5.0892, -42.8019],
+      ['company', 'Buffet Sabor da Casa', 'Buffet para eventos.', 'Buffet', 'Esquerda', [], 'Aracaju', 'SE', -10.9472, -37.0731],
+      ['company', 'Laboratório Vida', 'Laboratório de análises.', 'Laboratórios', 'Centro-esquerda', [], 'Juiz de Fora', 'MG', -21.7642, -43.3503],
+      ['shop', 'Doceria Doce Lar', 'Doceria.', 'Doces', 'Esquerda', [], 'Santos', 'SP', -23.9608, -46.3336],
+      ['shop', 'Auto Peças Central', 'Autopeças.', 'Autopeças', 'Centro-esquerda', [], 'Feira de Santana', 'BA', -12.2664, -38.9663],
+      ['professional', 'Rosa Fernandes', 'Artesanatos.', 'Artesanato', 'Esquerda', [], 'Olinda', 'PE', -8.0089, -34.8553],
+      ['shop', 'Restaurante Bom Prato', 'Restaurante.', 'Restaurantes', 'Centro-esquerda', [], 'Manaus', 'AM', -3.119, -60.0217],
+      ['shop', 'Posto Lago Azul', 'Posto de combustível.', 'Postos de combustível', 'Esquerda', [], 'Palmas', 'TO', -10.2491, -48.3243],
+      ['professional', 'Paulo Ribeiro', 'Marceneiro.', 'Marcenaria', 'Centro-esquerda', [], 'Pelotas', 'RS', -31.7654, -52.3376],
+      ['shop', 'Mix Variedades', 'Comércio.', 'Varejo', 'Esquerda', [], 'Campina Grande', 'PB', -7.2307, -35.8817],
+      ['professional', 'Jorge Santos', 'Venda de bolachas e roscas.', 'Padarias', 'Centro-esquerda', [], 'São Bernardo do Campo', 'SP', -23.6914, -46.5646],
+      ['shop', 'Mercadinho Bairro Novo', 'Mercadinho de bairro.', 'Mercados', 'Esquerda', [], 'Contagem', 'MG', -19.9317, -44.0536],
+      ['shop', 'Ateliê Moda Bela', 'Loja de moda.', 'Moda', 'Centro-esquerda', [], 'Vitória', 'ES', -20.3155, -40.3128],
       ['professional', 'Eduardo Vasconcelos', 'Contador.', 'Contabilidade', 'Centro-direita', [], 'Campinas', 'SP', -22.9099, -47.0626],
       ['company', 'AgroForte Insumos', 'Insumos agrícolas.', 'Agronegócio', 'Direita', ['Sustentabilidade'], 'Rio Verde', 'GO', -17.7923, -50.9192],
       ['shop', 'Churrascaria Fogo Alto', 'Churrascaria.', 'Restaurantes', 'Direita', [], 'Porto Alegre', 'RS', -30.0346, -51.2177],

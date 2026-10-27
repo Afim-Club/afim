@@ -1,0 +1,8 @@
+---
+import Container from './Container.astro';
+interface Props { size?: 'md' | 'lg' }
+const { size } = Astro.props;
+---
+<footer class="mt-12 border-t border-line text-sm text-muted">
+  <Container size={size} class="py-6"><slot /></Container>
+</footer>

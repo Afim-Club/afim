@@ -1,0 +1,13 @@
+---
+/** Top bar: logo on the left, navigation links (slot) on the right. */
+import Container from './Container.astro';
+import Logo from './Logo.astro';
+interface Props { label?: string; size?: 'md' | 'lg' }
+const { label, size } = Astro.props;
+---
+<header class="border-b border-line">
+  <Container size={size} class="flex items-center justify-between py-4">
+    <Logo label={label} />
+    <nav class="flex gap-4 text-sm font-medium"><slot /></nav>
+  </Container>
+</header>

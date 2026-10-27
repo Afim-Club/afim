@@ -1,5 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import Card from '@afim/design-system/components/Card.astro';
 import ProfileCard from '../components/ProfileCard.astro';
 import { getCategories, getProfiles } from '../lib/strapi';
 
@@ -9,14 +10,14 @@ const recent = (await getProfiles()).slice(0, 6);
 <Layout title="Início">
   <h1>Encontre quem compartilha seus valores</h1>
   <h2>Categorias</h2>
-  <ul class="cards">
+  <ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
     {roots.map((c) => (
-      <li>
-        <a href={`/categorias/${c.slug}`}><strong>{c.name}</strong></a>
-        {c.children?.length ? <div>{c.children.map((s) => s.name).join(', ')}</div> : null}
-      </li>
+      <Card as="li">
+        <a href={`/categorias/${c.slug}`} class="font-semibold">{c.name}</a>
+        {c.children?.length ? <div class="text-sm text-muted">{c.children.map((s) => s.name).join(', ')}</div> : null}
+      </Card>
     ))}
   </ul>
   <h2>Perfis</h2>
-  <ul class="cards">{recent.map((p) => <ProfileCard profile={p} />)}</ul>
+  <ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{recent.map((p) => <ProfileCard profile={p} />)}</ul>
 </Layout>

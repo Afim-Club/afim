@@ -1,8 +1,10 @@
 ---
+import Button from '@afim/design-system/components/Button.astro';
 import Layout from '../layouts/Layout.astro';
 ---
 <Layout title="Início">
   <h1>Seja um parceiro Afim</h1>
   <p>Empresas, comércios e ONGs que compartilham nossos valores aparecem no diretório, contratam pessoas alinhadas e oferecem benefícios aos membros.</p>
-  <p><a href="/cadastro">Cadastre seu negócio</a>. Cada cadastro passa por revisão antes de ser publicado.</p>
+  <p class="text-muted">Cada cadastro passa por revisão antes de ser publicado.</p>
+  <p class="mt-6"><Button href="/cadastro" size="lg">Cadastre seu negócio</Button></p>
 </Layout>

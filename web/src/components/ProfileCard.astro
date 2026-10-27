@@ -1,11 +1,13 @@
 ---
+import Badge from '@afim/design-system/components/Badge.astro';
+import Card from '@afim/design-system/components/Card.astro';
 import { TYPE_LABELS, type Profile } from '../lib/strapi';
 const { profile } = Astro.props as { profile: Profile };
 const place = [profile.location?.city, profile.location?.state].filter(Boolean).join(' / ');
 ---
-<li>
-  <a href={`/perfis/${profile.slug}`}><strong>{profile.name}</strong></a>
-  <span class="tag">{TYPE_LABELS[profile.profileType]}</span>
-  {place && <div>{place}</div>}
-  {profile.description && <p>{profile.description}</p>}
-</li>
+<Card as="li">
+  <a href={`/perfis/${profile.slug}`} class="font-semibold">{profile.name}</a>{' '}
+  <Badge>{TYPE_LABELS[profile.profileType]}</Badge>
+  {place && <div class="text-sm text-muted">{place}</div>}
+  {profile.description && <p class="mt-2 text-sm">{profile.description}</p>}
+</Card>

@@ -1,0 +1,10 @@
+---
+/** Label + control (slot) + optional hint. */
+interface Props { label: string; hint?: string; required?: boolean; class?: string }
+const { label, hint, required, class: className } = Astro.props;
+---
+<label class:list={['grid gap-1', className]}>
+  <span class="text-sm font-medium">{label}{required && <span class="text-danger" aria-hidden="true"> *</span>}</span>
+  <slot />
+  {hint && <span class="text-xs text-muted">{hint}</span>}
+</label>

@@ -1,0 +1,20 @@
+---
+/**
+ * Status message, hidden while empty. The tone is the `data-tone` attribute,
+ * so a script can switch it: `el.dataset.tone = 'danger'`.
+ */
+import type { HTMLAttributes } from 'astro/types';
+type Props = HTMLAttributes<'div'> & { tone?: 'info' | 'success' | 'warning' | 'danger' };
+const { tone = 'info', class: className, ...rest } = Astro.props;
+---
+<div
+  data-tone={tone}
+  class:list={[
+    'rounded-afim border border-line bg-surface px-4 py-3 text-sm text-fg empty:hidden',
+    'data-[tone=success]:border-success/40 data-[tone=success]:bg-brand-soft data-[tone=success]:text-success',
+    'data-[tone=warning]:border-warning/40 data-[tone=warning]:text-warning',
+    'data-[tone=danger]:border-danger/40 data-[tone=danger]:text-danger',
+    className,
+  ]}
+  {...rest}
+><slot /></div>

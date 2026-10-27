@@ -2,6 +2,7 @@
 import Layout from '../../layouts/Layout.astro';
 import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import CountList from '../../components/CountList.astro';
+import AffinityFilter from '../../components/AffinityFilter.astro';
 import ProfileCard from '../../components/ProfileCard.astro';
 import { cityUrl, getDirectory, type State } from '../../lib/places';
 
@@ -26,6 +27,7 @@ const noCity = state.profiles.filter((p) => !state.cities.some((c) => c.profiles
   {noCity.length ? (
     <>
       <h2>Sem cidade informada</h2>
+      <AffinityFilter />
       <ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{noCity.map((p) => <ProfileCard profile={p} />)}</ul>
     </>
   ) : null}

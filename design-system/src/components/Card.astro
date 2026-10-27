@@ -1,6 +1,6 @@
 ---
-/** Surface for grouped content. Renders as `<li>` inside lists with `as="li"`. */
-interface Props { as?: 'div' | 'li' | 'article'; class?: string }
-const { as: Tag = 'div', class: className } = Astro.props;
+/** Surface for grouped content. Renders as `<li>` inside lists with `as="li"`. Other attributes (e.g. `data-*`) pass through. */
+interface Props { as?: 'div' | 'li' | 'article'; class?: string; [attr: string]: unknown }
+const { as: Tag = 'div', class: className, ...rest } = Astro.props;
 ---
-<Tag class:list={['rounded-afim border border-line bg-surface p-4 shadow-xs', className]}><slot /></Tag>
+<Tag {...rest} class:list={['rounded-afim border border-line bg-surface p-4 shadow-xs', className]}><slot /></Tag>

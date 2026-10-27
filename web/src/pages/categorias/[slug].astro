@@ -2,6 +2,7 @@
 import Layout from '../../layouts/Layout.astro';
 import Badge from '@afim/design-system/components/Badge.astro';
 import EmptyState from '@afim/design-system/components/EmptyState.astro';
+import AffinityFilter from '../../components/AffinityFilter.astro';
 import ProfileCard from '../../components/ProfileCard.astro';
 import { getCategories, profilesBySlugs } from '../../lib/strapi';
 import { cityUrl, getDirectory, inCategory } from '../../lib/places';
@@ -33,5 +34,6 @@ const places = states.flatMap((s) =>
   {places.length ? (
     <p class="mb-4 flex flex-wrap gap-2"><span class="text-sm text-muted">Onde:</span>{places.map((p) => <Badge href={p.href}>{p.name} ({p.count})</Badge>)}</p>
   ) : null}
+  {profiles.length ? <AffinityFilter /> : null}
   {profiles.length ? <ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{profiles.map((p) => <ProfileCard profile={p} />)}</ul> : <EmptyState title="Nenhum perfil ainda." />}
 </Layout>

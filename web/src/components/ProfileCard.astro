@@ -7,7 +7,7 @@ const { profile } = Astro.props as { profile: Profile };
 const placeLink = placeHref(profile);
 const place = [profile.location?.city, profile.location?.state].filter(Boolean).join(' / ');
 ---
-<Card as="li">
+<Card as="li" data-affinities={(profile.affinities ?? []).map((a) => a.slug).join(' ')} data-type={profile.profileType}>
   <a href={`/perfis/${profile.slug}`} class="font-semibold">{profile.name}</a>{' '}
   <Badge>{TYPE_LABELS[profile.profileType]}</Badge>
   {place && <div class="text-sm text-muted">{placeLink ? <a href={placeLink} class="text-muted">{place}</a> : place}</div>}

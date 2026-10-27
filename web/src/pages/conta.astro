@@ -36,6 +36,7 @@ import Layout from '../layouts/Layout.astro';
           </p>
         </div>
         <ul id="affinities" class="grid gap-3"></ul>
+        <p id="noAffinities" class="text-sm text-muted" hidden>Ainda não há afinidades cadastradas. Elas são criadas no painel do CMS (Content Manager → Affinity).</p>
         <label class="flex items-start gap-2 text-sm">
           <input type="checkbox" name="consent" class="mt-1 accent-brand" />
           <span>
@@ -106,6 +107,7 @@ import Layout from '../layouts/Layout.astro';
         if (pref) for (const k of FIND) li.querySelector<HTMLInputElement>(`[data-role=${k}]`)!.checked = pref[k];
         return li;
       }));
+      $('noAffinities').hidden = affinities.length > 0;
     }
 
     async function renderMatches() {
@@ -124,11 +126,15 @@ import Layout from '../layouts/Layout.astro';
 
     if (!(await auth.restoreSession())) location.replace('/entrar');
     else {
-      const [user, member, affinities] = await Promise.all([auth.getUser(), auth.getMember(), auth.getAffinities()]);
-      $('email').textContent = user.email;
-      renderMember(member, affinities);
       $('root').hidden = false;
-      renderMatches();
+      try {
+        const [user, member, affinities] = await Promise.all([auth.getUser(), auth.getMember(), auth.getAffinities()]);
+        $('email').textContent = user.email;
+        renderMember(member, affinities);
+        renderMatches();
+      } catch {
+        show('danger', 'Não foi possível carregar sua conta. Confira se o CMS está atualizado e no ar, e recarregue a página.');
+      }
     }
 
     form.addEventListener('submit', async (e) => {

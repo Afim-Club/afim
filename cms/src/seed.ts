@@ -11,7 +11,7 @@ const slugify = (s: string) =>
 
 const AFFINITIES = ['Sustentabilidade', 'Veganismo', 'Diversidade e inclusão', 'Comércio justo', 'Software livre', 'Bem-estar animal'];
 
-// Sample affinities, only when none exist (the real list is curated in the admin).
+// Starter affinities, only when none exist (the list is curated in the admin after that).
 export async function seedAffinities(strapi: Core.Strapi) {
   if ((await strapi.documents('api::affinity.affinity').count({})) > 0) return;
   for (const name of AFFINITIES) {

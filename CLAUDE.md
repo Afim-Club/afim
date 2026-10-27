@@ -16,6 +16,8 @@ npm run develop                           # an older cms/.env may say DATABASE_H
 npm run build                             # build admin panel
 ```
 
+`./dev.sh` (repo root) starts MariaDB, the CMS and both sites in the background (logs and the CMS pid in `.tmp/`; `./dev.sh stop`). Optional `DEV_WEB_HOST`/`DEV_PARTNERS_HOST`/`DEV_CMS_HOST` in the root `.env` expose them through a tunnel: Astro `--host --allowed-hosts`, `PUBLIC_STRAPI_URL=https://$DEV_CMS_HOST`, and the hosts appended to `CORS_ORIGINS`. Astro 7 `astro dev` daemonizes when stdout is not a TTY; stop it with `astro dev stop`.
+
 No lint or test setup exists yet.
 
 ## Commands (web/)

@@ -57,6 +57,8 @@ cd partners && npm install && npm run dev    # partner site on :4322
 | http://localhost:4321 | Public site (`web/`) |
 | http://localhost:4322 | Partner site (`partners/`) |
 
+Or start everything at once with `./dev.sh` (stop with `./dev.sh stop`; logs in `.tmp/`). To reach the dev servers through a tunnel such as cloudflared, set `DEV_WEB_HOST`, `DEV_PARTNERS_HOST` and `DEV_CMS_HOST` in the root `.env` (e.g. `dev.afim.club`): the script then allows those hostnames, points the browser at `https://$DEV_CMS_HOST` and adds the sites to the CMS CORS list. The sites then listen on all interfaces.
+
 The ports are fixed because the CMS only accepts browser requests from `localhost:4321` and `localhost:4322` (`CORS_ORIGINS`). `web/` reads the CMS at request time in dev, so it needs Strapi running. Stop the database with `docker compose stop`; `docker compose down -v` also deletes its data.
 
 ## Privacy and data

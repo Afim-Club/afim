@@ -57,6 +57,8 @@ cd partners && npm install && npm run dev    # site de parceiros na :4322
 | http://localhost:4321 | Site público (`web/`) |
 | http://localhost:4322 | Site de parceiros (`partners/`) |
 
+Ou suba tudo de uma vez com `./dev.sh` (pare com `./dev.sh stop`; logs em `.tmp/`). Para acessar os servidores de dev por um túnel como o cloudflared, defina `DEV_WEB_HOST`, `DEV_PARTNERS_HOST` e `DEV_CMS_HOST` no `.env` da raiz (ex.: `dev.afim.club`): o script libera esses hostnames, aponta o navegador para `https://$DEV_CMS_HOST` e inclui os sites no CORS do CMS. Nesse modo os sites escutam em todas as interfaces.
+
 As portas são fixas porque o CMS só aceita requisições do navegador vindas de `localhost:4321` e `localhost:4322` (`CORS_ORIGINS`). Em dev, o `web/` consulta o CMS a cada requisição, então o Strapi precisa estar rodando. Pare o banco com `docker compose stop`; `docker compose down -v` também apaga os dados.
 
 ## Privacidade e dados

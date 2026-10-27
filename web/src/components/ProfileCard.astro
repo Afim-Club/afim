@@ -2,12 +2,14 @@
 import Badge from '@afim/design-system/components/Badge.astro';
 import Card from '@afim/design-system/components/Card.astro';
 import { TYPE_LABELS, type Profile } from '../lib/strapi';
+import { placeHref } from '../lib/places';
 const { profile } = Astro.props as { profile: Profile };
+const placeLink = placeHref(profile);
 const place = [profile.location?.city, profile.location?.state].filter(Boolean).join(' / ');
 ---
 <Card as="li">
   <a href={`/perfis/${profile.slug}`} class="font-semibold">{profile.name}</a>{' '}
   <Badge>{TYPE_LABELS[profile.profileType]}</Badge>
-  {place && <div class="text-sm text-muted">{place}</div>}
+  {place && <div class="text-sm text-muted">{placeLink ? <a href={placeLink} class="text-muted">{place}</a> : place}</div>}
   {profile.description && <p class="mt-2 text-sm">{profile.description}</p>}
 </Card>

@@ -1,0 +1,14 @@
+---
+/** Grid of links with a profile count, used for states, cities and categories. */
+import Card from '@afim/design-system/components/Card.astro';
+interface Props { items: { name: string; href: string; count: number }[] }
+const { items } = Astro.props;
+---
+<ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+  {items.map((i) => (
+    <Card as="li">
+      <a href={i.href} class="font-semibold">{i.name}</a>
+      <span class="text-sm text-muted"> · {i.count} {i.count === 1 ? 'perfil' : 'perfis'}</span>
+    </Card>
+  ))}
+</ul>

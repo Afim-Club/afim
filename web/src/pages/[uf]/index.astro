@@ -1,0 +1,32 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import CountList from '../../components/CountList.astro';
+import ProfileCard from '../../components/ProfileCard.astro';
+import { cityUrl, getDirectory, type State } from '../../lib/places';
+
+export async function getStaticPaths() {
+  const { states } = await getDirectory();
+  return states.map((state) => ({ params: { uf: state.slug }, props: { state } }));
+}
+
+const { state } = Astro.props as { state: State };
+// Profiles that gave a state but no city are only listed here.
+const noCity = state.profiles.filter((p) => !state.cities.some((c) => c.profiles.includes(p)));
+---
+<Layout title={`Perfis em ${state.name}`} description={`Pessoas, negócios e comércios com valores em comum em ${state.name} (${state.uf}).`}>
+  <Breadcrumbs items={[{ name: 'Início', href: '/' }, { name: 'Estados', href: '/estados' }, { name: state.name }]} />
+  <h1>{state.name}</h1>
+  {state.cities.length ? (
+    <>
+      <h2>Cidades</h2>
+      <CountList items={state.cities.map((c) => ({ name: c.name, href: cityUrl(state, c), count: c.profiles.length }))} />
+    </>
+  ) : null}
+  {noCity.length ? (
+    <>
+      <h2>Sem cidade informada</h2>
+      <ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{noCity.map((p) => <ProfileCard profile={p} />)}</ul>
+    </>
+  ) : null}
+</Layout>

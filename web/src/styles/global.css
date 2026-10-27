@@ -2,3 +2,6 @@
 @import "@afim/design-system/theme.css";
 /* Tailwind skips node_modules, so scan the design system components explicitly. */
 @source "../../../design-system/src";
+
+/* Leaflet popups (/mapa) use the brand link color. */
+.leaflet-container a { color: var(--afim-brand); }

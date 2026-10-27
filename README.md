@@ -66,6 +66,16 @@ The ports are fixed because the CMS only accepts browser requests from `localhos
 
 Profiles are built from information **declared by the users themselves** (opt-in). Personal data is handled according to the Brazilian General Data Protection Law (LGPD).
 
+### Member accounts and affinities
+
+People sign up on the public site (`/entrar`) with email and password or a social login (Google, Facebook, GitHub, LinkedIn), then complete their account at `/conta`:
+
+- **Affinities** are shared values (e.g. veganism, sustainability) curated in the CMS. Businesses and shops declare theirs publicly on their profile.
+- A member picks their affinities and, for each one, whether they want to find people, companies (and NGOs) and shops. "Found for you" lists the active profiles that match.
+- Affinities can reveal beliefs, so they are treated as **sensitive personal data** (LGPD art. 11): they are stored only after explicit consent (date and terms version are recorded), are never public or listed by the API (only the member reads them, through `/api/members/me`), and unticking the consent erases them. Members can delete their account and all their data at any time.
+
+Social providers are enabled from the CMS environment (`AUTH_<PROVIDER>_CLIENT_ID` / `_CLIENT_SECRET`, see `.env.example`); register `https://admin.<domain>/api/connect/<provider>/callback` as the redirect URI at each provider.
+
 ## License
 
 [GNU AGPL-3.0](LICENSE). If you run a modified version of this software as a network service, you must offer its source code to the users of that service.

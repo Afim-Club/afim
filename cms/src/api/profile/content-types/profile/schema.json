@@ -48,6 +48,12 @@
       "target": "api::category.category",
       "inversedBy": "profiles"
     },
+    "affinities": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::affinity.affinity",
+      "inversedBy": "profiles"
+    },
     "location": {
       "type": "component",
       "repeatable": false,

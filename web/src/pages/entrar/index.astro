@@ -1,0 +1,58 @@
+---
+import Alert from '@afim/design-system/components/Alert.astro';
+import Button from '@afim/design-system/components/Button.astro';
+import Card from '@afim/design-system/components/Card.astro';
+import FormField from '@afim/design-system/components/FormField.astro';
+import Input from '@afim/design-system/components/Input.astro';
+import Layout from '../../layouts/Layout.astro';
+import { API } from '../../lib/auth';
+import { PROVIDER_LABELS, enabledProviders } from '../../lib/providers';
+---
+<Layout title="Entrar">
+  <div class="mx-auto grid max-w-md gap-6 pt-8">
+    <h1>Entrar</h1>
+    {enabledProviders.length > 0 && (
+      <div class="grid gap-2">
+        {enabledProviders.map((p) => <Button variant="outline" href={`${API}/api/connect/${p}`}>Continuar com {PROVIDER_LABELS[p]}</Button>)}
+        <p class="text-center text-sm text-muted">ou use seu e-mail</p>
+      </div>
+    )}
+    <Card>
+      <form id="f" class="grid gap-4">
+        <FormField label="E-mail" required><Input name="email" type="email" autocomplete="email" required /></FormField>
+        <FormField label="Senha" hint="Mínimo de 6 caracteres." required><Input name="password" type="password" autocomplete="current-password" minlength="6" required /></FormField>
+        <div class="flex flex-wrap gap-2">
+          <Button name="action" value="login">Entrar</Button>
+          <Button name="action" value="register" variant="secondary">Criar conta</Button>
+        </div>
+      </form>
+    </Card>
+    <Alert id="msg" role="status" />
+  </div>
+  <script>
+    import { login, register, restoreSession } from '../../lib/auth';
+    const form = document.getElementById('f') as HTMLFormElement;
+    const msg = document.getElementById('msg')!;
+    const show = (tone: string, text: string) => { msg.dataset.tone = tone; msg.textContent = text; };
+
+    if (await restoreSession()) location.replace('/conta');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const action = (e.submitter as HTMLButtonElement | null)?.value ?? 'login';
+      const { email, password } = Object.fromEntries(new FormData(form)) as Record<string, string>;
+      form.querySelectorAll('button').forEach((b) => (b.disabled = true));
+      show('info', action === 'register' ? 'Criando sua conta...' : 'Entrando...');
+      try {
+        await (action === 'register' ? register(email, password) : login(email, password));
+        location.assign('/conta');
+      } catch (err) {
+        const text = String((err as Error).message);
+        show('danger', text.includes('already taken') ? 'Já existe uma conta com este e-mail. Use "Entrar".'
+          : text.includes('Invalid identifier') ? 'E-mail ou senha incorretos.'
+          : 'Não foi possível continuar. Tente novamente.');
+        form.querySelectorAll('button').forEach((b) => (b.disabled = false));
+      }
+    });
+  </script>
+</Layout>

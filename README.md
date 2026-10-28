@@ -104,9 +104,9 @@ or deploy from a machine with `npm run deploy` (needs `wrangler login` or `CLOUD
 
 Strapi's built-in [MCP server](https://docs.strapi.io/cms/features/strapi-mcp-server) lets an AI client (Claude Code, Claude Desktop, Cursor...) list, create, edit and publish content in the CMS.
 
-1. Set `MCP_ENABLED=true` in the CMS environment (Dockge stack `.env`) and redeploy. The endpoint is `https://dash.afim.club/mcp`.
+1. Set `MCP_ENABLED=true` in the CMS environment (Dockge stack `.env`) and redeploy. The endpoint is `https://<cms-host>/mcp`.
 2. In the admin panel, open **Settings → Admin tokens** and create a token with only the content it needs. Suggested: read, create, update and publish on Home page, Pricing page, Launch page, Page, Help topic, Help article, Blog post, Blog tag, Plan, Site settings and Module SEO. **Never** grant Member, Newsletter signup, User or Profile: they hold personal data (LGPD). The token can do only what its permissions allow, and never more than the admin who created it.
-3. Connect the client. In this repository, `.mcp.json` already declares the server `strapi` for Claude Code; it reads the token from `STRAPI_MCP_TOKEN` (and optionally the URL from `STRAPI_MCP_URL`). For Claude Code on the web, add `STRAPI_MCP_TOKEN` to the cloud environment and allow `dash.afim.club` in its network access. Elsewhere: `claude mcp add strapi --transport http https://dash.afim.club/mcp -H "Authorization: Bearer <token>"`.
+3. Connect the client on your side only: the endpoint and the token never go in this public repository (`.mcp.json` is git-ignored). With Claude Code: `claude mcp add --scope user --transport http strapi https://<cms-host>/mcp -H "Authorization: Bearer <token>"`. For Claude Code on the web, run the same command (without `-H`) in the cloud environment's setup script, keep the token as a network secret for the CMS host (header `Authorization`, prefix `Bearer`) and allow that host in its network access.
 
 Content created through MCP follows the same rules as the admin panel (drafts until published). The static site still needs a rebuild to show it (the Strapi webhook triggers one).
 

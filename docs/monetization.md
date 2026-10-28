@@ -134,7 +134,7 @@ Payer (member)            Afim CMS                          Advertiser's wallet
 
 `profile`, `offer`, `payer` (member, private), `billBrl`, `lightningBrl`, `discountBrl`, `amountSats`, `rateBrlPerBtc`, `invoiceHash`, `verifyUrl`, `status` (`pending`, `paid`, `expired`), `createdAt`.
 
-This record is what reviews and the dashboard count on. Afim keeps the invoice and the preimage only for payments that earned points (see Afinity Points); for the rest it keeps only the hash.
+This record is what reviews and the dashboard count on. Afim keeps the invoice and the preimage only for payments that earned points (see Affinity Points); for the rest it keeps only the hash.
 
 ## Highlight, featured in your city and Afim recommended
 
@@ -148,7 +148,7 @@ Three different things, kept apart so the directory stays credible:
 
 The site is static, so highlight order, slots and recommended strips change only on a rebuild: add a daily scheduled build in Jenkins so slots start and end on time.
 
-## Afinity Points (Pontos de Afinidade)
+## Affinity Points (Pontos de Afinidade)
 
 Members earn **1 point per sat** paid in Lightning through Afim, and advertisers can give a bigger discount in exchange for points.
 
@@ -279,7 +279,7 @@ Each milestone is one or a few small PRs, in this order:
 8. **Referral rewards.** One free month per invited paying member.
 9. **PWA and near me.**
 10. **Highlight, featured in your city and Afim recommended.** Highlight ordering can ship with milestone 1; the city slots and the recommended strip need reviews and the badge first.
-11. **Afinity Points.** After the discounts (milestone 3), which already store each payment's hash and proof.
+11. **Affinity Points.** After the discounts (milestone 3), which already store each payment's hash and proof.
 
 ## Open questions
 
@@ -287,6 +287,6 @@ Each milestone is one or a few small PRs, in this order:
 - BTCPay Server self-hosted (proposed) or a hosted provider for Afim's own wallet.
 - BRL/BTC rate source.
 - Should the advertiser also be able to confirm payments when the wallet has no LUD-21 (proposed: yes)?
-- Afinity Points: monthly caps, pending period and expiry values.
+- Affinity Points: monthly caps, pending period and expiry values.
 - Price and duration of a city slot (e.g. per month), and the slot cap per page.
 - Integrator partners: only a category for now, or a partner badge and referral deal?

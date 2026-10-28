@@ -1,0 +1,37 @@
+---
+/** Parceiros module: landing for businesses, shops and NGOs (was partners.afim.club, which now redirects here). */
+import Button from '@afim/design-system/components/Button.astro';
+import Card from '@afim/design-system/components/Card.astro';
+import Layout from '../../layouts/Layout.astro';
+
+const steps = [
+  { title: 'Cadastre o seu negócio', text: 'Empresa, comércio ou ONG, com as afinidades que o negócio declara. É grátis.' },
+  { title: 'Passe pela moderação', text: 'Cada cadastro é revisado antes de aparecer no diretório.' },
+  { title: 'Seja encontrado por afins', text: 'Quem compartilha os seus valores encontra você por categoria, cidade e mapa.' },
+];
+---
+<Layout title="Parceiros" module="parceiros" description="Cadastre a sua empresa, comércio ou ONG no Afim e seja encontrado por quem compartilha os seus valores.">
+  <section class="py-10">
+    <h1 class="mt-0 text-4xl font-extrabold">Está afim de clientes que pensam como você?</h1>
+    <p class="max-w-2xl text-lg text-muted">
+      Empresas, comércios e ONGs que compartilham valores aparecem no diretório do Afim, contratam pessoas alinhadas e oferecem benefícios a quem tem as mesmas afinidades.
+    </p>
+    <div class="mt-6 flex flex-wrap gap-3">
+      <Button href="/parceiros/cadastro" size="lg">Cadastrar meu negócio</Button>
+      <Button href="/planos" size="lg" variant="outline">Ver planos</Button>
+    </div>
+  </section>
+  <ol class="m-0 grid list-none gap-4 p-0 md:grid-cols-3">
+    {steps.map((s, i) => (
+      <Card as="li">
+        <p class="m-0 text-sm font-semibold text-brand">{i + 1}</p>
+        <h2 class="mt-1 mb-2 text-lg">{s.title}</h2>
+        <p class="m-0 text-muted">{s.text}</p>
+      </Card>
+    ))}
+  </ol>
+  <section class="py-10">
+    <h2>Já tem conta no Afim?</h2>
+    <p class="text-muted">Cadastre e edite os seus negócios em <a href="/conta/perfis">Meus perfis</a>, com localização no mapa. Dúvidas? Veja a <a href="/ajuda/negocios/cadastrar-meu-negocio">ajuda para negócios</a>.</p>
+  </section>
+</Layout>

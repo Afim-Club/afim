@@ -8,7 +8,7 @@
 - Businesses hire people who share their values.
 - Shops and suppliers do business with partners who share their values.
 
-The public site is split in modules, each with its own URL prefix: the marketing home owns the root (`/`, `/planos`, `/avise-me`, and free pages such as `/sobre`, `/valores` and `/privacidade`), with its text, plans and SEO edited in Strapi, the blog lives under `/blog` (with tags and an RSS feed), the help center lives under `/ajuda` (topics and articles edited in Strapi, starting with how to use a Lightning wallet), and the directory lives under `/explorar`.
+The public site is split in modules, each with its own URL prefix: the marketing home owns the root (`/`, `/planos`, `/avise-me`, and free pages such as `/sobre`, `/valores` and `/privacidade`), with its text, plans and SEO edited in Strapi, the blog lives under `/blog` (with tags and an RSS feed), the partner pages (landing and sign-up form for businesses) live under `/parceiros` (the old `partners.afim.club` redirects there), the help center lives under `/ajuda` (topics and articles edited in Strapi, starting with how to use a Lightning wallet), and the directory lives under `/explorar`.
 
 The directory can be browsed by place, like a classic directory: the whole directory lives under `/explorar` (old URLs redirect with 301): `/explorar/estados` lists the states, then `/explorar/sp`, `/explorar/sp/campinas` and `/explorar/sp/campinas/servicos` list the active profiles by state, city and category, with counts and breadcrumbs.
 
@@ -17,10 +17,10 @@ The directory can be browsed by place, like a classic directory: the whole direc
 | Folder | Description | Planned address |
 | --- | --- | --- |
 | `web/` | Public site for users (Astro) | `afim.club` |
-| `partners/` | Site for affiliates: businesses and shops (Astro) | `partners.afim.club` |
+| `partners/` | Redirect from the old partner site to `afim.club/parceiros` (the partner pages now live in `web/`) | `partners.afim.club` |
 | `cms/` | Backoffice and API (Strapi) | `dash.afim.club` |
 | `infra/` | Deploy: Dockge stack for the CMS (`infra/dockge/`), plus Docker Swarm, Traefik and Jenkins | - |
-| `design-system/` | Design system: Tailwind theme, Astro components and brand assets used by `web/` and `partners/` | - |
+| `design-system/` | Design system: Tailwind theme, Astro components and brand assets used by `web/` | - |
 
 ## Stack
 

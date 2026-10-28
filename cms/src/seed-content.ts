@@ -26,7 +26,7 @@ const HOME = {
       text: 'Cadastre sua empresa, comércio ou ONG de graça. Com o plano Pro, você atrai clientes com ofertas para quem paga em Lightning e campanhas para quem tem as mesmas afinidades.',
       note: 'Com o split payment da reforma tributária, a venda por Pix ou cartão já chega com o imposto descontado. Em Lightning você recebe o valor inteiro na hora e acerta os impostos com o seu contador.',
       ctaLabel: 'Cadastrar meu negócio',
-      ctaHref: '/conta/perfis',
+      ctaHref: '/parceiros',
       secondaryLabel: 'Ver planos',
       secondaryHref: '/planos',
       items: [

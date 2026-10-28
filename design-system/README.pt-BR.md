@@ -23,7 +23,7 @@ O símbolo são dois círculos e o espaço que eles compartilham: afinidade.
 
 ## Tokens
 
-Os componentes usam **cores semânticas**, que mudam com o tema do sistema operacional (`prefers-color-scheme`), então não precisam de variantes `dark:`:
+Os componentes usam **cores semânticas**, que mudam com o tema do sistema operacional (`prefers-color-scheme`), então não precisam de variantes `dark:`. `ThemeToggle` (botão do cabeçalho) deixa o visitante forçar claro ou escuro: ele grava `data-theme` no `<html>` e salva no localStorage `afim.theme`; `ThemeScript` no `<head>` aplica a escolha salva antes da primeira pintura:
 
 | Sufixo da classe | Papel |
 | --- | --- |

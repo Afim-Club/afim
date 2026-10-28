@@ -1,12 +1,10 @@
 # Strapi (cms/) + MariaDB as a single Dockge stack.
 # In Dockge: create a stack named "afim-cms", paste this file, and fill the
-# ".env" tab from .env.example next to it. Deploy builds the image straight
-# from the Git repository (no registry needed); Deploy/Update rebuild it.
+# ".env" tab from .env.example next to it. The image is published to GHCR by
+# .github/workflows/cms-image.yml on every push to main; Update pulls it.
 services:
   cms:
-    image: afim-cms:local
-    build: ${CMS_BUILD_CONTEXT:-https://github.com/Afim-Club/afim.git#main:cms}
-    pull_policy: build
+    image: ghcr.io/afim-club/afim-cms:${CMS_TAG:-latest}
     restart: unless-stopped
     depends_on:
       mariadb:

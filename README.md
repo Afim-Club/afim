@@ -76,7 +76,7 @@ The CMS runs as a Docker container on a host managed by [Dockge](https://github.
 
 1. In Dockge, create a stack (e.g. `afim-cms`) and paste [`infra/dockge/compose.yaml`](infra/dockge/compose.yaml).
 2. Fill the stack's `.env` from [`infra/dockge/.env.example`](infra/dockge/.env.example). Generate each secret with `openssl rand -base64 32`.
-3. Deploy. The image is built straight from this Git repository (`main`, folder `cms/`), so no registry is needed; **Deploy/Update rebuilds it** (`pull_policy: build`). `CMS_BUILD_CONTEXT` builds another branch or a local checkout.
+3. Deploy. The image `ghcr.io/afim-club/afim-cms` is published by the `CMS image` GitHub Action on every push to `main` that touches `cms/` (tags `latest` and the commit SHA); **Update in Dockge pulls the new one**. Set `CMS_TAG` to a commit SHA to pin or roll back. The package must be public on GitHub (Package settings → Change visibility), or run `docker login ghcr.io` on the host.
 4. Expose port `CMS_PORT` (1337) as `https://admin.afim.club` through a reverse proxy or a Cloudflare Tunnel. The container trusts `X-Forwarded-*` (`PROXY=true`).
 
 Data lives in two named volumes: `mariadb-data` (database) and `uploads` (media from the admin panel). Back up both.

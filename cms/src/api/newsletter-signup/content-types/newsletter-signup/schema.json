@@ -5,13 +5,14 @@
     "singularName": "newsletter-signup",
     "pluralName": "newsletter-signups",
     "displayName": "Newsletter signup",
-    "description": "Launch announcement list from /avise-me. Private: no public read route; only the admin sees it."
+    "description": "Launch announcement list from /avise-me. Private: no public read route; only the admin sees it. email is encrypted and emailHash (keyed hash of the lowercase e-mail) finds duplicates, see src/crypto.ts."
   },
   "options": {
     "draftAndPublish": false
   },
   "attributes": {
-    "email": { "type": "email", "required": true, "unique": true, "private": true },
+    "email": { "type": "string", "required": true, "private": true },
+    "emailHash": { "type": "string", "unique": true, "private": true },
     "name": { "type": "string", "private": true },
     "forPeople": { "type": "boolean", "default": false },
     "forBusiness": { "type": "boolean", "default": false },

@@ -1,6 +1,7 @@
 import { factories } from '@strapi/strapi';
 import { uniqueSlug } from '../slug';
 import { turnstileOk } from '../../../turnstile';
+import { MAX_EMAIL, encrypt } from '../../../crypto';
 
 // Public reads only ever see active profiles; review/blocked stay in the backoffice.
 export default factories.createCoreController('api::profile.profile', ({ strapi }) => ({
@@ -35,15 +36,15 @@ export default factories.createCoreController('api::profile.profile', ({ strapi 
 
     const str = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
     const name = str(body.name, 255);
-    const contactEmail = str(body.contactEmail, 255);
+    const contactEmail = str(body.contactEmail, MAX_EMAIL + 1);
     const profileType = str(body.profileType, 20);
-    if (!name || !/^\S+@\S+\.\S+$/.test(contactEmail) || !['company', 'shop', 'ngo'].includes(profileType)) {
+    if (!name || !/^\S+@\S+\.\S+$/.test(contactEmail) || contactEmail.length > MAX_EMAIL || !['company', 'shop', 'ngo'].includes(profileType)) {
       return ctx.badRequest('name, a valid contactEmail and profileType (company|shop|ngo) are required');
     }
     const slug = uniqueSlug(name);
     await strapi.documents('api::profile.profile').create({
       data: {
-        name, slug, contactEmail, profileType,
+        name, slug, contactEmail: encrypt(contactEmail), profileType,
         description: str(body.description, 2000),
         moderationStatus: 'review',
         location: { city: str(body.city, 120), state: str(body.state, 2).toUpperCase() },

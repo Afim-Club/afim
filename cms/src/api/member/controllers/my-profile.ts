@@ -1,5 +1,6 @@
 import type { Core } from '@strapi/strapi';
 import { uniqueSlug } from '../../profile/slug';
+import { MAX_EMAIL, encrypt } from '../../../crypto';
 
 // Profiles a member registers and owns (profile.owner, a private field): their own professional profile (one at most)
 // and the companies, shops and NGOs they represent. They always go to moderation: new and edited profiles are saved
@@ -70,8 +71,8 @@ export default ({ strapi }: { strapi: Core.Strapi }) => {
       const created = await profiles().create({
         data: {
           ...rest, slug: uniqueSlug(data.name), moderationStatus: 'review', owner: userId,
-          // Moderators reach the owner through the login e-mail (private, never returned by the API).
-          contactEmail: ctx.state.user.email, location: { city, state, lat, lng },
+          // Moderators reach the owner through the login e-mail (private, never returned by the API, encrypted).
+          contactEmail: encrypt(String(ctx.state.user.email).slice(0, MAX_EMAIL)), location: { city, state, lat, lng },
         } as any,
         fields: FIELDS as any, populate: POPULATE as any,
       });

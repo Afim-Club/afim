@@ -3,8 +3,10 @@ import type { Core } from '@strapi/strapi';
 const config = ({ env }: Core.Config.Shared.ConfigParams): Core.Config.Server => ({
   host: env('HOST', '0.0.0.0'),
   port: env.int('PORT', 1337),
-  // Behind Traefik: trust X-Forwarded-* and build admin/API URLs from the public address.
-  proxy: env.bool('PROXY', false),
+  // Behind a proxy (Traefik, Cloudflare Tunnel): trust X-Forwarded-* so Koa sees HTTPS and the
+  // client IP. Strapi 5 reads `proxy.koa`; a plain boolean is ignored, and then the secure login
+  // cookie throws ("Cannot send secure cookie over unencrypted connection") and member login fails.
+  proxy: { koa: env.bool('PROXY', false) },
   url: env('PUBLIC_URL', ''),
   app: {
     keys: env.array('APP_KEYS')!,

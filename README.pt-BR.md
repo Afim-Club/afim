@@ -84,6 +84,10 @@ As pessoas criam a conta no site público (`/entrar`) com e-mail e senha ou logi
 
 Os provedores sociais são ativados pelo ambiente do CMS (`AUTH_<PROVEDOR>_CLIENT_ID` / `_CLIENT_SECRET`, veja `.env.example`); cadastre `https://admin.<domínio>/api/connect/<provedor>/callback` como URI de redirecionamento em cada provedor.
 
+## Roadmap
+
+Planos, descontos Lightning entre perfis Afim e os recursos que vêm com eles estão descritos em [docs/monetization.pt-BR.md](docs/monetization.pt-BR.md).
+
 ## Licença
 
 [GNU AGPL-3.0](LICENSE). Se você executar uma versão modificada deste software como serviço de rede, deve oferecer o código-fonte aos usuários desse serviço.

@@ -89,6 +89,58 @@ Três coisas diferentes, separadas para o diretório continuar confiável:
 
 O site é estático, então ordem de destaque, vagas e recomendados só mudam num novo build: um build agendado diário no Jenkins faz as vagas começarem e terminarem no dia certo.
 
+## Pontos de Afinidade
+
+Membros ganham **1 ponto por sat** pago em Lightning pelo Afim, e o anunciante pode dar um desconto maior em troca de pontos.
+
+### O que dá para registrar com fidelidade
+
+O Afim nunca toca no dinheiro, então só consegue contar pagamentos cuja fatura **o próprio Afim pediu** no fluxo acima. Um pagamento feito na loja com outro QR code é invisível para o Afim e não gera pontos. Dentro do fluxo, todo pagamento tem prova criptográfica:
+
+1. **A fatura é conferida quando chega.** O Afim a buscou no callback LNURL do anunciante, então decodifica o BOLT11 e confere o valor igual à cotação, a validade e que o `payment_hash` nunca foi usado antes. O hash fica em `payment`.
+2. **A prova de pagamento é o preimage.** Uma fatura Lightning só é paga quando a carteira de quem paga recebe um segredo (o preimage) cujo SHA-256 é o `payment_hash`. Ninguém consegue esse segredo sem o pagamento acontecer. O Afim o recebe de um de dois jeitos e confere `sha256(preimage) == payment_hash` antes de creditar:
+   - **Da carteira de quem paga.** Se o navegador tem carteira WebLN (Alby e outras), a página chama `webln.sendPayment(fatura)`, que devolve o preimage. Senão, o membro cola o preimage dos detalhes do pagamento na carteira.
+   - **Da carteira do anunciante.** A URL `verify` do LUD-21 devolve `settled` e o preimage.
+3. **Sem preimage, sem pontos.** Pagamento confirmado só à mão pelo anunciante vale para avaliação e painel, mas não gera pontos: não há prova, e permitiria anunciante e membro inventarem pagamentos.
+
+Os pontos contam sobre o **valor efetivamente pago em sats** (depois do desconto). A parte em Pix ou dinheiro não gera pontos.
+
+### Extrato (ledger)
+
+`point-entry` (collection privada, escrita só pelo servidor; sem rota de alterar ou apagar): `member`, `kind` (`earn`, `redeem`, `expire`, `reverse`), `points` (positivo no `earn`, negativo nos outros), `payment` (único no `earn`: um crédito por pagamento provado), `status` (`pending`, `available`; o `earn` fica `pending` por 7 dias), `prevHash` e `hash` (`hash = sha256(prevHash + campos)`, uma corrente por membro).
+
+O saldo é a soma das entradas `available`. Nada é editado: um erro se corrige com uma entrada `reverse`. A corrente de hashes torna visível qualquer alteração no banco: um job diário confere todas e avisa o admin. Pontos vencem 12 meses depois de liberados.
+
+### Seguro, idempotente e sempre verificável
+
+- **Seguro:** um ponto só existe com um preimage que bate com o `payment_hash` da fatura; a fatura foi pedida pelo Afim e é assinada pelo nó Lightning do anunciante. Só o servidor escreve no extrato, numa única transação do banco.
+- **Idempotente:** `point-entry` tem chave única em (`kind`, `payment_hash`), então o mesmo pagamento nunca é creditado duas vezes, não importa quantas vezes a carteira, a página ou a checagem LUD-21 o informem. O endpoint `POST /api/members/me/points/claim {paymentId, preimage}` devolve a entrada que já existe numa chamada repetida, em vez de erro, e o resgate usa o id da cotação do mesmo jeito.
+- **Sempre verificável:** cada entrada `earn` guarda a fatura BOLT11 e o preimage (a descrição da fatura tem só o nome do perfil e "Afim", sem dado pessoal). Qualquer pessoa com eles confere a prova sem confiar no Afim: a assinatura da fatura mostra qual nó a emitiu e o valor, e `sha256(preimage) == payment_hash` mostra que foi paga. Em `/conta/pontos` o membro baixa o extrato com as provas, e a página as confere no navegador.
+- **O histórico não pode ser reescrito em silêncio:** todo dia o Afim publica o `hash` final de cada corrente combinado numa raiz Merkle em `GET /api/points/roots/:dia`, e registra essa raiz na blockchain do Bitcoin com OpenTimestamps (grátis, sem carteira). O extrato baixado traz o caminho da corrente do membro até a raiz do dia, então ele prova que o saldo existia naquela data, até contra o Afim.
+
+### Antifraude
+
+O risco é anunciante e membro (ou a mesma pessoa nos dois papéis) pagarem um ao outro em círculo para acumular pontos, já que os sats voltam para eles.
+
+- Sem pontos em pagamentos a um perfil do próprio pagante, ou cujo dono convidou o pagante.
+- Limites: no máximo 100.000 pontos por membro por mês e 20.000 por membro por perfil por mês (valores a ajustar).
+- `pending` por 7 dias antes do uso, para o admin poder estornar uma rajada suspeita.
+- O admin vê os mesmos sinais das avaliações (idade da conta, convite em comum, pares que se repetem).
+
+### Resgate
+
+A `offer` ganha `pointsCost` e `pointsBonusPercent` opcionais: "use 5.000 pontos e ganhe mais 10%". Na cotação o membro escolhe usar pontos; o desconto extra vale sobre a parte Lightning e o total continua limitado a 50% e ao `maxDiscountBrl`. Os pontos só são debitados (`redeem`) quando aquele pagamento é provado; uma cotação vencida os libera.
+
+Cada anunciante decide se aceita pontos e quanto valem na loja dele. O Afim não paga o anunciante pelos pontos: é um desconto que o anunciante escolhe dar a afins com histórico de pagar em Lightning. Oferecer resgate exige `lightningOffers` (plano pago); ganhar pontos é grátis para todo membro.
+
+### Pontos não são dinheiro
+
+Pontos não têm valor em dinheiro, não podem ser vendidos, transferidos nem convertidos em sats ou reais, e são só um direito a desconto oferecido pelo anunciante. Isso os mantém como programa de fidelidade, fora das regras de pagamento ou de ativos virtuais (confirmar na revisão jurídica). Os termos dizem que o Afim pode encerrar o programa com aviso prévio.
+
+### LGPD
+
+O extrato liga o membro aos negócios em que pagou, então é dado pessoal. O membro vê o próprio extrato em `/conta/pontos`; o anunciante vê só quantos pontos foram resgatados com ele, nunca por quem. Apagar a conta apaga o extrato e o saldo.
+
 ## Avaliações
 
 `review`: `profile`, `payment` (uma por pagamento confirmado), `author` (privado), `rating` 1 a 5, `text`, `showName` (padrão falso: aparece "Membro Afim"), `reply` (do dono, plano pago), `moderationStatus`. Média e avaliações ativas aparecem na página do perfil.
@@ -147,7 +199,7 @@ Cada marco é um ou poucos PRs pequenos, nesta ordem:
 
 1. **Planos + Stripe** (`plan`, `subscription`, helper de acesso, Checkout, webhook, Portal, `/conta/plano`; a página pública de planos lê `plan`).
 2. **Lightning para os planos** (BTCPay, meses pré-pagos, lembrete).
-3. **Descontos Lightning** (`lightningAddress`, `offer` para membros, cotação + fatura LNURL, pagamento dividido, checagem LUD-21).
+3. **Descontos Lightning** (`lightningAddress`, `offer` para membros, cotação + fatura LNURL, pagamento dividido, checagem LUD-21 e do preimage via WebLN).
 4. **Avaliações.**
 5. **Campanhas** por afinidade, datas e cupom.
 6. **Painel.**
@@ -155,6 +207,7 @@ Cada marco é um ou poucos PRs pequenos, nesta ordem:
 8. **Recompensa por indicação.**
 9. **PWA e perto de mim.**
 10. **Destaque, destaque na cidade e recomendados.** A ordem de destaque pode sair junto com o marco 1; as vagas na cidade e os recomendados dependem de avaliações e do selo.
+11. **Pontos de Afinidade.** Depois dos descontos (marco 3), que já guardam o hash e a prova de cada pagamento.
 
 ## Perguntas em aberto
 
@@ -162,5 +215,6 @@ Cada marco é um ou poucos PRs pequenos, nesta ordem:
 - BTCPay auto-hospedado (proposto) ou um provedor hospedado para a carteira do Afim.
 - Fonte da cotação BRL/BTC.
 - O anunciante pode confirmar pagamentos quando a carteira não tem LUD-21 (proposto: sim)?
+- Pontos de Afinidade: valores dos limites mensais, da carência e da validade.
 - Preço e duração da vaga na cidade (ex.: por mês) e limite de vagas por página.
 - Parceiros integradores: só uma categoria por enquanto, ou selo de parceiro e acordo de indicação?

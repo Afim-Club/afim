@@ -134,7 +134,7 @@ Payer (member)            Afim CMS                          Advertiser's wallet
 
 `profile`, `offer`, `payer` (member, private), `billBrl`, `lightningBrl`, `discountBrl`, `amountSats`, `rateBrlPerBtc`, `invoiceHash`, `verifyUrl`, `status` (`pending`, `paid`, `expired`), `createdAt`.
 
-This record is what reviews and the dashboard count on. Afim does not keep the invoice after it expires or is paid, only its hash.
+This record is what reviews and the dashboard count on. Afim keeps the invoice and the preimage only for payments that earned points (see Afinity Points); for the rest it keeps only the hash.
 
 ## Highlight, featured in your city and Afim recommended
 
@@ -147,6 +147,67 @@ Three different things, kept apart so the directory stays credible:
 `city-highlight` (collection, shared with the public site, which reads only current rows at build time): `profile`, `uf`, `citySlug`, `kind` (`recommended` or `paid`), `startsAt`, `endsAt`, `sortOrder`, plus private `provider` (stripe|lightning) and `paymentRef` on paid rows. A paid row lasts 30 days and is created when a one-off Stripe Checkout or a BTCPay invoice bought from `/conta/plano` is settled, only while the plan is active. `recommended` rows are created only by the admin, following the criteria above, and are never sold.
 
 The site is static, so highlight order, slots and recommended strips change only on a rebuild: add a daily scheduled build in Jenkins so slots start and end on time.
+
+## Afinity Points (Pontos de Afinidade)
+
+Members earn **1 point per sat** paid in Lightning through Afim, and advertisers can give a bigger discount in exchange for points.
+
+### What can be recorded faithfully
+
+Afim never touches the money, so it can only count payments whose invoice **Afim itself requested** in the pay flow above. A payment made in a shop with any other QR code is invisible to Afim and earns nothing. Inside the flow, every payment has a cryptographic proof:
+
+1. **The invoice is checked when it arrives.** Afim fetched it from the advertiser's LNURL callback, so it decodes the BOLT11 and checks the amount equals the quote, the expiry, and that its `payment_hash` was never used before. The hash is stored in `payment`.
+2. **The proof of payment is the preimage.** A Lightning invoice is paid only when the payer's wallet receives a secret (the preimage) whose SHA-256 is the `payment_hash`. Nobody can produce it without the payment going through. Afim gets it in one of two ways, and checks `sha256(preimage) == payment_hash` before crediting anything:
+   - **From the payer's wallet.** When the browser has a WebLN wallet (Alby and others), the pay page calls `webln.sendPayment(invoice)`, which returns the preimage. Otherwise the member can paste it from the wallet's payment details.
+   - **From the advertiser's wallet.** The LUD-21 `verify` URL returns `settled` and the preimage.
+3. **No preimage, no points.** A payment the advertiser only confirms by hand still counts for reviews and the dashboard, but earns no points: there is no proof, and it would let an advertiser and a member invent payments.
+
+Points are credited on the **amount actually paid in sats** (after the discount). The Pix or cash part earns nothing.
+
+### Ledger
+
+`point-entry` (collection, private, written only by the server; no update or delete route):
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `member` | relation | |
+| `kind` | enum `earn`, `redeem`, `expire`, `reverse` | |
+| `points` | integer | positive for `earn`, negative for the rest |
+| `payment` | relation, unique for `earn` | one credit per proven payment |
+| `status` | enum `pending`, `available` | `earn` starts `pending` for 7 days |
+| `prevHash`, `hash` | string | `hash = sha256(prevHash + fields)`, a chain per member |
+
+The balance is the sum of `available` entries. Entries are never edited: a mistake is fixed with a `reverse` entry. The hash chain makes any change in the database visible: a daily job re-checks every chain and alerts the admin. Points expire 12 months after they become available.
+
+### Secure, idempotent and always verifiable
+
+- **Secure:** a point exists only with a preimage that matches the invoice's `payment_hash`; the invoice was requested by Afim and is signed by the advertiser's Lightning node. Only the server writes the ledger, inside one database transaction.
+- **Idempotent:** `point-entry` has a unique key on (`kind`, `payment_hash`), so the same payment can never be credited twice, however many times the wallet, the page or the LUD-21 check reports it. The claim endpoint `POST /api/members/me/points/claim {paymentId, preimage}` returns the existing entry on a repeat call instead of an error, and redeeming uses the quote id the same way.
+- **Always verifiable:** each `earn` entry keeps the BOLT11 invoice and the preimage (the invoice text carries only the profile name and "Afim", no personal data). Anyone holding them can recheck the proof without trusting Afim: the invoice signature shows which node issued it and for how much, and `sha256(preimage) == payment_hash` shows it was paid. In `/conta/pontos` the member can download their ledger with these proofs, and the page rechecks them in the browser.
+- **History cannot be rewritten in silence:** every day Afim publishes the head `hash` of every member chain combined into one Merkle root at `GET /api/points/roots/:day`, and stamps that root in the Bitcoin blockchain with OpenTimestamps (free, no wallet needed). A member's downloaded ledger includes the path from their chain head to that day's root, so they can prove their balance existed on that date, even against Afim.
+
+### Anti-fraud
+
+The risk is an advertiser and a member (or one person with both roles) paying each other in a loop to farm points, since the sats come back to them.
+
+- No points for payments to a profile the payer owns, or whose owner invited the payer.
+- Caps: at most 100,000 points per member per month and 20,000 per member per profile per month (values to tune).
+- `pending` for 7 days before use, so the admin can reverse a suspicious burst.
+- The admin sees the same signals as for reviews (account age, shared inviter, repeated pairs).
+
+### Redeeming
+
+An `offer` gains optional `pointsCost` (integer) and `pointsBonusPercent` (integer): "use 5,000 points for 10% more". In the quote the member chooses to use points; the extra discount applies to the Lightning part and the total discount is still capped at 50% plus `maxDiscountBrl`. Points are deducted with a `redeem` entry only when that payment is proven; an expired quote releases them.
+
+Each advertiser decides whether to accept points and how much they are worth there. Afim does not pay advertisers for redeemed points: it is a discount the advertiser chooses to give to afins with a history of paying in Lightning. Redeeming needs `lightningOffers` (paid plan); earning is free for every member.
+
+### Points are not money
+
+Points have no cash value, cannot be sold, transferred, or converted into sats or reais, and are only a right to a discount the advertiser offers. This keeps them a loyalty program and out of payment or virtual asset rules (to confirm in the legal review). The terms say Afim can end the program with notice.
+
+### LGPD
+
+The ledger links a member to the businesses they paid, so it is personal data. The member sees their own entries in `/conta/pontos`; the advertiser sees only how many points were redeemed with them, never by whom. Deleting the account deletes the member's ledger and balance.
 
 ## Reviews
 
@@ -210,7 +271,7 @@ Each milestone is one or a few small PRs, in this order:
 
 1. **Plans + Stripe.** `plan`, `subscription`, entitlement helper, Checkout, webhook, Customer Portal, `/conta/plano`. The public plans page reads `plan` (done in the public site work).
 2. **Lightning for plans.** BTCPay in the stack, prepaid months, renewal reminder.
-3. **Lightning discounts.** `lightningAddress`, `offer` with `audience = members`, quote + LNURL invoice, pay page with split, LUD-21 check.
+3. **Lightning discounts.** `lightningAddress`, `offer` with `audience = members`, quote + LNURL invoice, pay page with split, LUD-21 check, WebLN preimage check.
 4. **Reviews.** After a paid payment; replies on the paid plan.
 5. **Campaigns.** `audience = affinities`, dates and coupon codes.
 6. **Dashboard.** Daily counters and `/conta/painel`.
@@ -218,6 +279,7 @@ Each milestone is one or a few small PRs, in this order:
 8. **Referral rewards.** One free month per invited paying member.
 9. **PWA and near me.**
 10. **Highlight, featured in your city and Afim recommended.** Highlight ordering can ship with milestone 1; the city slots and the recommended strip need reviews and the badge first.
+11. **Afinity Points.** After the discounts (milestone 3), which already store each payment's hash and proof.
 
 ## Open questions
 
@@ -225,5 +287,6 @@ Each milestone is one or a few small PRs, in this order:
 - BTCPay Server self-hosted (proposed) or a hosted provider for Afim's own wallet.
 - BRL/BTC rate source.
 - Should the advertiser also be able to confirm payments when the wallet has no LUD-21 (proposed: yes)?
+- Afinity Points: monthly caps, pending period and expiry values.
 - Price and duration of a city slot (e.g. per month), and the slot cap per page.
 - Integrator partners: only a category for now, or a partner badge and referral deal?

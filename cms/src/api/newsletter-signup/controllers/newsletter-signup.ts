@@ -1,5 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import { turnstileOk } from '../../../turnstile';
+import { MAX_EMAIL, encrypt, hash } from '../../../crypto';
 
 // Bump it together with the consent text of /avise-me (launch-page.consentText or the page default).
 export const NEWSLETTER_CONSENT_VERSION = '2026-10-28';
@@ -18,8 +19,8 @@ export default ({ strapi }: { strapi: any }) => ({
     if (body.website) return ok(ctx); // honeypot
     if (!(await turnstileOk(body.captchaToken, ctx.ip))) return ctx.badRequest('CAPTCHA verification failed');
 
-    const email = typeof body.email === 'string' ? body.email.trim().toLowerCase().slice(0, 255) : '';
-    if (!/^\S+@\S+\.\S+$/.test(email)) return ctx.badRequest('a valid email is required');
+    const email = typeof body.email === 'string' ? body.email.trim().toLowerCase().slice(0, MAX_EMAIL + 1) : '';
+    if (!/^\S+@\S+\.\S+$/.test(email) || email.length > MAX_EMAIL) return ctx.badRequest('a valid email is required');
     if (body.consent !== true) return ctx.badRequest('consent is required');
 
     const data = {
@@ -30,9 +31,10 @@ export default ({ strapi }: { strapi: any }) => ({
       consentVersion: NEWSLETTER_CONSENT_VERSION,
     };
     const docs = strapi.documents(UID);
-    const current = await docs.findFirst({ filters: { email } });
+    const emailHash = hash(email);
+    const current = await docs.findFirst({ filters: { emailHash } });
     if (current) await docs.update({ documentId: current.documentId, data });
-    else await docs.create({ data: { ...data, email, unsubscribeToken: randomBytes(24).toString('base64url') } });
+    else await docs.create({ data: { ...data, email: encrypt(email), emailHash, unsubscribeToken: randomBytes(24).toString('base64url') } });
     return ok(ctx);
   },
 

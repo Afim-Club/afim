@@ -5,7 +5,7 @@
     "singularName": "member",
     "pluralName": "members",
     "displayName": "Member",
-    "description": "Personal data of a signed-up person. Affinities are sensitive data (LGPD): only the member reads or changes them, through /api/members/me."
+    "description": "Personal data of a signed-up person. Affinities are sensitive data (LGPD): only the member reads or changes them, through /api/members/me. They are stored encrypted in affinityData (see src/crypto.ts): a JSON list of { affinity (documentId), stance, findPeople, findCompanies, findShops }."
   },
   "options": { "draftAndPublish": false },
   "pluginOptions": {},
@@ -16,7 +16,7 @@
     "state": { "type": "string", "maxLength": 2 },
     "affinityConsentAt": { "type": "datetime" },
     "affinityConsentVersion": { "type": "string" },
-    "affinities": { "type": "component", "repeatable": true, "component": "member.affinity-preference" },
+    "affinityData": { "type": "text", "private": true },
     "inviteCode": { "type": "string", "unique": true, "private": true },
     "invitedBy": { "type": "relation", "relation": "manyToOne", "target": "api::member.member", "private": true }
   }

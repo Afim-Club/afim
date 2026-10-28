@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { factories } from '@strapi/strapi';
 import { POSITION_GROUP, positionIndex, type Stance } from '../political';
+import { decrypt, encrypt } from '../../../crypto';
 
 // Bump when the consent text shown in web/src/pages/conta.astro changes.
 export const CONSENT_VERSION = '2026-10-27';
@@ -13,38 +14,50 @@ type Pref = { affinity: { documentId: string; name: string; slug: string; group:
 // An invite only counts for accounts created this recently, so old members can't attach themselves to someone.
 const INVITE_WINDOW_MS = 24 * 3_600_000;
 
-const POPULATE = { affinities: { populate: { affinity: { fields: ['name', 'slug', 'group', 'lean', 'description'] } } } };
+// What member.affinityData holds once decrypted.
+type Row = { affinity: string; stance: Stance | null; findPeople: boolean; findCompanies: boolean; findShops: boolean };
+const rowsOf = (m: any): Row[] => JSON.parse(decrypt(m?.affinityData) ?? '[]');
 
 export default factories.createCoreController('api::member.member', ({ strapi }) => {
   const findMine = (userId: number) =>
-    strapi.documents('api::member.member').findFirst({ filters: { user: { id: userId } }, populate: POPULATE as any });
+    strapi.documents('api::member.member').findFirst({ filters: { user: { id: userId } } as any });
 
   const positions = () =>
     strapi.documents('api::affinity.affinity').findMany({
       filters: { group: { $eq: POSITION_GROUP } } as any, fields: ['name', 'slug', 'description'] as any, sort: ['sortOrder:asc', 'name:asc'] as any,
     });
 
-  const view = (m: any) => ({
-    displayName: m?.displayName ?? '',
-    city: m?.city ?? '',
-    state: m?.state ?? '',
-    affinityConsentAt: m?.affinityConsentAt ?? null,
-    affinityConsentVersion: m?.affinityConsentVersion ?? null,
-    affinities: ((m?.affinities ?? []) as any[])
-      .filter((a: any) => a.affinity)
-      .map((a: any) => ({
-        affinity: {
-          documentId: a.affinity.documentId, name: a.affinity.name, slug: a.affinity.slug,
-          group: a.affinity.group ?? null, lean: a.affinity.lean ?? null, description: a.affinity.description ?? null,
-        },
-        stance: a.stance ?? null,
-        findPeople: a.findPeople, findCompanies: a.findCompanies, findShops: a.findShops,
-      })) as Pref[],
-  });
+  // Decrypts the member's affinities and joins them with the affinity list (deleted affinities are dropped).
+  const view = async (m: any) => {
+    const rows = rowsOf(m);
+    const known = rows.length
+      ? await strapi.documents('api::affinity.affinity').findMany({
+          filters: { documentId: { $in: rows.map((r) => r.affinity) } } as any, fields: ['name', 'slug', 'group', 'lean', 'description'] as any,
+        })
+      : [];
+    const byDoc = new Map(known.map((a: any) => [a.documentId, a]));
+    return {
+      displayName: m?.displayName ?? '',
+      city: m?.city ?? '',
+      state: m?.state ?? '',
+      affinityConsentAt: m?.affinityConsentAt ?? null,
+      affinityConsentVersion: m?.affinityConsentVersion ?? null,
+      affinities: rows
+        .filter((r) => byDoc.has(r.affinity))
+        .map((r) => {
+          const a = byDoc.get(r.affinity) as any;
+          return {
+            affinity: { documentId: a.documentId, name: a.name, slug: a.slug, group: a.group ?? null, lean: a.lean ?? null, description: a.description ?? null },
+            stance: r.stance ?? null,
+            findPeople: r.findPeople, findCompanies: r.findCompanies, findShops: r.findShops,
+          };
+        }) as Pref[],
+    };
+  };
 
   // The member's own political position, derived from their answers on political issues. It is not stored.
   const withPosition = async (m: any) => {
-    const v = view(m);
+    const v = await view(m);
     const answers = v.affinities
       .filter((p) => p.stance && p.affinity.lean !== null)
       .map((p) => ({ lean: p.affinity.lean as number, stance: p.stance as Stance }));
@@ -71,22 +84,22 @@ export default factories.createCoreController('api::member.member', ({ strapi })
 
       const ids = [...new Set(wanted.map((a: any) => a?.affinity).filter((id: unknown) => typeof id === 'string'))] as string[];
       const known = ids.length
-        ? await strapi.documents('api::affinity.affinity').findMany({ filters: { documentId: { $in: ids } }, fields: ['id', 'group', 'lean'] as any })
+        ? await strapi.documents('api::affinity.affinity').findMany({ filters: { documentId: { $in: ids } }, fields: ['group', 'lean'] as any })
         : [];
       const byDoc = new Map(known.map((a: any) => [a.documentId, a]));
       const flags = (a: any) => ({ findPeople: a?.findPeople === true, findCompanies: a?.findCompanies === true, findShops: a?.findShops === true });
-      const affinities: Record<string, any>[] = [];
+      const affinities: Row[] = [];
       for (const id of ids) {
         const a = wanted.find((w: any) => w?.affinity === id);
         const k = byDoc.get(id) as any;
         if (!k) continue;
         if (k.group === POSITION_GROUP) {
           // Which kinds of profiles to find for this spectrum; a row with nothing to find is not kept.
-          if (Object.values(flags(a)).some(Boolean)) affinities.push({ affinity: k.id, stance: null, ...flags(a) });
+          if (Object.values(flags(a)).some(Boolean)) affinities.push({ affinity: id, stance: null, ...flags(a) });
         } else if (k.lean === null || k.lean === undefined) {
-          affinities.push({ affinity: k.id, stance: null, ...flags(a) });
+          affinities.push({ affinity: id, stance: null, ...flags(a) });
         } else if (['agrees', 'disagrees', 'neutral'].includes(a.stance)) {
-          affinities.push({ affinity: k.id, stance: a.stance, ...flags(null) });
+          affinities.push({ affinity: id, stance: a.stance, ...flags(null) });
         }
       }
 
@@ -95,7 +108,8 @@ export default factories.createCoreController('api::member.member', ({ strapi })
         displayName: str(body.displayName, 120),
         city: str(body.city, 120),
         state: str(body.state, 2).toUpperCase(),
-        affinities: consent ? affinities : [],
+        // Encrypted (LGPD sensitive data); null when there is nothing to keep.
+        affinityData: consent && affinities.length ? encrypt(JSON.stringify(affinities)) : null,
         // Keep the original consent date unless consent was withdrawn or its terms changed.
         affinityConsentAt: consent
           ? (current?.affinityConsentVersion === CONSENT_VERSION && current?.affinityConsentAt) || new Date().toISOString()
@@ -103,8 +117,8 @@ export default factories.createCoreController('api::member.member', ({ strapi })
         affinityConsentVersion: consent ? CONSENT_VERSION : null,
       };
       const saved = current
-        ? await strapi.documents('api::member.member').update({ documentId: current.documentId, data: data as any, populate: POPULATE as any })
-        : await strapi.documents('api::member.member').create({ data: { ...data, user: ctx.state.user.id } as any, populate: POPULATE as any });
+        ? await strapi.documents('api::member.member').update({ documentId: current.documentId, data: data as any })
+        : await strapi.documents('api::member.member').create({ data: { ...data, user: ctx.state.user.id } as any });
       return { data: await withPosition(saved) };
     },
 
@@ -159,7 +173,7 @@ export default factories.createCoreController('api::member.member', ({ strapi })
     // Done server side so the affinities never travel in a public, logged URL.
     // Each profile comes with `matchedAffinities`: the member's affinities it has.
     async matches(ctx) {
-      const prefs = view(await findMine(ctx.state.user.id)).affinities.filter((p) => p.stance === null);
+      const prefs = (await view(await findMine(ctx.state.user.id))).affinities.filter((p) => p.stance === null);
       const typesOf = (p: Pref) => (Object.keys(TYPES) as (keyof typeof TYPES)[]).filter((k) => p[k]).flatMap((k) => TYPES[k]) as string[];
       // Each requirement: affinity documentId -> profile types it finds.
       const spectrums = new Map<string, string[]>();

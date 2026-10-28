@@ -4,6 +4,7 @@ import { seed, seedAffinities } from './seed';
 import { seedContent } from './seed-content';
 import { seedHelp } from './seed-help';
 import { seedBlog } from './seed-blog';
+import { checkKey } from './crypto';
 
 const PUBLIC_ACTIONS = [
   'api::profile.profile.find',
@@ -58,7 +59,10 @@ async function grant(strapi: Core.Strapi, roleType: string, actions: string[]) {
 }
 
 export default {
-  register() {},
+  // Refuse to start without a valid DATA_ENCRYPTION_KEY in production, before any request is served.
+  register() {
+    checkKey();
+  },
 
   async bootstrap({ strapi }: { strapi: Core.Strapi }) {
     await grant(strapi, 'public', PUBLIC_ACTIONS);

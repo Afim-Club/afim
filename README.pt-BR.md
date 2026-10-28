@@ -8,7 +8,7 @@
 - Empresas contratam pessoas que compartilham seus valores.
 - Comércios e fornecedores fazem negócios com parceiros que compartilham seus valores.
 
-O site público pode ser navegado por lugar, como um diretório clássico: `/estados` lista os estados, e `/sp`, `/sp/campinas` e `/sp/campinas/servicos` listam os perfis ativos por estado, cidade e categoria, com contagens e trilha de navegação.
+O site público pode ser navegado por lugar, como um diretório clássico: todo o diretório fica em `/explorar` (as URLs antigas redirecionam com 301): `/explorar/estados` lista os estados, e `/explorar/sp`, `/explorar/sp/campinas` e `/explorar/sp/campinas/servicos` listam os perfis ativos por estado, cidade e categoria, com contagens e trilha de navegação.
 
 ## Componentes
 

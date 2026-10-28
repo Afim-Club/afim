@@ -15,7 +15,7 @@ const profiles = await getProfiles();
   <ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
     {roots.map((c) => (
       <Card as="li">
-        <a href={`/categorias/${c.slug}`} class="font-semibold">{c.name}</a>
+        <a href={`/explorar/categorias/${c.slug}`} class="font-semibold">{c.name}</a>
         {c.children?.length ? <div class="text-sm text-muted">{c.children.map((s) => s.name).join(', ')}</div> : null}
       </Card>
     ))}

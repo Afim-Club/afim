@@ -16,7 +16,7 @@ const { title, description } = Astro.props;
     {description && <meta name="description" content={description} />}
   </head>
   <body>
-    <SiteHeader><a href="/estados">Estados</a><a href="/mapa">Mapa</a><a href="/busca">Buscar</a><a href="/conta">Minha conta</a></SiteHeader>
+    <SiteHeader><a href="/explorar">Explorar</a><a href="/explorar/estados">Estados</a><a href="/explorar/mapa">Mapa</a><a href="/explorar/busca">Buscar</a><a href="/conta">Minha conta</a></SiteHeader>
     <Container><main class="py-2"><slot /></main></Container>
     <SiteFooter>Afim — diretório open source de pessoas, negócios e comércios com valores em comum.</SiteFooter>
   </body>

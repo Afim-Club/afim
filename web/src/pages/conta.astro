@@ -208,7 +208,7 @@ import Layout from '../layouts/Layout.astro';
       $('matches').replaceChildren(...matches.map((p: any) => {
         const li = tpl.cloneNode(true) as HTMLElement;
         const a = li.querySelector('a')!;
-        a.href = `/perfis/${p.slug}`;
+        a.href = `/explorar/perfis/${p.slug}`;
         a.textContent = p.name;
         li.querySelector('span')!.textContent = `${TYPE_LABELS[p.profileType as keyof typeof TYPE_LABELS]} · Em comum: ${p.matchedAffinities.map((x: any) => x.name).join(', ')}`;
         return li;

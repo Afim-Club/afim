@@ -1,11 +1,11 @@
 ---
-import Layout from '../../../layouts/Layout.astro';
+import Layout from '../../../../layouts/Layout.astro';
 import Badge from '@afim/design-system/components/Badge.astro';
-import Breadcrumbs from '../../../components/Breadcrumbs.astro';
-import AffinityFilter from '../../../components/AffinityFilter.astro';
-import ProfileCard from '../../../components/ProfileCard.astro';
-import { cityUrl, getDirectory, inCategory, stateUrl, type City, type State } from '../../../lib/places';
-import type { Category, Profile } from '../../../lib/strapi';
+import Breadcrumbs from '../../../../components/Breadcrumbs.astro';
+import AffinityFilter from '../../../../components/AffinityFilter.astro';
+import ProfileCard from '../../../../components/ProfileCard.astro';
+import { cityUrl, getDirectory, inCategory, stateUrl, type City, type State } from '../../../../lib/places';
+import type { Category, Profile } from '../../../../lib/strapi';
 
 // One page per category (or parent category) that has profiles in the city.
 export async function getStaticPaths() {
@@ -29,7 +29,7 @@ const children = (category.children ?? []).filter((c) => city.profiles.some((p) 
 ---
 <Layout title={`${category.name} em ${city.name} - ${state.uf}`} description={`${category.name} com valores em comum em ${city.name} (${state.uf}).`}>
   <Breadcrumbs items={[
-    { name: 'Início', href: '/' }, { name: 'Estados', href: '/estados' }, { name: state.name, href: stateUrl(state) },
+    { name: 'Explorar', href: '/explorar' }, { name: 'Estados', href: '/explorar/estados' }, { name: state.name, href: stateUrl(state) },
     { name: city.name, href: base }, ...(category.parent ? [{ name: category.parent.name, href: `${base}/${category.parent.slug}` }] : []),
     { name: category.name },
   ]} />

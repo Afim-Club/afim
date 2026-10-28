@@ -2,8 +2,8 @@
 import Button from '@afim/design-system/components/Button.astro';
 import Card from '@afim/design-system/components/Card.astro';
 import Input from '@afim/design-system/components/Input.astro';
-import AffinityFilter from '../components/AffinityFilter.astro';
-import Layout from '../layouts/Layout.astro';
+import AffinityFilter from '../../components/AffinityFilter.astro';
+import Layout from '../../layouts/Layout.astro';
 ---
 <Layout title="Buscar">
   <h1>Buscar</h1>
@@ -17,8 +17,8 @@ import Layout from '../layouts/Layout.astro';
   <template id="tpl"><Card as="li"><a class="font-semibold"></a> <span class="text-sm text-muted"></span></Card></template>
   <ul id="results" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"></ul>
   <script>
-    import { API } from '../lib/auth';
-    import { onFilter, type Test } from '../lib/affinity-filter';
+    import { API } from '../../lib/auth';
+    import { onFilter, type Test } from '../../lib/affinity-filter';
 
     type Hit = { name: string; slug: string; profileType: string; affinities?: { slug: string }[]; location?: { city?: string; state?: string } };
     const form = document.getElementById('f') as HTMLFormElement;
@@ -34,7 +34,7 @@ import Layout from '../layouts/Layout.astro';
       out.replaceChildren(...shown.map((x) => {
         const li = tpl.content.firstElementChild!.cloneNode(true) as HTMLElement;
         const a = li.querySelector('a')!;
-        a.href = `/perfis/${x.slug}`;
+        a.href = `/explorar/perfis/${x.slug}`;
         a.textContent = x.name;
         li.querySelector('span')!.textContent = [x.location?.city, x.location?.state].filter(Boolean).join(' / ');
         return li;

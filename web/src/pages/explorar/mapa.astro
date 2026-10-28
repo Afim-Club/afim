@@ -1,9 +1,9 @@
 ---
 import Select from '@afim/design-system/components/Select.astro';
 import EmptyState from '@afim/design-system/components/EmptyState.astro';
-import Layout from '../layouts/Layout.astro';
-import AffinityFilter from '../components/AffinityFilter.astro';
-import { TYPE_LABELS, getProfiles } from '../lib/strapi';
+import Layout from '../../layouts/Layout.astro';
+import AffinityFilter from '../../components/AffinityFilter.astro';
+import { TYPE_LABELS, getProfiles } from '../../lib/strapi';
 
 // Only profiles with coordinates go on the map. Embedded at build time, like every other page.
 const points = (await getProfiles())
@@ -40,7 +40,7 @@ const points = (await getProfiles())
 <script>
   import 'leaflet/dist/leaflet.css';
   import L from 'leaflet';
-  import { onFilter, type Test } from '../lib/affinity-filter';
+  import { onFilter, type Test } from '../../lib/affinity-filter';
 
   type Point = { name: string; slug: string; type: string; typeLabel: string; affinities: string[]; place: string; lat: number; lng: number };
 
@@ -59,7 +59,7 @@ const points = (await getProfiles())
     const popup = (p: Point) => {
       const div = document.createElement('div');
       const a = document.createElement('a');
-      a.href = `/perfis/${p.slug}`;
+      a.href = `/explorar/perfis/${p.slug}`;
       a.textContent = p.name;
       a.style.fontWeight = '600';
       const meta = document.createElement('div');

@@ -1,10 +1,10 @@
 ---
-import Layout from '../../../layouts/Layout.astro';
+import Layout from '../../../../layouts/Layout.astro';
 import Badge from '@afim/design-system/components/Badge.astro';
-import Breadcrumbs from '../../../components/Breadcrumbs.astro';
-import AffinityFilter from '../../../components/AffinityFilter.astro';
-import ProfileCard from '../../../components/ProfileCard.astro';
-import { categoryCounts, cityUrl, getDirectory, stateUrl, type City, type State } from '../../../lib/places';
+import Breadcrumbs from '../../../../components/Breadcrumbs.astro';
+import AffinityFilter from '../../../../components/AffinityFilter.astro';
+import ProfileCard from '../../../../components/ProfileCard.astro';
+import { categoryCounts, cityUrl, getDirectory, stateUrl, type City, type State } from '../../../../lib/places';
 
 export async function getStaticPaths() {
   const { states, categories } = await getDirectory();
@@ -19,7 +19,7 @@ export async function getStaticPaths() {
 const { state, city, counts } = Astro.props as { state: State; city: City; counts: ReturnType<typeof categoryCounts> };
 ---
 <Layout title={`Perfis em ${city.name} - ${state.uf}`} description={`Pessoas, negócios e comércios com valores em comum em ${city.name} (${state.uf}).`}>
-  <Breadcrumbs items={[{ name: 'Início', href: '/' }, { name: 'Estados', href: '/estados' }, { name: state.name, href: stateUrl(state) }, { name: city.name }]} />
+  <Breadcrumbs items={[{ name: 'Explorar', href: '/explorar' }, { name: 'Estados', href: '/explorar/estados' }, { name: state.name, href: stateUrl(state) }, { name: city.name }]} />
   <h1>{city.name} <span class="text-muted">· {state.uf}</span></h1>
   {counts.length ? (
     <p class="mb-4 flex flex-wrap gap-2">

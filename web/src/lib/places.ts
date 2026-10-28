@@ -17,8 +17,8 @@ export const slugify = (s: string) =>
 export type City = { slug: string; name: string; profiles: Profile[] };
 export type State = { uf: string; slug: string; name: string; cities: City[]; profiles: Profile[] };
 
-export const stateUrl = (s: { slug: string }) => `/${s.slug}`;
-export const cityUrl = (s: { slug: string }, c: { slug: string }) => `/${s.slug}/${c.slug}`;
+export const stateUrl = (s: { slug: string }) => `/explorar/${s.slug}`;
+export const cityUrl = (s: { slug: string }, c: { slug: string }) => `/explorar/${s.slug}/${c.slug}`;
 
 let cache: Promise<{ states: State[]; categories: Category[] }> | undefined;
 
@@ -76,5 +76,5 @@ export function placeHref(p: Profile) {
   const uf = p.location?.state?.trim().toUpperCase() ?? '';
   if (!STATES[uf]) return undefined;
   const city = slugify(p.location?.city ?? '');
-  return city ? `/${uf.toLowerCase()}/${city}` : `/${uf.toLowerCase()}`;
+  return city ? `/explorar/${uf.toLowerCase()}/${city}` : `/explorar/${uf.toLowerCase()}`;
 }

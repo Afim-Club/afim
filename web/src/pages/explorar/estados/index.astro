@@ -1,9 +1,9 @@
 ---
-import Layout from '../../layouts/Layout.astro';
+import Layout from '../../../layouts/Layout.astro';
 import EmptyState from '@afim/design-system/components/EmptyState.astro';
-import Breadcrumbs from '../../components/Breadcrumbs.astro';
-import CountList from '../../components/CountList.astro';
-import { getDirectory, stateUrl } from '../../lib/places';
+import Breadcrumbs from '../../../components/Breadcrumbs.astro';
+import CountList from '../../../components/CountList.astro';
+import { getDirectory, stateUrl } from '../../../lib/places';
 
 const { states } = await getDirectory();
 ---

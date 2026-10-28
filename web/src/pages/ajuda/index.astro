@@ -1,0 +1,51 @@
+---
+/** Help module home: topics with their articles, and a client-side search over titles and summaries. */
+import Layout from '../../layouts/Layout.astro';
+import Input from '@afim/design-system/components/Input.astro';
+import { getHelp, helpUrl } from '../../lib/content';
+const topics = await getHelp();
+---
+<Layout title="Ajuda" module="ajuda" description="Como usar o Afim, pagar com Lightning, cadastrar seu negócio e cuidar dos seus dados.">
+  <section class="py-6">
+    <h1 class="mt-0">Como podemos ajudar?</h1>
+    <label class="block max-w-xl">
+      <span class="sr-only">Buscar na ajuda</span>
+      <Input id="help-q" type="search" placeholder="Buscar na ajuda" autocomplete="off" />
+    </label>
+  </section>
+  <div id="help-topics" class="grid gap-8 md:grid-cols-2">
+    {topics.map((t) => (
+      <section data-topic>
+        <h2 class="mt-0"><a href={helpUrl(t)} class="text-fg no-underline hover:text-brand">{t.name}</a></h2>
+        {t.description && <p class="text-muted">{t.description}</p>}
+        <ul class="m-0 list-none space-y-3 p-0">
+          {t.articles.map((a) => (
+            <li data-search={`${a.title} ${a.summary ?? ''}`.toLowerCase()}>
+              <a href={helpUrl(t, a)} class="font-medium">{a.title}</a>
+              {a.summary && <p class="m-0 text-sm text-muted">{a.summary}</p>}
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))}
+  </div>
+  <p id="help-empty" class="text-muted" hidden>Nada encontrado. Tente outras palavras.</p>
+  <script>
+    const q = document.getElementById('help-q') as HTMLInputElement;
+    q.addEventListener('input', () => {
+      const words = q.value.toLowerCase().split(/\s+/).filter(Boolean);
+      let shown = 0;
+      document.querySelectorAll<HTMLElement>('[data-topic]').forEach((topic) => {
+        let inTopic = 0;
+        topic.querySelectorAll<HTMLElement>('[data-search]').forEach((li) => {
+          const hit = words.every((w) => li.dataset.search!.includes(w));
+          li.hidden = !hit;
+          if (hit) inTopic++;
+        });
+        topic.hidden = !inTopic;
+        shown += inTopic;
+      });
+      document.getElementById('help-empty')!.hidden = shown > 0;
+    });
+  </script>
+</Layout>

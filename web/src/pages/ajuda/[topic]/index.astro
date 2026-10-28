@@ -1,0 +1,31 @@
+---
+/** Help topic: /ajuda/<topic>, the list of its articles. */
+import Layout from '../../../layouts/Layout.astro';
+import Breadcrumbs from '../../../components/Breadcrumbs.astro';
+import HelpNav from '../../../components/help/HelpNav.astro';
+import { getHelp, helpUrl } from '../../../lib/content';
+
+export async function getStaticPaths() {
+  return (await getHelp()).map((topic) => ({ params: { topic: topic.slug }, props: { topic } }));
+}
+const { topic } = Astro.props;
+const topics = await getHelp();
+---
+<Layout title={topic.name} module="ajuda" description={topic.description}>
+  <div class="grid gap-8 py-6 md:grid-cols-[15rem_1fr]">
+    <aside class="hidden md:block"><HelpNav topics={topics} /></aside>
+    <section>
+      <Breadcrumbs items={[{ name: 'Ajuda', href: '/ajuda' }, { name: topic.name }]} />
+      <h1>{topic.name}</h1>
+      {topic.description && <p class="text-lg text-muted">{topic.description}</p>}
+      <ul class="m-0 list-none space-y-4 p-0">
+        {topic.articles.map((a) => (
+          <li>
+            <a href={helpUrl(topic, a)} class="text-lg font-medium">{a.title}</a>
+            {a.summary && <p class="m-0 text-muted">{a.summary}</p>}
+          </li>
+        ))}
+      </ul>
+    </section>
+  </div>
+</Layout>

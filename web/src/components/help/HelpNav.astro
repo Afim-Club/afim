@@ -1,0 +1,24 @@
+---
+/** Help center side navigation: every topic with its articles; the current article is highlighted. */
+import { helpUrl, type HelpTopic } from '../../lib/content';
+interface Props { topics: HelpTopic[]; current?: string }
+const { topics, current } = Astro.props;
+---
+<nav aria-label="Artigos de ajuda" class="text-sm">
+  {topics.map((t) => (
+    <div class="mb-5">
+      <a href={helpUrl(t)} class="mb-1 block px-2 text-xs font-semibold uppercase tracking-wide text-muted no-underline">{t.name}</a>
+      <ul class="m-0 list-none p-0">
+        {t.articles.map((a) => (
+          <li>
+            <a
+              href={helpUrl(t, a)}
+              aria-current={a.slug === current ? 'page' : undefined}
+              class:list={['block rounded-afim px-2 py-1 no-underline', a.slug === current ? 'bg-brand-soft font-semibold text-brand' : 'text-fg hover:bg-surface']}
+            >{a.title}</a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  ))}
+</nav>

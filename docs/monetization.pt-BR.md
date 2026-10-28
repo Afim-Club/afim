@@ -31,7 +31,7 @@ Dois planos para começar (KISS). Preços em aberto (ver o final).
 | `dashboard`: visitas, cliques, pagamentos e desconto concedido | | sim |
 | `verifiedBadge`: verificação de documento e selo | | sim |
 | `reviewReplies`: responder avaliações | | sim |
-| `highlight`: card em destaque e listado primeiro | | sim |
+| `featuredListing`: card em destaque e listado primeiro | | sim |
 | `cityFeatured`: pode comprar vagas de "Destaque na sua cidade" (cobrança extra) | | sim |
 
 Membros (pessoas buscando afins) nunca pagam. Pagar uma conta com desconto, avaliar e convidar são gratuitos.
@@ -81,11 +81,11 @@ O desconto é sempre para membros logados: "entre perfis Afim" significa que que
 
 Três coisas diferentes, separadas para o diretório continuar confiável:
 
-- **Destaque** (`highlight`, no plano pago): o perfil pago tem card em destaque e aparece primeiro entre os perfis que **já combinam** com a página e o filtro de afinidades. Nunca faz um perfil aparecer onde ele não combina.
-- **Destaque na sua cidade** (`cityFeatured`, adicional pago sobre o plano): uma faixa no topo da página da cidade (e da cidade + categoria), no máximo 3 vagas por página, por um período fixo. O card leva o selo "Destaque" para o visitante saber que é pago (transparência do CDC).
-- **Recomendados do Afim na cidade** (grátis, nunca vendido): faixa escolhida por critério: selo de verificado, pelo menos 5 avaliações com média 4,5 ou mais, ativo nos últimos 90 dias e sem moderação em aberto. O admin pode retirar um manualmente. Vender isso quebraria a confiança que as regras de avaliação constroem.
+- **Destaque** (`featuredListing`, no plano pago): o perfil pago tem card em destaque e aparece primeiro entre os perfis que **já combinam** com a página e o filtro de afinidades. Nunca faz um perfil aparecer onde ele não combina.
+- **Destaque na sua cidade** (`cityFeatured`, adicional pago sobre o plano): uma faixa no topo da página da cidade, no máximo 3 vagas por página, por 30 dias. O card leva o selo "Destaque" para o visitante saber que é pago (transparência do CDC).
+- **Recomendados do Afim na cidade** (grátis, nunca vendido): faixa escolhida pelo admin seguindo critérios: selo de verificado, pelo menos 5 avaliações com média 4,5 ou mais, ativo nos últimos 90 dias e sem moderação em aberto. Vender isso quebraria a confiança que as regras de avaliação constroem.
 
-`featured-slot` (collection privada; o site público lê só as vagas vigentes no build): `profile`, `state` (UF), `citySlug`, `category` (opcional), `startsAt`, `endsAt`, `provider` (stripe|lightning), `paymentRef`. Comprado em `/conta/plano` com Checkout avulso do Stripe ou fatura do BTCPay, só com plano ativo. Os recomendados são calculados no build, sem campo novo.
+`city-highlight` (collection compartilhada com o site público, que lê só as linhas vigentes no build): `profile`, `uf`, `citySlug`, `kind` (`recommended` ou `paid`), `startsAt`, `endsAt`, `sortOrder`, mais `provider` (stripe|lightning) e `paymentRef` privados nas linhas pagas. Uma linha paga vale 30 dias e é criada quando o Checkout avulso do Stripe ou a fatura do BTCPay comprados em `/conta/plano` são pagos, só com plano ativo. Linhas `recommended` são criadas só pelo admin, seguindo os critérios acima, e nunca são vendidas.
 
 O site é estático, então ordem de destaque, vagas e recomendados só mudam num novo build: um build agendado diário no Jenkins faz as vagas começarem e terminarem no dia certo.
 

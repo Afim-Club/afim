@@ -31,7 +31,7 @@ Two plans to start (KISS). Prices are open (see the end).
 | `dashboard`: views, clicks, payments and discount given | | yes |
 | `verifiedBadge`: document check and badge | | yes |
 | `reviewReplies`: answer reviews | | yes |
-| `highlight`: highlighted card and listed first | | yes |
+| `featuredListing`: highlighted card and listed first | | yes |
 | `cityFeatured`: can buy "Destaque na sua cidade" slots (extra charge) | | yes |
 
 Members (people looking for afins) never pay. Paying a discounted Lightning bill, writing a review and inviting are free.
@@ -140,11 +140,11 @@ This record is what reviews and the dashboard count on. Afim does not keep the i
 
 Three different things, kept apart so the directory stays credible:
 
-- **Highlight** (`highlight`, in the paid plan): a paid profile gets a highlighted card and comes first among the profiles that **already match** the page and the affinity filter. It never makes a profile show up where it does not match.
-- **Featured in your city** (`cityFeatured`, paid add-on on top of the plan): a "Destaque na sua cidade" strip at the top of the city page (and of the city + category page), at most 3 slots per page, for a fixed period. The card is labeled "Destaque" so visitors know it was paid (CDC transparency).
-- **Afim recommended in the city** (free, never sold): a "Recomendados do Afim" strip chosen by criteria: verified badge, at least 5 reviews with average 4.5 or more, active in the last 90 days, and no open moderation. The admin can remove one by hand. Selling it would break the trust the reviews section works to build.
+- **Highlight** (`featuredListing`, in the paid plan): a paid profile gets a highlighted card and comes first among the profiles that **already match** the page and the affinity filter. It never makes a profile show up where it does not match.
+- **Featured in your city** (`cityFeatured`, paid add-on on top of the plan): a "Destaque na sua cidade" strip at the top of the city page, at most 3 slots per page, for 30 days. The card is labeled "Destaque" so visitors know it was paid (CDC transparency).
+- **Afim recommended in the city** (free, never sold): a "Recomendados do Afim" strip chosen by the admin following criteria: verified badge, at least 5 reviews with average 4.5 or more, active in the last 90 days, and no open moderation. Selling it would break the trust the reviews section works to build.
 
-`featured-slot` (collection, private; the public site reads only current slots at build time): `profile`, `state` (UF), `citySlug`, `category` (optional), `startsAt`, `endsAt`, `provider` (stripe|lightning), `paymentRef`. Bought from `/conta/plano` with a one-off Stripe Checkout or a BTCPay invoice, only while the plan is active. Recommended profiles are computed at build time, no new field.
+`city-highlight` (collection, shared with the public site, which reads only current rows at build time): `profile`, `uf`, `citySlug`, `kind` (`recommended` or `paid`), `startsAt`, `endsAt`, `sortOrder`, plus private `provider` (stripe|lightning) and `paymentRef` on paid rows. A paid row lasts 30 days and is created when a one-off Stripe Checkout or a BTCPay invoice bought from `/conta/plano` is settled, only while the plan is active. `recommended` rows are created only by the admin, following the criteria above, and are never sold.
 
 The site is static, so highlight order, slots and recommended strips change only on a rebuild: add a daily scheduled build in Jenkins so slots start and end on time.
 

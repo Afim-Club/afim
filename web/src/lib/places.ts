@@ -1,6 +1,7 @@
 // Browse-by-place directory: groups active profiles by state (UF) and city.
 // City is free text in the CMS, so cities are grouped by a slug of their name
 // (accents, case and extra spaces ignored) and shown with the most used spelling.
+import { memo } from './memo';
 import { getCategories, getProfiles, type Category, type Profile } from './strapi';
 
 export const STATES: Record<string, string> = {
@@ -20,14 +21,10 @@ export type State = { uf: string; slug: string; name: string; cities: City[]; pr
 export const stateUrl = (s: { slug: string }) => `/explorar/${s.slug}`;
 export const cityUrl = (s: { slug: string }, c: { slug: string }) => `/explorar/${s.slug}/${c.slug}`;
 
-let cache: Promise<{ states: State[]; categories: Category[] }> | undefined;
+/** Every state with at least one profile, sorted by name (cached for a minute, see memo.ts). */
+export const getDirectory = () => memo('directory', build);
 
-/** Every state with at least one profile, sorted by name; built once per build. */
-export function getDirectory() {
-  return (cache ??= build());
-}
-
-async function build() {
+async function build(): Promise<{ states: State[]; categories: Category[] }> {
   const [profiles, categories] = await Promise.all([getProfiles(), getCategories()]);
   const byUf = new Map<string, Map<string, { spellings: Map<string, number>; profiles: Profile[] }>>();
   const stateProfiles = new Map<string, Profile[]>();

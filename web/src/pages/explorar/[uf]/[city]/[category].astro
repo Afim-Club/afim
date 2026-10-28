@@ -4,26 +4,15 @@ import Badge from '@afim/design-system/components/Badge.astro';
 import Breadcrumbs from '../../../../components/Breadcrumbs.astro';
 import AffinityFilter from '../../../../components/AffinityFilter.astro';
 import ProfileCard from '../../../../components/ProfileCard.astro';
-import { cityUrl, getDirectory, inCategory, stateUrl, type City, type State } from '../../../../lib/places';
-import type { Category, Profile } from '../../../../lib/strapi';
+import { cityUrl, getDirectory, inCategory, stateUrl } from '../../../../lib/places';
 
-// One page per category (or parent category) that has profiles in the city.
-export async function getStaticPaths() {
-  const { states, categories } = await getDirectory();
-  return states.flatMap((state) =>
-    state.cities.flatMap((city) =>
-      categories
-        .map((category) => ({ category, profiles: inCategory(city.profiles, category) }))
-        .filter((c) => c.profiles.length)
-        .map(({ category, profiles }) => ({
-          params: { uf: state.slug, city: city.slug, category: category.slug },
-          props: { state, city, category, profiles },
-        })),
-    ),
-  );
-}
-
-const { state, city, category, profiles } = Astro.props as { state: State; city: City; category: Category; profiles: Profile[] };
+// A page for each category (or parent category) that has profiles in the city.
+const { states, categories } = await getDirectory();
+const state = states.find((s) => s.slug === Astro.params.uf);
+const city = state?.cities.find((c) => c.slug === Astro.params.city);
+const category = categories.find((c) => c.slug === Astro.params.category);
+const profiles = city && category ? inCategory(city.profiles, category) : [];
+if (!state || !city || !category || !profiles.length) return Astro.rewrite('/404');
 const base = cityUrl(state, city);
 const children = (category.children ?? []).filter((c) => city.profiles.some((p) => p.categories?.some((pc) => pc.slug === c.slug)));
 ---

@@ -5,11 +5,9 @@ import Breadcrumbs from '../../../components/Breadcrumbs.astro';
 import HelpNav from '../../../components/help/HelpNav.astro';
 import { getHelp, helpUrl } from '../../../lib/content';
 
-export async function getStaticPaths() {
-  return (await getHelp()).map((topic) => ({ params: { topic: topic.slug }, props: { topic } }));
-}
-const { topic } = Astro.props;
 const topics = await getHelp();
+const topic = topics.find((t) => t.slug === Astro.params.topic);
+if (!topic) return Astro.rewrite('/404');
 ---
 <Layout title={topic.name} module="ajuda" description={topic.description}>
   <div class="grid gap-8 py-6 md:grid-cols-[15rem_1fr]">

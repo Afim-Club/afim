@@ -5,10 +5,8 @@ import Badge from '@afim/design-system/components/Badge.astro';
 import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import { blogDate, getBlogPosts, markdown, mediaUrl } from '../../lib/content';
 
-export async function getStaticPaths() {
-  return (await getBlogPosts()).map((post) => ({ params: { slug: post.slug }, props: { post } }));
-}
-const { post } = Astro.props;
+const post = (await getBlogPosts()).find((p) => p.slug === Astro.params.slug);
+if (!post) return Astro.rewrite('/404');
 const image = mediaUrl(post.cover);
 const jsonLd = {
   '@context': 'https://schema.org',

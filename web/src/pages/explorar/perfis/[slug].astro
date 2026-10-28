@@ -4,11 +4,8 @@ import Badge from '@afim/design-system/components/Badge.astro';
 import { TYPE_LABELS, getProfiles, isPolitical } from '../../../lib/strapi';
 import { placeHref } from '../../../lib/places';
 
-export async function getStaticPaths() {
-  return (await getProfiles()).map((profile) => ({ params: { slug: profile.slug }, props: { profile } }));
-}
-
-const { profile } = Astro.props;
+const profile = Astro.params.slug ? (await getProfiles(`filters[slug][$eq]=${encodeURIComponent(Astro.params.slug)}`))[0] : undefined;
+if (!profile) return Astro.rewrite('/404');
 const placeLink = placeHref(profile);
 const place = [profile.location?.city, profile.location?.state].filter(Boolean).join(' / ');
 const shownAffinities = (profile.affinities ?? []).filter((a) => !isPolitical(a));

@@ -3,10 +3,8 @@
 import Layout from '../layouts/Layout.astro';
 import { getPages, markdown } from '../lib/content';
 
-export async function getStaticPaths() {
-  return (await getPages()).map((page) => ({ params: { slug: page.slug }, props: { page } }));
-}
-const { page } = Astro.props;
+const page = (await getPages()).find((p) => p.slug === Astro.params.slug);
+if (!page) return Astro.rewrite('/404');
 ---
 <Layout title={page.title} module="home" seo={page.seo}>
   <article class="mx-auto max-w-3xl py-6">

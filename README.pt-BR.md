@@ -67,7 +67,7 @@ A porta é fixa porque o CMS só aceita requisições do navegador vindas de `lo
 
 ## Deploy (Cloudflare Workers + Dockge)
 
-O CMS roda como container Docker num host gerenciado pelo [Dockge](https://github.com/louislam/dockge); o site Astro é estático e servido pelo Cloudflare Workers (static assets, sem adapter nem código de servidor). O setup Swarm/Jenkins em `infra/stack.yml` continua como alternativa.
+O CMS roda como container Docker num host gerenciado pelo [Dockge](https://github.com/louislam/dockge); o site público (`web`) roda no Cloudflare Workers e renderiza cada página sob demanda a partir do CMS, com o adaptador `@astrojs/cloudflare` e um cache curto na borda. O setup Swarm/Jenkins em `infra/stack.yml` continua como alternativa.
 
 ### CMS no Dockge
 
@@ -80,7 +80,7 @@ A stack não tem container de banco: ela usa um MySQL 8 ou MariaDB que já exist
 
 ### Site no Cloudflare Workers
 
-O `web/wrangler.jsonc` (worker `afim-web`) publica `dist/` como static assets. Conecte o repositório em **Workers & Pages → Create → Import a repository** (Workers Builds):
+O `web/wrangler.jsonc` (worker `afim-web`, gerado pelo adaptador do Astro) publica o site. Conecte o repositório em **Workers & Pages → Create → Import a repository** (Workers Builds):
 
 | Configuração | `web` |
 | --- | --- |
@@ -92,8 +92,8 @@ O `web/wrangler.jsonc` (worker `afim-web`) publica `dist/` como static assets. C
 
 ou publique de uma máquina com `npm run deploy` (precisa de `wrangler login` ou `CLOUDFLARE_API_TOKEN`, e das mesmas variáveis no shell).
 
-- `STRAPI_URL` e `PUBLIC_STRAPI_URL` são o endereço público do CMS (`https://dash.afim.club`). O build do `web` busca nele os dados de todas as páginas, então **o CMS precisa estar no ar e acessível pela Cloudflare durante o build**.
-- O `web` é estático: conteúdo novo ou alterado só aparece depois de um novo build. Crie um Deploy Hook (Worker → Settings → Builds → Deploy Hooks) e cadastre a URL como webhook no Strapi (Settings → Webhooks, eventos de Profile/Category/Affinity, e também Home page, Pricing page, Launch page, Help topic, Help article, Blog post, Blog tag, Page, Plan, Site settings e Module SEO) para que cada alteração dispare um build.
+- `STRAPI_URL` e `PUBLIC_STRAPI_URL` são o endereço público do CMS (`https://dash.afim.club`). Eles são lidos no build, mas o build em si não chama o CMS.
+- O `web` renderiza as páginas sob demanda, então mudanças no CMS aparecem sem novo build, em cerca de um minuto (cada Worker guarda as respostas do Strapi por 60 s, e o cache da borda guarda cada página por 60 s). Depois disso, a borda entrega a cópia antiga por até um dia enquanto gera uma nova, então uma queda curta do CMS não derruba o site. O sitemap (`/sitemap.xml`) também é gerado na hora.
 - Use os domínios próprios, não `*.workers.dev`: o login de membros depende de o site e o CMS serem do mesmo site (`afim.club` e `dash.afim.club`). Inclua o endereço do site em `CORS_ORIGINS` e defina `WEB_URL` no CMS.
 - O cache longo de `/_astro/*` vem de `public/_headers`.
 
@@ -105,7 +105,7 @@ O [servidor MCP](https://docs.strapi.io/cms/features/strapi-mcp-server) embutido
 2. No painel admin, abra **Settings → Admin tokens** e crie um token só com o conteúdo necessário. Sugestão: ler, criar, editar e publicar em Home page, Pricing page, Launch page, Page, Help topic, Help article, Blog post, Blog tag, Plan, Site settings e Module SEO. **Nunca** dê acesso a Member, Newsletter signup, User ou Profile: eles têm dados pessoais (LGPD). O token só faz o que as permissões dele permitem, e nunca mais do que o admin que o criou.
 3. Conecte o cliente só do seu lado: o endereço e o token nunca vão para este repositório público (o `.mcp.json` está no `.gitignore`). Com o Claude Code: `claude mcp add --scope user --transport http strapi https://<host-do-cms>/mcp -H "Authorization: Bearer <token>"`. No Claude Code na web, rode o mesmo comando (sem `-H`) no script de setup do ambiente de nuvem, guarde o token como segredo de rede do host do CMS (cabeçalho `Authorization`, prefixo `Bearer`) e libere esse host no acesso de rede.
 
-O conteúdo criado pelo MCP segue as mesmas regras do painel admin (rascunho até publicar). O site estático ainda precisa de um novo build para mostrá-lo (o webhook do Strapi dispara um).
+O conteúdo criado pelo MCP segue as mesmas regras do painel admin (rascunho até publicar). Depois de publicado, ele aparece no site em cerca de um minuto.
 
 ## Privacidade e dados
 

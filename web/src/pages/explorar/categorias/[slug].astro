@@ -7,18 +7,10 @@ import ProfileCard from '../../../components/ProfileCard.astro';
 import { getCategories, profilesBySlugs } from '../../../lib/strapi';
 import { cityUrl, getDirectory, inCategory } from '../../../lib/places';
 
-export async function getStaticPaths() {
-  const all = await getCategories();
-  return Promise.all(
-    all.map(async (category) => {
-      // A category page also lists profiles from its subcategories.
-      const slugs = [category.slug, ...(category.children ?? []).map((c) => c.slug)];
-      return { params: { slug: category.slug }, props: { category, profiles: await profilesBySlugs(slugs) } };
-    }),
-  );
-}
-
-const { category, profiles } = Astro.props;
+const category = (await getCategories()).find((c) => c.slug === Astro.params.slug);
+if (!category) return Astro.rewrite('/404');
+// A category page also lists profiles from its subcategories.
+const profiles = await profilesBySlugs([category.slug, ...(category.children ?? []).map((c) => c.slug)]);
 // Cities with profiles in this category, linking to the city + category page.
 const { states } = await getDirectory();
 const places = states.flatMap((s) =>

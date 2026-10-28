@@ -44,14 +44,14 @@ pipeline {
       steps {
         sh '''
           docker build -t $REGISTRY/afim-web:$TAG \
-            --build-arg STRAPI_URL=https://admin.$DOMAIN \
-            --build-arg PUBLIC_STRAPI_URL=https://admin.$DOMAIN \
+            --build-arg STRAPI_URL=https://dash.$DOMAIN \
+            --build-arg PUBLIC_STRAPI_URL=https://dash.$DOMAIN \
             --build-arg PUBLIC_AUTH_PROVIDERS=$PUBLIC_AUTH_PROVIDERS \
             --build-context design-system=design-system web
           trivy image --exit-code 1 --severity HIGH,CRITICAL --ignore-unfixed $REGISTRY/afim-web:$TAG
           docker push $REGISTRY/afim-web:$TAG
           docker build -t $REGISTRY/afim-partners:$TAG \
-            --build-arg PUBLIC_STRAPI_URL=https://admin.$DOMAIN \
+            --build-arg PUBLIC_STRAPI_URL=https://dash.$DOMAIN \
             --build-arg PUBLIC_TURNSTILE_SITE_KEY=$PUBLIC_TURNSTILE_SITE_KEY \
             --build-context design-system=design-system partners
           trivy image --exit-code 1 --severity HIGH,CRITICAL --ignore-unfixed $REGISTRY/afim-partners:$TAG

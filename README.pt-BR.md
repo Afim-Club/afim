@@ -8,7 +8,7 @@
 - Empresas contratam pessoas que compartilham seus valores.
 - Comércios e fornecedores fazem negócios com parceiros que compartilham seus valores.
 
-O site público é dividido em módulos, cada um com seu prefixo de URL: a home de divulgação fica na raiz (`/`, `/planos`, `/avise-me` e páginas livres como `/sobre`, `/valores` e `/privacidade`), com textos, planos e SEO editados no Strapi, o blog fica em `/blog` (com tags e feed RSS), a central de ajuda fica em `/ajuda` (tópicos e artigos editados no Strapi, começando por como usar uma carteira Lightning), e o diretório fica em `/explorar`.
+O site público é dividido em módulos, cada um com seu prefixo de URL: a home de divulgação fica na raiz (`/`, `/planos`, `/avise-me` e páginas livres como `/sobre`, `/valores` e `/privacidade`), com textos, planos e SEO editados no Strapi, o blog fica em `/blog` (com tags e feed RSS), as páginas de parceiros (apresentação e cadastro de negócios) ficam em `/parceiros` (o antigo `partners.afim.club` redireciona para lá), a central de ajuda fica em `/ajuda` (tópicos e artigos editados no Strapi, começando por como usar uma carteira Lightning), e o diretório fica em `/explorar`.
 
 O diretório pode ser navegado por lugar, como um diretório clássico: todo o diretório fica em `/explorar` (as URLs antigas redirecionam com 301): `/explorar/estados` lista os estados, e `/explorar/sp`, `/explorar/sp/campinas` e `/explorar/sp/campinas/servicos` listam os perfis ativos por estado, cidade e categoria, com contagens e trilha de navegação.
 
@@ -17,10 +17,10 @@ O diretório pode ser navegado por lugar, como um diretório clássico: todo o d
 | Pasta | Descrição | Endereço previsto |
 | --- | --- | --- |
 | `web/` | Site público dos usuários (Astro) | `afim.club` |
-| `partners/` | Site dos afiliados: empresas e comércios (Astro) | `partners.afim.club` |
+| `partners/` | Redirecionamento do antigo site de parceiros para `afim.club/parceiros` (as páginas de parceiros agora ficam no `web/`) | `partners.afim.club` |
 | `cms/` | Backoffice e API (Strapi) | `dash.afim.club` |
 | `infra/` | Deploy: stack Dockge do CMS (`infra/dockge/`), além de Docker Swarm, Traefik e Jenkins | - |
-| `design-system/` | Design system: tema Tailwind, componentes Astro e assets de marca usados por `web/` e `partners/` | - |
+| `design-system/` | Design system: tema Tailwind, componentes Astro e assets de marca usados pelo `web/` | - |
 
 ## Stack
 

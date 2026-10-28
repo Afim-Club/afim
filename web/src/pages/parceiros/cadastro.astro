@@ -5,14 +5,15 @@ import FormField from '@afim/design-system/components/FormField.astro';
 import Input from '@afim/design-system/components/Input.astro';
 import Select from '@afim/design-system/components/Select.astro';
 import Textarea from '@afim/design-system/components/Textarea.astro';
-import Layout from '../layouts/Layout.astro';
+import Layout from '../../layouts/Layout.astro';
 const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY;
 const api = import.meta.env.PUBLIC_STRAPI_URL ?? 'http://localhost:1337';
 ---
-<Layout title="Cadastro">
-  {siteKey && <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>}
+<Layout title="Cadastro de parceiro" module="parceiros" description="Cadastre a sua empresa, comércio ou ONG no Afim. É grátis e passa por moderação.">
+  {siteKey && <script is:inline slot="head" src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>}
   <h1>Cadastro de parceiro</h1>
-  <form id="f" class="grid gap-4">
+  <p class="max-w-2xl text-muted">Grátis para empresas, comércios e ONGs. O cadastro passa por moderação antes de aparecer no diretório. Se preferir gerenciar seus negócios com login, use <a href="/conta/perfis">Meus perfis</a>.</p>
+  <form id="f" class="grid max-w-2xl gap-4">
     <FormField label="Nome do negócio" required><Input name="name" required /></FormField>
     <FormField label="Tipo" required>
       <Select name="profileType" required>
@@ -31,7 +32,7 @@ const api = import.meta.env.PUBLIC_STRAPI_URL ?? 'http://localhost:1337';
     {siteKey && <div class="cf-turnstile" data-sitekey={siteKey}></div>}
     <div><Button>Enviar para revisão</Button></div>
   </form>
-  <Alert id="msg" role="status" class="mt-4" />
+  <Alert id="msg" role="status" class="mt-4 max-w-2xl" />
   <script define:vars={{ api }}>
     const form = document.getElementById('f');
     const msg = document.getElementById('msg');

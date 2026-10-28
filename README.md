@@ -26,7 +26,7 @@ The directory can be browsed by place, like a classic directory: the whole direc
 
 - **Front-end:** Astro (SSG/SSR)
 - **Back-end / admin:** Strapi CMS
-- **Database:** MariaDB
+- **Database:** MySQL 8 / MariaDB
 - **Infrastructure:** Cloudflare Workers (sites) + Docker on Dockge (CMS); Docker Swarm + Traefik as an alternative
 - **CI/CD:** Jenkins, SonarQube and Trivy
 
@@ -79,7 +79,7 @@ The CMS runs as a Docker container on a host managed by [Dockge](https://github.
 3. Deploy. The image `ghcr.io/afim-club/afim-cms` is published by the `CMS image` GitHub Action on every push to `main` that touches `cms/` (tags `latest` and the commit SHA); **Update in Dockge pulls the new one**. Set `CMS_TAG` to a commit SHA to pin or roll back. The package must be public on GitHub (Package settings → Change visibility), or run `docker login ghcr.io` on the host.
 4. Expose port `CMS_PORT` (1337) as `https://dash.afim.club` through a reverse proxy or a Cloudflare Tunnel. The container trusts `X-Forwarded-*` (`PROXY=true`).
 
-Data lives in two named volumes: `mariadb-data` (database) and `uploads` (media from the admin panel). Back up both.
+The stack has no database container: it uses an existing MySQL 8 or MariaDB (`DATABASE_HOST`, `DATABASE_SSL`, ...), such as a managed MySQL on the same private network. Create an empty database and a user for it; Strapi creates the tables and the starter content on first boot. Media from the admin panel lives in the `uploads` volume. Back up both.
 
 ### Sites on Cloudflare Workers
 

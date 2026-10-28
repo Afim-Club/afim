@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import Badge from '@afim/design-system/components/Badge.astro';
-import { TYPE_LABELS, getProfiles } from '../../lib/strapi';
+import { TYPE_LABELS, getProfiles, isPolitical } from '../../lib/strapi';
 import { placeHref } from '../../lib/places';
 
 export async function getStaticPaths() {
@@ -11,6 +11,7 @@ export async function getStaticPaths() {
 const { profile } = Astro.props;
 const placeLink = placeHref(profile);
 const place = [profile.location?.city, profile.location?.state].filter(Boolean).join(' / ');
+const shownAffinities = (profile.affinities ?? []).filter((a) => !isPolitical(a));
 const extra = profile.extra?.[0];
 const details = extra ? Object.entries(extra).filter(([k, v]) => !['__component', 'id'].includes(k) && v !== null) : [];
 ---
@@ -20,7 +21,7 @@ const details = extra ? Object.entries(extra).filter(([k, v]) => !['__component'
   {place && <p class="text-muted">{placeLink ? <a href={placeLink} class="text-muted">{place}</a> : place}</p>}
   {profile.description && <p>{profile.description}</p>}
   {profile.categories?.length ? <p class="flex flex-wrap gap-2">{profile.categories.map((c) => <Badge href={`/categorias/${c.slug}`}>{c.name}</Badge>)}</p> : null}
-  {profile.affinities?.length ? <p class="flex flex-wrap gap-2"><span class="text-sm text-muted">Afinidades:</span>{profile.affinities.map((a) => <Badge tone="brand">{a.name}</Badge>)}</p> : null}
+  {shownAffinities.length ? <p class="flex flex-wrap gap-2"><span class="text-sm text-muted">Afinidades:</span>{shownAffinities.map((a) => <Badge tone="brand">{a.name}</Badge>)}</p> : null}
   {details.length ? <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">{details.map(([k, v]) => <><dt class="font-medium text-muted">{k}</dt><dd>{String(v)}</dd></>)}</dl> : null}
   {profile.mediaLinks?.length ? (
     <ul class="flex flex-wrap gap-3">{profile.mediaLinks.map((l) => <li><a href={l.url} rel="noopener nofollow">{l.platform}</a></li>)}</ul>

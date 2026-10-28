@@ -4,14 +4,10 @@ import Breadcrumbs from '../../../components/Breadcrumbs.astro';
 import CountList from '../../../components/CountList.astro';
 import AffinityFilter from '../../../components/AffinityFilter.astro';
 import ProfileCard from '../../../components/ProfileCard.astro';
-import { cityUrl, getDirectory, type State } from '../../../lib/places';
+import { cityUrl, getDirectory } from '../../../lib/places';
 
-export async function getStaticPaths() {
-  const { states } = await getDirectory();
-  return states.map((state) => ({ params: { uf: state.slug }, props: { state } }));
-}
-
-const { state } = Astro.props as { state: State };
+const state = (await getDirectory()).states.find((s) => s.slug === Astro.params.uf);
+if (!state) return Astro.rewrite('/404');
 // Profiles that gave a state but no city are only listed here.
 const noCity = state.profiles.filter((p) => !state.cities.some((c) => c.profiles.includes(p)));
 ---

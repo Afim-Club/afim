@@ -4,8 +4,8 @@ import Alert from '@afim/design-system/components/Alert.astro';
 import Layout from '../../layouts/Layout.astro';
 import { PROVIDER_LABELS } from '../../lib/providers';
 
-export const getStaticPaths = () => Object.keys(PROVIDER_LABELS).map((provider) => ({ params: { provider } }));
 const { provider } = Astro.params;
+if (!provider || !(provider in PROVIDER_LABELS)) return Astro.rewrite('/404');
 ---
 <Layout module="conta" title="Entrando">
   <div class="mx-auto max-w-md pt-8" data-provider={provider} id="root">

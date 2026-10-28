@@ -1,10 +1,9 @@
-// Cloudflare Workers deploy of the static site (no adapter: every page is
-// prerendered, so the Worker only serves the files in dist/).
+// Cloudflare Workers deploy. Pages are rendered on demand by the @astrojs/cloudflare adapter,
+// which sets the Worker entry point and the ASSETS binding for the files in dist/client.
 // Build variables (Workers Builds > Settings > Build): STRAPI_URL,
 // PUBLIC_STRAPI_URL, PUBLIC_AUTH_PROVIDERS, SITE_URL, PUBLIC_TURNSTILE_SITE_KEY (optional). See README "Deploy".
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "afim-web",
-  "compatibility_date": "2026-10-01",
-  "assets": { "directory": "./dist" }
+  "compatibility_date": "2026-10-01"
 }

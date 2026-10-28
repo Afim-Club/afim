@@ -1,5 +1,6 @@
 import { factories } from '@strapi/strapi';
 import { uniqueSlug } from '../slug';
+import { turnstileOk } from '../../../turnstile';
 
 // Public reads only ever see active profiles; review/blocked stay in the backoffice.
 export default factories.createCoreController('api::profile.profile', ({ strapi }) => ({
@@ -30,16 +31,7 @@ export default factories.createCoreController('api::profile.profile', ({ strapi 
       return { data: { received: true } };
     }
 
-    // Optional Cloudflare Turnstile CAPTCHA, enforced only when TURNSTILE_SECRET is set.
-    const secret = process.env.TURNSTILE_SECRET;
-    if (secret) {
-      const token = typeof body.captchaToken === 'string' ? body.captchaToken : '';
-      const verify = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-        method: 'POST',
-        body: new URLSearchParams({ secret, response: token, remoteip: ctx.ip }),
-      }).then((r) => r.json() as Promise<{ success: boolean }>).catch(() => ({ success: false }));
-      if (!verify.success) return ctx.badRequest('CAPTCHA verification failed');
-    }
+    if (!(await turnstileOk(body.captchaToken, ctx.ip))) return ctx.badRequest('CAPTCHA verification failed');
 
     const str = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
     const name = str(body.name, 255);

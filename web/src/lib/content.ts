@@ -17,6 +17,9 @@ export type Section =
 
 export type HomePage = { heroTitle: string; heroText?: string; heroNote?: string; searchPlaceholder?: string; sections: Section[]; seo: Seo };
 export type PricingPage = { title: string; intro?: string; lightningDiscountPercent?: number | null; featureLabels: { key: string; label: string }[]; faq: FaqItem[]; seo: Seo };
+export type LaunchPage = {
+  badge?: string; title: string; text?: string; items: Item[]; consentText?: string; doneTitle?: string; doneText?: string; seo: Seo;
+};
 export type Plan = {
   name: string; slug: string; description?: string; priceMonthlyBrl: number; priceYearlyBrl: number; priceMonthlySats?: number | null;
   features?: string[] | null; highlights?: string[] | null; featured?: boolean; active?: boolean; sortOrder?: number;
@@ -43,6 +46,7 @@ export const getModuleSeo = async (module: string) =>
 
 export const getHomePage = () => get<HomePage>(`home-page?populate[sections][populate]=*&${SEO}`);
 export const getPricingPage = () => get<PricingPage>(`pricing-page?populate[featureLabels]=true&populate[faq]=true&${SEO}`);
+export const getLaunchPage = () => get<LaunchPage>(`launch-page?populate[items]=true&${SEO}`);
 export const getPlans = async () =>
   ((await get<Plan[]>('plans?sort=sortOrder&pagination[pageSize]=100')) ?? []).filter((p) => p.active !== false);
 export const getPages = async () => (await get<Page[]>(`pages?${SEO}&pagination[pageSize]=100`)) ?? [];

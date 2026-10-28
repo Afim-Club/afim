@@ -8,7 +8,7 @@
 - Businesses hire people who share their values.
 - Shops and suppliers do business with partners who share their values.
 
-The public site is split in modules, each with its own URL prefix: the marketing home owns the root (`/`, `/planos`, and free pages such as `/sobre`), with its text, plans and SEO edited in Strapi, and the directory lives under `/explorar`.
+The public site is split in modules, each with its own URL prefix: the marketing home owns the root (`/`, `/planos`, `/avise-me`, and free pages such as `/sobre`, `/valores` and `/privacidade`), with its text, plans and SEO edited in Strapi, and the directory lives under `/explorar`.
 
 The directory can be browsed by place, like a classic directory: the whole directory lives under `/explorar` (old URLs redirect with 301): `/explorar/estados` lists the states, then `/explorar/sp`, `/explorar/sp/campinas` and `/explorar/sp/campinas/servicos` list the active profiles by state, city and category, with counts and breadcrumbs.
 
@@ -90,19 +90,23 @@ Each site has a `wrangler.jsonc` (`afim-web` and `afim-partners`) that uploads `
 | Root directory | `web` | `partners` |
 | Build command | `npm run build` | `npm run build` |
 | Deploy command | `npx wrangler deploy` | `npx wrangler deploy` |
-| Build variables | `STRAPI_URL`, `PUBLIC_STRAPI_URL`, `PUBLIC_AUTH_PROVIDERS`, `SITE_URL` (canonical URLs and sitemap, default `https://afim.club`) | `PUBLIC_STRAPI_URL`, `PUBLIC_TURNSTILE_SITE_KEY` |
+| Build variables | `STRAPI_URL`, `PUBLIC_STRAPI_URL`, `PUBLIC_AUTH_PROVIDERS`, `SITE_URL` (canonical URLs and sitemap, default `https://afim.club`), `PUBLIC_TURNSTILE_SITE_KEY` (optional, /avise-me form) | `PUBLIC_STRAPI_URL`, `PUBLIC_TURNSTILE_SITE_KEY` |
 | Custom domain | `afim.club` | `partners.afim.club` |
 
 or deploy from a machine with `npm run deploy` (needs `wrangler login` or `CLOUDFLARE_API_TOKEN`, plus the same variables in the shell).
 
 - `STRAPI_URL` and `PUBLIC_STRAPI_URL` are the public CMS address (`https://admin.afim.club`). The `web` build fetches every page's data from it, so **the CMS must be up and reachable from Cloudflare during the build**.
-- `web` is static: new or changed content shows up only after a rebuild. Create a Deploy Hook (Worker → Settings → Builds → Deploy Hooks) and add its URL as a webhook in Strapi (Settings → Webhooks, events on Profile/Category/Affinity entries, plus Home page, Pricing page, Page, Plan, Site settings and Module SEO) so each change triggers a rebuild.
+- `web` is static: new or changed content shows up only after a rebuild. Create a Deploy Hook (Worker → Settings → Builds → Deploy Hooks) and add its URL as a webhook in Strapi (Settings → Webhooks, events on Profile/Category/Affinity entries, plus Home page, Pricing page, Launch page, Page, Plan, Site settings and Module SEO) so each change triggers a rebuild.
 - Use the custom domains, not `*.workers.dev`: member login relies on the site and the CMS being same-site (`afim.club` and `admin.afim.club`). Add each site's address to `CORS_ORIGINS` and set `WEB_URL` in the CMS.
 - Long cache for `/_astro/*` comes from `public/_headers`.
 
 ## Privacy and data
 
 Profiles are built from information **declared by the users themselves** (opt-in). Personal data is handled according to the Brazilian General Data Protection Law (LGPD).
+
+### Launch e-mail list
+
+`/avise-me` collects the e-mails of people who want to know when new features launch. It stores only the e-mail, an optional name, what they want news about and the date and version of their explicit consent. The list is never readable through the API (only in the admin), the form answers the same for new and known e-mails, and the link in each e-mail (`/avise-me/sair`) deletes the entry.
 
 ### Member accounts and affinities
 

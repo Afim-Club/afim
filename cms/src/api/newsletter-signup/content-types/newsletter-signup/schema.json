@@ -1,0 +1,22 @@
+{
+  "kind": "collectionType",
+  "collectionName": "newsletter_signups",
+  "info": {
+    "singularName": "newsletter-signup",
+    "pluralName": "newsletter-signups",
+    "displayName": "Newsletter signup",
+    "description": "Launch announcement list from /avise-me. Private: no public read route; only the admin sees it."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "email": { "type": "email", "required": true, "unique": true, "private": true },
+    "name": { "type": "string", "private": true },
+    "forPeople": { "type": "boolean", "default": false },
+    "forBusiness": { "type": "boolean", "default": false },
+    "consentAt": { "type": "datetime", "required": true, "private": true },
+    "consentVersion": { "type": "string", "required": true, "private": true },
+    "unsubscribeToken": { "type": "string", "unique": true, "private": true }
+  }
+}

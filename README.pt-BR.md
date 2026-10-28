@@ -18,7 +18,7 @@ O diretório pode ser navegado por lugar, como um diretório clássico: todo o d
 | --- | --- | --- |
 | `web/` | Site público dos usuários (Astro) | `afim.club` |
 | `partners/` | Site dos afiliados: empresas e comércios (Astro) | `partners.afim.club` |
-| `cms/` | Backoffice e API (Strapi) | `admin.afim.club` |
+| `cms/` | Backoffice e API (Strapi) | `dash.afim.club` |
 | `infra/` | Deploy: stack Dockge do CMS (`infra/dockge/`), além de Docker Swarm, Traefik e Jenkins | - |
 | `design-system/` | Design system: tema Tailwind, componentes Astro e assets de marca usados por `web/` e `partners/` | - |
 
@@ -77,7 +77,7 @@ O CMS roda como container Docker num host gerenciado pelo [Dockge](https://githu
 1. No Dockge, crie uma stack (ex.: `afim-cms`) e cole o [`infra/dockge/compose.yaml`](infra/dockge/compose.yaml).
 2. Preencha o `.env` da stack a partir do [`infra/dockge/.env.example`](infra/dockge/.env.example). Gere cada segredo com `openssl rand -base64 32`.
 3. Faça o deploy. A imagem `ghcr.io/afim-club/afim-cms` é publicada pelo GitHub Action `CMS image` a cada push na `main` que mexe em `cms/` (tags `latest` e o SHA do commit); **o Update do Dockge baixa a nova**. Defina `CMS_TAG` com um SHA para fixar uma versão ou voltar atrás. O pacote precisa ser público no GitHub (Package settings → Change visibility), ou rode `docker login ghcr.io` no host.
-4. Exponha a porta `CMS_PORT` (1337) como `https://admin.afim.club` por um proxy reverso ou um Cloudflare Tunnel. O container confia em `X-Forwarded-*` (`PROXY=true`).
+4. Exponha a porta `CMS_PORT` (1337) como `https://dash.afim.club` por um proxy reverso ou um Cloudflare Tunnel. O container confia em `X-Forwarded-*` (`PROXY=true`).
 
 Os dados ficam em dois volumes nomeados: `mariadb-data` (banco) e `uploads` (mídias do painel). Faça backup dos dois.
 
@@ -95,9 +95,9 @@ Cada site tem um `wrangler.jsonc` (`afim-web` e `afim-partners`) que publica `di
 
 ou publique de uma máquina com `npm run deploy` (precisa de `wrangler login` ou `CLOUDFLARE_API_TOKEN`, e das mesmas variáveis no shell).
 
-- `STRAPI_URL` e `PUBLIC_STRAPI_URL` são o endereço público do CMS (`https://admin.afim.club`). O build do `web` busca nele os dados de todas as páginas, então **o CMS precisa estar no ar e acessível pela Cloudflare durante o build**.
+- `STRAPI_URL` e `PUBLIC_STRAPI_URL` são o endereço público do CMS (`https://dash.afim.club`). O build do `web` busca nele os dados de todas as páginas, então **o CMS precisa estar no ar e acessível pela Cloudflare durante o build**.
 - O `web` é estático: conteúdo novo ou alterado só aparece depois de um novo build. Crie um Deploy Hook (Worker → Settings → Builds → Deploy Hooks) e cadastre a URL como webhook no Strapi (Settings → Webhooks, eventos de Profile/Category/Affinity, e também Home page, Pricing page, Launch page, Help topic, Help article, Page, Plan, Site settings e Module SEO) para que cada alteração dispare um build.
-- Use os domínios próprios, não `*.workers.dev`: o login de membros depende de o site e o CMS serem do mesmo site (`afim.club` e `admin.afim.club`). Inclua o endereço de cada site em `CORS_ORIGINS` e defina `WEB_URL` no CMS.
+- Use os domínios próprios, não `*.workers.dev`: o login de membros depende de o site e o CMS serem do mesmo site (`afim.club` e `dash.afim.club`). Inclua o endereço de cada site em `CORS_ORIGINS` e defina `WEB_URL` no CMS.
 - O cache longo de `/_astro/*` vem de `public/_headers`.
 
 ## Privacidade e dados
@@ -120,7 +120,7 @@ As pessoas criam a conta no site público (`/entrar`) com e-mail e senha ou logi
 - **Filtro por afinidade**: todas as listagens do site público (início, categorias, estados e cidades, busca e mapa) mostram só os perfis que têm todas as afinidades do membro logado (interseção: Software livre + Direita mostra só os perfis com as duas). Um perfil tem uma única posição política, então vários espectros marcados valem como "qualquer um deles", combinados com o resto. "Encontrados para você" na conta segue a mesma regra. Quem não tem conta escolhe afinidades num filtro acima da lista (a escolha fica no navegador). As páginas continuam estáticas: o navegador esconde os perfis que não combinam, usando as afinidades que cada perfil declara publicamente. As afinidades do membro só são lidas pela chamada autenticada `/api/members/me` e ficam em memória, nunca numa URL ou no HTML da página. A página de um perfil lista as afinidades dele, menos as políticas ("Política" e "Pautas políticas"), que só servem para filtrar.
 - **Convites**: cada membro tem um link pessoal (`/entrar?convite=CODIGO`) para copiar ou enviar pelo WhatsApp, já que ainda não há provedor de e-mail. Uma conta nova criada por ele registra quem convidou (uma vez, até 24 horas após o cadastro). Quem convidou vê só quantas pessoas entraram, nunca quem.
 
-Os provedores sociais são ativados pelo ambiente do CMS (`AUTH_<PROVEDOR>_CLIENT_ID` / `_CLIENT_SECRET`, veja `.env.example`); cadastre `https://admin.<domínio>/api/connect/<provedor>/callback` como URI de redirecionamento em cada provedor.
+Os provedores sociais são ativados pelo ambiente do CMS (`AUTH_<PROVEDOR>_CLIENT_ID` / `_CLIENT_SECRET`, veja `.env.example`); cadastre `https://dash.<domínio>/api/connect/<provedor>/callback` como URI de redirecionamento em cada provedor.
 
 ## Roadmap
 

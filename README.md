@@ -18,7 +18,7 @@ The directory can be browsed by place, like a classic directory: the whole direc
 | --- | --- | --- |
 | `web/` | Public site for users (Astro) | `afim.club` |
 | `partners/` | Site for affiliates: businesses and shops (Astro) | `partners.afim.club` |
-| `cms/` | Backoffice and API (Strapi) | `admin.afim.club` |
+| `cms/` | Backoffice and API (Strapi) | `dash.afim.club` |
 | `infra/` | Deploy: Dockge stack for the CMS (`infra/dockge/`), plus Docker Swarm, Traefik and Jenkins | - |
 | `design-system/` | Design system: Tailwind theme, Astro components and brand assets used by `web/` and `partners/` | - |
 
@@ -77,7 +77,7 @@ The CMS runs as a Docker container on a host managed by [Dockge](https://github.
 1. In Dockge, create a stack (e.g. `afim-cms`) and paste [`infra/dockge/compose.yaml`](infra/dockge/compose.yaml).
 2. Fill the stack's `.env` from [`infra/dockge/.env.example`](infra/dockge/.env.example). Generate each secret with `openssl rand -base64 32`.
 3. Deploy. The image `ghcr.io/afim-club/afim-cms` is published by the `CMS image` GitHub Action on every push to `main` that touches `cms/` (tags `latest` and the commit SHA); **Update in Dockge pulls the new one**. Set `CMS_TAG` to a commit SHA to pin or roll back. The package must be public on GitHub (Package settings → Change visibility), or run `docker login ghcr.io` on the host.
-4. Expose port `CMS_PORT` (1337) as `https://admin.afim.club` through a reverse proxy or a Cloudflare Tunnel. The container trusts `X-Forwarded-*` (`PROXY=true`).
+4. Expose port `CMS_PORT` (1337) as `https://dash.afim.club` through a reverse proxy or a Cloudflare Tunnel. The container trusts `X-Forwarded-*` (`PROXY=true`).
 
 Data lives in two named volumes: `mariadb-data` (database) and `uploads` (media from the admin panel). Back up both.
 
@@ -95,9 +95,9 @@ Each site has a `wrangler.jsonc` (`afim-web` and `afim-partners`) that uploads `
 
 or deploy from a machine with `npm run deploy` (needs `wrangler login` or `CLOUDFLARE_API_TOKEN`, plus the same variables in the shell).
 
-- `STRAPI_URL` and `PUBLIC_STRAPI_URL` are the public CMS address (`https://admin.afim.club`). The `web` build fetches every page's data from it, so **the CMS must be up and reachable from Cloudflare during the build**.
+- `STRAPI_URL` and `PUBLIC_STRAPI_URL` are the public CMS address (`https://dash.afim.club`). The `web` build fetches every page's data from it, so **the CMS must be up and reachable from Cloudflare during the build**.
 - `web` is static: new or changed content shows up only after a rebuild. Create a Deploy Hook (Worker → Settings → Builds → Deploy Hooks) and add its URL as a webhook in Strapi (Settings → Webhooks, events on Profile/Category/Affinity entries, plus Home page, Pricing page, Launch page, Help topic, Help article, Page, Plan, Site settings and Module SEO) so each change triggers a rebuild.
-- Use the custom domains, not `*.workers.dev`: member login relies on the site and the CMS being same-site (`afim.club` and `admin.afim.club`). Add each site's address to `CORS_ORIGINS` and set `WEB_URL` in the CMS.
+- Use the custom domains, not `*.workers.dev`: member login relies on the site and the CMS being same-site (`afim.club` and `dash.afim.club`). Add each site's address to `CORS_ORIGINS` and set `WEB_URL` in the CMS.
 - Long cache for `/_astro/*` comes from `public/_headers`.
 
 ## Privacy and data
@@ -120,7 +120,7 @@ People sign up on the public site (`/entrar`) with email and password or a socia
 - **Affinity filter**: every listing on the public site (home, categories, states and cities, search and map) shows only profiles that have all of the signed-in member's affinities (intersection: Free software + Right shows only profiles with both). A profile has a single political position, so several chosen spectrums count as "any of them", combined with the rest. "Found for you" on the account page follows the same rule. Visitors without an account pick affinities in a filter above the list instead (kept in their browser). The pages stay static: the browser hides the profiles that don't match, using the affinities each profile declares publicly. A member's own affinities are read only through the authenticated `/api/members/me` call and kept in memory, never in a URL or the page HTML. A profile page lists the profile's affinities except political ones ("Política" and "Pautas políticas"), which only filter.
 - **Invites**: each member has a personal link (`/entrar?convite=CODE`) to copy or send by WhatsApp, since there is no email provider yet. A new account that signs up through it records who invited it (once, within 24 hours of sign-up). The inviter sees only how many people joined, never who.
 
-Social providers are enabled from the CMS environment (`AUTH_<PROVIDER>_CLIENT_ID` / `_CLIENT_SECRET`, see `.env.example`); register `https://admin.<domain>/api/connect/<provider>/callback` as the redirect URI at each provider.
+Social providers are enabled from the CMS environment (`AUTH_<PROVIDER>_CLIENT_ID` / `_CLIENT_SECRET`, see `.env.example`); register `https://dash.<domain>/api/connect/<provider>/callback` as the redirect URI at each provider.
 
 ## Roadmap
 

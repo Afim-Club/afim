@@ -13,6 +13,8 @@ import Logo from '../components/Logo.astro';
 import Select from '../components/Select.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import SiteHeader from '../components/SiteHeader.astro';
+import ThemeScript from '../components/ThemeScript.astro';
+import ThemeToggle from '../components/ThemeToggle.astro';
 import Textarea from '../components/Textarea.astro';
 
 const ramps = ['primary', 'neutral'];
@@ -23,15 +25,16 @@ const semantic = ['page', 'surface', 'fg', 'muted', 'line', 'brand', 'brand-soft
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <ThemeScript />
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>Afim design system</title>
   </head>
   <body>
-    <SiteHeader label="Afim design system"><a href="#tokens">Tokens</a><a href="#components">Components</a></SiteHeader>
+    <SiteHeader label="Afim design system"><a href="#tokens">Tokens</a><a href="#components">Components</a><ThemeToggle /></SiteHeader>
     <Container>
       <h1>Afim design system</h1>
-      <p class="text-muted">Tailwind v4 theme, Astro components and brand assets used by <code>web/</code>. Switch your OS to dark mode to see the dark theme.</p>
+      <p class="text-muted">Tailwind v4 theme, Astro components and brand assets used by <code>web/</code>. The theme follows the OS; the header button (ThemeToggle) overrides it.</p>
 
       <h2 id="tokens">Color ramps</h2>
       {ramps.map((r) => (

@@ -23,7 +23,7 @@ The symbol is two circles and the ground they share: affinity.
 
 ## Tokens
 
-Components use **semantic colors**, which switch with the OS color scheme (`prefers-color-scheme`), so they need no `dark:` variants:
+Components use **semantic colors**, which switch with the OS color scheme (`prefers-color-scheme`), so they need no `dark:` variants. `ThemeToggle` (header button) lets the visitor force light or dark: it sets `data-theme` on `<html>` and saves it in localStorage `afim.theme`; `ThemeScript` in `<head>` applies the saved choice before first paint:
 
 | Class suffix | Role |
 | --- | --- |

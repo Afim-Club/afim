@@ -3,6 +3,8 @@ import '../styles/global.css';
 import Container from '@afim/design-system/components/Container.astro';
 import SiteFooter from '@afim/design-system/components/SiteFooter.astro';
 import SiteHeader from '@afim/design-system/components/SiteHeader.astro';
+import ThemeScript from '@afim/design-system/components/ThemeScript.astro';
+import ThemeToggle from '@afim/design-system/components/ThemeToggle.astro';
 import { getModuleSeo, getSiteSetting, mediaUrl, type Seo } from '../lib/content';
 
 /**
@@ -32,6 +34,7 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : un
 <html lang="pt-BR">
   <head>
     <meta charset="utf-8" />
+    <ThemeScript />
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{fullTitle}</title>
@@ -54,6 +57,7 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : un
       <a href="/planos">Planos</a>
       <a href="/ajuda">Ajuda</a>
       <a href="/conta">Minha conta</a>
+      <ThemeToggle />
     </SiteHeader>
     {wide ? <main><slot /></main> : <Container><main class="py-2"><slot /></main></Container>}
     <SiteFooter>

@@ -8,6 +8,6 @@ const { label, size } = Astro.props;
 <header class="border-b border-line">
   <Container size={size} class="flex items-center justify-between py-4">
     <Logo label={label} />
-    <nav class="flex gap-4 text-sm font-medium"><slot /></nav>
+    <nav class="flex items-center gap-4 text-sm font-medium"><slot /></nav>
   </Container>
 </header>

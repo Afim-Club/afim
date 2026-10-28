@@ -60,8 +60,10 @@
   --afim-danger: var(--color-red-700);
 }
 
+/* Dark: follows the system unless the visitor picked a theme with ThemeToggle
+   (data-theme="light" | "dark" on <html>, set before first paint by ThemeScript). */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --afim-page: var(--color-neutral-950);
     --afim-surface: var(--color-neutral-900);
     --afim-fg: var(--color-neutral-100);
@@ -75,6 +77,21 @@
     --afim-warning: var(--color-amber-300);
     --afim-danger: var(--color-red-300);
   }
+}
+
+:root[data-theme="dark"] {
+  --afim-page: var(--color-neutral-950);
+  --afim-surface: var(--color-neutral-900);
+  --afim-fg: var(--color-neutral-100);
+  --afim-muted: var(--color-neutral-400);
+  --afim-line: var(--color-neutral-800);
+  --afim-brand: var(--color-primary-400);
+  --afim-brand-hover: var(--color-primary-300);
+  --afim-brand-soft: color-mix(in oklab, var(--color-primary-400) 15%, transparent);
+  --afim-on-brand: var(--color-neutral-950);
+  --afim-success: var(--color-primary-300);
+  --afim-warning: var(--color-amber-300);
+  --afim-danger: var(--color-red-300);
 }
 
 @theme inline {
@@ -94,6 +111,8 @@
 
 @layer base {
   html { color-scheme: light dark; }
+  html[data-theme="light"] { color-scheme: light; }
+  html[data-theme="dark"] { color-scheme: dark; }
   body { @apply bg-page text-fg font-sans antialiased; }
   h1 { @apply text-3xl font-bold tracking-tight mt-8 mb-4; }
   h2 { @apply text-xl font-semibold mt-8 mb-3; }

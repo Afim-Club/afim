@@ -1,0 +1,18 @@
+---
+import type { Item } from '../../lib/content';
+import Section from './Section.astro';
+interface Props { title?: string; items: Item[] }
+const { title, items } = Astro.props;
+---
+<Section id="como-funciona">
+  {title && <h2 class="mt-0 text-3xl font-extrabold">{title}</h2>}
+  <ol class="mt-8 grid list-none gap-5 p-0 sm:grid-cols-3">
+    {items.map((it, i) => (
+      <li class="rounded-afim border border-line p-6">
+        <span class="flex size-9 items-center justify-center rounded-full bg-brand font-bold text-on-brand">{i + 1}</span>
+        <h3 class="mb-1 mt-3 text-xl">{it.title}</h3>
+        {it.text && <p class="m-0 text-muted">{it.text}</p>}
+      </li>
+    ))}
+  </ol>
+</Section>

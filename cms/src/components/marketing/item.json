@@ -1,0 +1,16 @@
+{
+  "collectionName": "components_marketing_items",
+  "info": {
+    "displayName": "Item",
+    "icon": "bulletList"
+  },
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "text": {
+      "type": "text"
+    }
+  }
+}

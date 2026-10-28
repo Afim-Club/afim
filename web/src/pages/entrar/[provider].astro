@@ -7,7 +7,7 @@ import { PROVIDER_LABELS } from '../../lib/providers';
 export const getStaticPaths = () => Object.keys(PROVIDER_LABELS).map((provider) => ({ params: { provider } }));
 const { provider } = Astro.params;
 ---
-<Layout title="Entrando">
+<Layout module="conta" title="Entrando">
   <div class="mx-auto max-w-md pt-8" data-provider={provider} id="root">
     <h1>Entrando com {PROVIDER_LABELS[provider]}...</h1>
     <Alert id="msg" role="status" />

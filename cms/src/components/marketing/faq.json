@@ -1,0 +1,17 @@
+{
+  "collectionName": "components_marketing_faqs",
+  "info": {
+    "displayName": "FAQ",
+    "icon": "question"
+  },
+  "attributes": {
+    "title": {
+      "type": "string"
+    },
+    "items": {
+      "type": "component",
+      "repeatable": true,
+      "component": "marketing.faq-item"
+    }
+  }
+}

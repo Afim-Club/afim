@@ -1,0 +1,33 @@
+---
+/** Categories and places straight from the directory module, so the home always shows what exists. */
+import Button from '@afim/design-system/components/Button.astro';
+import { getCategories, getProfiles } from '../../lib/strapi';
+import Section from './Section.astro';
+interface Props { title?: string; linkLabel?: string }
+const { title = 'Explore o diretório', linkLabel = 'Ver todas as categorias' } = Astro.props;
+const [categories, profiles] = await Promise.all([getCategories(), getProfiles()]);
+const count = (slug: string) => {
+  const c = categories.find((x) => x.slug === slug);
+  const slugs = new Set([slug, ...(c?.children ?? []).map((x) => x.slug)]);
+  return profiles.filter((p) => p.categories?.some((pc) => slugs.has(pc.slug))).length;
+};
+const roots = categories.filter((c) => !c.parent).map((c) => ({ ...c, count: count(c.slug) })).filter((c) => c.count > 0);
+---
+<Section tone="surface">
+  <div class="flex flex-wrap items-baseline justify-between gap-3">
+    <h2 class="m-0 text-3xl font-extrabold">{title}</h2>
+    <a href="/explorar" class="font-semibold">{linkLabel}</a>
+  </div>
+  <ul class="mt-6 grid list-none gap-3 p-0 sm:grid-cols-2 lg:grid-cols-3">
+    {roots.map((c) => (
+      <li><a href={`/explorar/categorias/${c.slug}`} class="block rounded-afim border border-line bg-page p-4 text-fg no-underline hover:border-brand hover:text-fg">
+        <span class="block font-semibold">{c.name}</span>
+        <span class="text-sm text-muted">{c.count} {c.count === 1 ? 'perfil' : 'perfis'}</span>
+      </a></li>
+    ))}
+  </ul>
+  <div class="mt-6 flex flex-wrap gap-3">
+    <Button variant="outline" href="/explorar/estados">Por estado</Button>
+    <Button variant="outline" href="/explorar/mapa">Ver no mapa</Button>
+  </div>
+</Section>

@@ -1,0 +1,15 @@
+{
+  "collectionName": "components_marketing_directory_showcases",
+  "info": {
+    "displayName": "Directory showcase",
+    "icon": "grid"
+  },
+  "attributes": {
+    "title": {
+      "type": "string"
+    },
+    "linkLabel": {
+      "type": "string"
+    }
+  }
+}

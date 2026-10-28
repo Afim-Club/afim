@@ -1,0 +1,32 @@
+{
+  "collectionName": "components_marketing_cta_bands",
+  "info": {
+    "displayName": "Call to action band",
+    "icon": "cursor"
+  },
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "text": {
+      "type": "text"
+    },
+    "ctaLabel": {
+      "type": "string"
+    },
+    "ctaHref": {
+      "type": "string"
+    },
+    "secondaryLabel": {
+      "type": "string"
+    },
+    "secondaryHref": {
+      "type": "string"
+    },
+    "dark": {
+      "type": "boolean",
+      "default": false
+    }
+  }
+}

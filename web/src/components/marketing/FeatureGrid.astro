@@ -1,0 +1,31 @@
+---
+import Button from '@afim/design-system/components/Button.astro';
+import type { Item } from '../../lib/content';
+import Section from './Section.astro';
+interface Props {
+  title?: string; text?: string; note?: string; items: Item[];
+  ctaLabel?: string; ctaHref?: string; secondaryLabel?: string; secondaryHref?: string;
+}
+const { title, text, note, items, ctaLabel, ctaHref, secondaryLabel, secondaryHref } = Astro.props;
+---
+<Section id="negocios">
+  <div class="grid items-center gap-10 lg:grid-cols-2">
+    <div class="space-y-4">
+      {title && <h2 class="m-0 text-3xl font-extrabold">{title}</h2>}
+      {text && <p class="m-0 text-lg text-muted">{text}</p>}
+      {note && <p class="m-0 rounded-afim bg-surface p-4">{note}</p>}
+      <div class="flex flex-wrap gap-3">
+        {ctaLabel && ctaHref && <Button size="lg" href={ctaHref}>{ctaLabel}</Button>}
+        {secondaryLabel && secondaryHref && <Button size="lg" variant="outline" href={secondaryHref}>{secondaryLabel}</Button>}
+      </div>
+    </div>
+    <ul class="m-0 grid list-none gap-3 p-0 sm:grid-cols-2">
+      {items.map((it) => (
+        <li class="rounded-afim border border-line p-5">
+          <strong>{it.title}</strong>
+          {it.text && <p class="m-0 mt-1 text-sm text-muted">{it.text}</p>}
+        </li>
+      ))}
+    </ul>
+  </div>
+</Section>

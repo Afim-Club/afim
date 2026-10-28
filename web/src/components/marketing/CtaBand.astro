@@ -1,0 +1,18 @@
+---
+import Button from '@afim/design-system/components/Button.astro';
+import Section from './Section.astro';
+interface Props { title: string; text?: string; ctaLabel?: string; ctaHref?: string; secondaryLabel?: string; secondaryHref?: string; dark?: boolean }
+const { title, text, ctaLabel, ctaHref, secondaryLabel, secondaryHref, dark } = Astro.props;
+---
+<Section tone={dark ? 'dark' : 'soft'} id="sobre">
+  <div class="flex flex-wrap items-center justify-between gap-8">
+    <div class="max-w-2xl space-y-3">
+      <h2 class="m-0 text-3xl font-extrabold">{title}</h2>
+      {text && <p class:list={['m-0 text-lg', dark ? 'text-primary-100' : 'text-muted']}>{text}</p>}
+    </div>
+    <div class="flex flex-wrap gap-3">
+      {ctaLabel && ctaHref && <Button size="lg" href={ctaHref} class={dark ? 'bg-white text-primary-800 hover:bg-primary-50 hover:text-primary-800' : undefined}>{ctaLabel}</Button>}
+      {secondaryLabel && secondaryHref && <Button size="lg" variant="outline" href={secondaryHref} class={dark ? 'border-primary-300 bg-transparent text-white hover:bg-primary-700 hover:text-white' : undefined}>{secondaryLabel}</Button>}
+    </div>
+  </div>
+</Section>

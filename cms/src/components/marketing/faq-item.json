@@ -1,0 +1,17 @@
+{
+  "collectionName": "components_marketing_faq_items",
+  "info": {
+    "displayName": "FAQ item",
+    "icon": "question"
+  },
+  "attributes": {
+    "question": {
+      "type": "string",
+      "required": true
+    },
+    "answer": {
+      "type": "text",
+      "required": true
+    }
+  }
+}

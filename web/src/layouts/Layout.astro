@@ -3,8 +3,30 @@ import '../styles/global.css';
 import Container from '@afim/design-system/components/Container.astro';
 import SiteFooter from '@afim/design-system/components/SiteFooter.astro';
 import SiteHeader from '@afim/design-system/components/SiteHeader.astro';
-interface Props { title: string; description?: string }
-const { title, description } = Astro.props;
+import { getModuleSeo, getSiteSetting, mediaUrl, type Seo } from '../lib/content';
+
+/**
+ * Page shell with three SEO layers: site-wide defaults (site-setting), the module's own defaults
+ * (module-seo: title template, description, image) and the page's own `seo` from Strapi.
+ * `wide` drops the centered column so marketing sections can run edge to edge.
+ */
+interface Props {
+  title: string;
+  description?: string;
+  module?: 'home' | 'explorar' | 'ajuda' | 'blog' | 'parceiros' | 'conta';
+  seo?: Seo;
+  noindex?: boolean;
+  wide?: boolean;
+}
+const { title, description, module = 'explorar', seo, noindex, wide } = Astro.props;
+const site = await getSiteSetting();
+const mod = await getModuleSeo(module);
+const fullTitle = seo?.metaTitle || (mod?.titleTemplate ?? '%s · Afim').replace('%s', title);
+const desc = seo?.metaDescription || description || mod?.defaultDescription || site?.defaultDescription;
+const image = mediaUrl(seo?.ogImage) ?? mediaUrl(mod?.ogImage) ?? mediaUrl(site?.ogImage);
+// The account area is private, so it stays out of search engines.
+const robotsNoindex = noindex || seo?.noindex || module === 'conta';
+const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : undefined;
 ---
 <!doctype html>
 <html lang="pt-BR">
@@ -12,12 +34,38 @@ const { title, description } = Astro.props;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>{title} · Afim</title>
-    {description && <meta name="description" content={description} />}
+    <title>{fullTitle}</title>
+    {desc && <meta name="description" content={desc} />}
+    {robotsNoindex && <meta name="robots" content="noindex" />}
+    {canonical && <link rel="canonical" href={canonical} />}
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={site?.siteName ?? 'Afim'} />
+    <meta property="og:title" content={fullTitle} />
+    {desc && <meta property="og:description" content={desc} />}
+    {canonical && <meta property="og:url" content={canonical} />}
+    {image && <meta property="og:image" content={image} />}
+    <meta name="twitter:card" content={image ? 'summary_large_image' : 'summary'} />
+    <slot name="head" />
   </head>
   <body>
-    <SiteHeader><a href="/explorar">Explorar</a><a href="/explorar/estados">Estados</a><a href="/explorar/mapa">Mapa</a><a href="/explorar/busca">Buscar</a><a href="/conta">Minha conta</a></SiteHeader>
-    <Container><main class="py-2"><slot /></main></Container>
-    <SiteFooter>Afim — diretório open source de pessoas, negócios e comércios com valores em comum.</SiteFooter>
+    <SiteHeader>
+      <a href="/explorar">Explorar</a>
+      <a href="/planos">Planos</a>
+      <a href="/sobre">Sobre</a>
+      <a href="/conta">Minha conta</a>
+    </SiteHeader>
+    {wide ? <main><slot /></main> : <Container><main class="py-2"><slot /></main></Container>}
+    <SiteFooter>
+      <div class="flex flex-wrap justify-between gap-6">
+        <p class="max-w-sm">{site?.footerText ?? 'Afim — diretório open source de pessoas, negócios e comércios com valores em comum.'}</p>
+        <nav aria-label="Rodapé" class="flex flex-wrap gap-4">
+          <a href="/explorar">Explorar</a>
+          <a href="/explorar/mapa">Mapa</a>
+          <a href="/planos">Planos</a>
+          <a href="/sobre">Sobre</a>
+          <a href="https://github.com/Afim-Club/afim" rel="noopener">Código no GitHub</a>
+        </nav>
+      </div>
+    </SiteFooter>
   </body>
 </html>

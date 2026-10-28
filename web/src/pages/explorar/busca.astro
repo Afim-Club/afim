@@ -5,7 +5,7 @@ import Input from '@afim/design-system/components/Input.astro';
 import AffinityFilter from '../../components/AffinityFilter.astro';
 import Layout from '../../layouts/Layout.astro';
 ---
-<Layout title="Buscar">
+<Layout title="Buscar" noindex>
   <h1>Buscar</h1>
   <form id="f" class="flex flex-col gap-3 sm:flex-row">
     <Input name="q" placeholder="Nome ou descrição" aria-label="Nome ou descrição" />
@@ -56,5 +56,12 @@ import Layout from '../../layouts/Layout.astro';
       hits = (await res.json()).data;
       render();
     });
+
+    // The home page search box links here with ?q=.
+    const q0 = new URLSearchParams(location.search).get('q');
+    if (q0) {
+      (form.elements.namedItem('q') as HTMLInputElement).value = q0;
+      form.requestSubmit();
+    }
   </script>
 </Layout>

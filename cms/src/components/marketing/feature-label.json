@@ -1,0 +1,17 @@
+{
+  "collectionName": "components_marketing_feature_labels",
+  "info": {
+    "displayName": "Feature label",
+    "icon": "key"
+  },
+  "attributes": {
+    "key": {
+      "type": "string",
+      "required": true
+    },
+    "label": {
+      "type": "string",
+      "required": true
+    }
+  }
+}

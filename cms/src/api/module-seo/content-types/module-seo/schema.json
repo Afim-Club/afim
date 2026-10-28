@@ -1,0 +1,41 @@
+{
+  "kind": "collectionType",
+  "collectionName": "module_seos",
+  "info": {
+    "singularName": "module-seo",
+    "pluralName": "module-seos",
+    "displayName": "Module SEO",
+    "description": "SEO defaults per site module. titleTemplate uses %s for the page title."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "module": {
+      "type": "enumeration",
+      "enum": [
+        "home",
+        "explorar",
+        "ajuda",
+        "blog",
+        "parceiros"
+      ],
+      "required": true,
+      "unique": true
+    },
+    "titleTemplate": {
+      "type": "string",
+      "default": "%s · Afim"
+    },
+    "defaultDescription": {
+      "type": "text"
+    },
+    "ogImage": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "images"
+      ]
+    }
+  }
+}

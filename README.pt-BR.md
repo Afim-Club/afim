@@ -17,7 +17,7 @@ O site público pode ser navegado por lugar, como um diretório clássico: `/est
 | `web/` | Site público dos usuários (Astro) | `afim.club` |
 | `partners/` | Site dos afiliados: empresas e comércios (Astro) | `partners.afim.club` |
 | `cms/` | Backoffice e API (Strapi) | `admin.afim.club` |
-| `infra/` | Configuração de Docker Swarm, Traefik e Jenkins | - |
+| `infra/` | Deploy: stack Dockge do CMS (`infra/dockge/`), além de Docker Swarm, Traefik e Jenkins | - |
 | `design-system/` | Design system: tema Tailwind, componentes Astro e assets de marca usados por `web/` e `partners/` | - |
 
 ## Stack
@@ -25,7 +25,7 @@ O site público pode ser navegado por lugar, como um diretório clássico: `/est
 - **Front-end:** Astro (SSG/SSR)
 - **Back-end / admin:** Strapi CMS
 - **Banco de dados:** MariaDB
-- **Infraestrutura:** Docker Swarm + Traefik (TLS automático)
+- **Infraestrutura:** Cloudflare Workers (sites) + Docker no Dockge (CMS); Docker Swarm + Traefik como alternativa
 - **CI/CD:** Jenkins, SonarQube e Trivy
 
 ## Primeiros passos
@@ -65,6 +65,38 @@ Ou suba tudo de uma vez com `./dev.sh` (pare com `./dev.sh stop`; logs em `.tmp/
 > **Pare o CMS antes de trocar de branch** (`./dev.sh stop`). O `strapi develop` recarrega quando os arquivos mudam e, se um checkout remover tipos de conteúdo mesmo por instantes, o Strapi apaga as tabelas deles (com dados e relações).
 
 As portas são fixas porque o CMS só aceita requisições do navegador vindas de `localhost:4321` e `localhost:4322` (`CORS_ORIGINS`). Em dev, o `web/` consulta o CMS a cada requisição, então o Strapi precisa estar rodando. Pare o banco com `docker compose stop`; `docker compose down -v` também apaga os dados.
+
+## Deploy (Cloudflare Workers + Dockge)
+
+O CMS roda como container Docker num host gerenciado pelo [Dockge](https://github.com/louislam/dockge); os dois sites Astro são estáticos e servidos pelo Cloudflare Workers (static assets, sem adapter nem código de servidor). O setup Swarm/Jenkins em `infra/stack.yml` continua como alternativa.
+
+### CMS no Dockge
+
+1. No Dockge, crie uma stack (ex.: `afim-cms`) e cole o [`infra/dockge/compose.yaml`](infra/dockge/compose.yaml).
+2. Preencha o `.env` da stack a partir do [`infra/dockge/.env.example`](infra/dockge/.env.example). Gere cada segredo com `openssl rand -base64 32`.
+3. Faça o deploy. A imagem é construída direto deste repositório Git (`main`, pasta `cms/`), então não precisa de registry; **Deploy/Update reconstrói a imagem** (`pull_policy: build`). `CMS_BUILD_CONTEXT` permite construir outra branch ou um checkout local.
+4. Exponha a porta `CMS_PORT` (1337) como `https://admin.afim.club` por um proxy reverso ou um Cloudflare Tunnel. O container confia em `X-Forwarded-*` (`PROXY=true`).
+
+Os dados ficam em dois volumes nomeados: `mariadb-data` (banco) e `uploads` (mídias do painel). Faça backup dos dois.
+
+### Sites no Cloudflare Workers
+
+Cada site tem um `wrangler.jsonc` (`afim-web` e `afim-partners`) que publica `dist/` como static assets. Conecte o repositório em **Workers & Pages → Create → Import a repository** (Workers Builds), uma vez por site:
+
+| Configuração | `web` | `partners` |
+| --- | --- | --- |
+| Root directory | `web` | `partners` |
+| Build command | `npm run build` | `npm run build` |
+| Deploy command | `npx wrangler deploy` | `npx wrangler deploy` |
+| Variáveis de build | `STRAPI_URL`, `PUBLIC_STRAPI_URL`, `PUBLIC_AUTH_PROVIDERS` | `PUBLIC_STRAPI_URL`, `PUBLIC_TURNSTILE_SITE_KEY` |
+| Domínio | `afim.club` | `partners.afim.club` |
+
+ou publique de uma máquina com `npm run deploy` (precisa de `wrangler login` ou `CLOUDFLARE_API_TOKEN`, e das mesmas variáveis no shell).
+
+- `STRAPI_URL` e `PUBLIC_STRAPI_URL` são o endereço público do CMS (`https://admin.afim.club`). O build do `web` busca nele os dados de todas as páginas, então **o CMS precisa estar no ar e acessível pela Cloudflare durante o build**.
+- O `web` é estático: conteúdo novo ou alterado só aparece depois de um novo build. Crie um Deploy Hook (Worker → Settings → Builds → Deploy Hooks) e cadastre a URL como webhook no Strapi (Settings → Webhooks, eventos de Profile/Category/Affinity) para que cada alteração dispare um build.
+- Use os domínios próprios, não `*.workers.dev`: o login de membros depende de o site e o CMS serem do mesmo site (`afim.club` e `admin.afim.club`). Inclua o endereço de cada site em `CORS_ORIGINS` e defina `WEB_URL` no CMS.
+- O cache longo de `/_astro/*` vem de `public/_headers`.
 
 ## Privacidade e dados
 

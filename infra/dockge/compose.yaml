@@ -1,0 +1,68 @@
+# Strapi (cms/) + MariaDB as a single Dockge stack.
+# In Dockge: create a stack named "afim-cms", paste this file, and fill the
+# ".env" tab from .env.example next to it. Deploy builds the image straight
+# from the Git repository (no registry needed); Deploy/Update rebuild it.
+services:
+  cms:
+    image: afim-cms:local
+    build: ${CMS_BUILD_CONTEXT:-https://github.com/Afim-Club/afim.git#main:cms}
+    pull_policy: build
+    restart: unless-stopped
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    ports:
+      - "${CMS_PORT:-1337}:1337"
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: "1337"
+      PROXY: "true"
+      PUBLIC_URL: ${PUBLIC_URL}
+      CORS_ORIGINS: ${CORS_ORIGINS}
+      WEB_URL: ${WEB_URL}
+      DATABASE_CLIENT: mysql
+      DATABASE_HOST: mariadb
+      DATABASE_PORT: "3306"
+      DATABASE_NAME: ${DATABASE_NAME:-afim}
+      DATABASE_USERNAME: ${DATABASE_USERNAME:-afim}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      APP_KEYS: ${APP_KEYS}
+      API_TOKEN_SALT: ${API_TOKEN_SALT}
+      ADMIN_JWT_SECRET: ${ADMIN_JWT_SECRET}
+      TRANSFER_TOKEN_SALT: ${TRANSFER_TOKEN_SALT}
+      JWT_SECRET: ${JWT_SECRET}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      SEED: ${SEED:-false}
+      TURNSTILE_SECRET: ${TURNSTILE_SECRET:-}
+      SUBMIT_RATE_MAX: ${SUBMIT_RATE_MAX:-5}
+      AUTH_GOOGLE_CLIENT_ID: ${AUTH_GOOGLE_CLIENT_ID:-}
+      AUTH_GOOGLE_CLIENT_SECRET: ${AUTH_GOOGLE_CLIENT_SECRET:-}
+      AUTH_FACEBOOK_CLIENT_ID: ${AUTH_FACEBOOK_CLIENT_ID:-}
+      AUTH_FACEBOOK_CLIENT_SECRET: ${AUTH_FACEBOOK_CLIENT_SECRET:-}
+      AUTH_GITHUB_CLIENT_ID: ${AUTH_GITHUB_CLIENT_ID:-}
+      AUTH_GITHUB_CLIENT_SECRET: ${AUTH_GITHUB_CLIENT_SECRET:-}
+      AUTH_LINKEDIN_CLIENT_ID: ${AUTH_LINKEDIN_CLIENT_ID:-}
+      AUTH_LINKEDIN_CLIENT_SECRET: ${AUTH_LINKEDIN_CLIENT_SECRET:-}
+    volumes:
+      # Media uploaded through the admin panel (local upload provider).
+      - uploads:/app/public/uploads
+
+  mariadb:
+    image: mariadb:11
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: ${DATABASE_NAME:-afim}
+      MARIADB_USER: ${DATABASE_USERNAME:-afim}
+      MARIADB_PASSWORD: ${DATABASE_PASSWORD}
+      MARIADB_RANDOM_ROOT_PASSWORD: "1"
+    volumes:
+      - mariadb-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      retries: 10
+
+volumes:
+  mariadb-data:
+  uploads:

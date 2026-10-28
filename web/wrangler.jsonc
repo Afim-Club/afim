@@ -1,0 +1,10 @@
+// Cloudflare Workers deploy of the static site (no adapter: every page is
+// prerendered, so the Worker only serves the files in dist/).
+// Build variables (Workers Builds > Settings > Build): STRAPI_URL,
+// PUBLIC_STRAPI_URL, PUBLIC_AUTH_PROVIDERS. See README "Deploy".
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "afim-web",
+  "compatibility_date": "2026-10-01",
+  "assets": { "directory": "./dist" }
+}

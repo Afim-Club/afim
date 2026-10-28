@@ -200,7 +200,7 @@ Not legal advice: get a lawyer to review before launch, mainly items 1 to 3.
 2. **Different price by payment method** is allowed in Brazil by Lei 13.455/2017, and the advertiser sets the discount. Afim's terms must say the advertiser is responsible for honoring the price shown and for issuing their own fiscal documents and taxes on the full sale.
 3. **Afim's own revenue in sats** is revenue like any other: it must be recorded in BRL at the date received; check reporting duties for crypto received (Receita Federal) with an accountant.
 4. **Affinities stay sensitive data.** Offers target affinities, but the match runs server side, the advertiser only sees aggregate counts (minimum 5), and nothing about a member's affinities goes into URLs, invoices (the invoice description is only the profile name and "Afim"), or the payment record.
-5. **Payments link a member to a business.** The `payment` and `review` rows are personal data: the advertiser never sees the payer's identity, reviews are anonymous by default, and account deletion erases the member's payments and reviews (reviews may stay as anonymous text if we decide so; to define in the privacy notice). Pending payments older than 30 days are deleted.
+5. **Payments link a member to a business.** The `payment` and `review` rows are personal data: the advertiser never sees the payer's identity and reviews are anonymous by default. When a member deletes their account, Afim erases: the `payer` link of each of their payments (the row stays without anyone attached, so the advertiser's history, dashboard counts and discount totals stay correct), their reviews (text, rating and the report data; the profile average is recalculated), and everything that already goes today (member, affinities, user, sessions, owned profiles). Pending payments older than 30 days are deleted.
 6. **Stripe and BTCPay** are processors: list them in the privacy notice. Card data stays in Stripe.
 7. **Geolocation** for "near me" never leaves the device; the existing profile position stays opt-in and rounded (about 1 km).
 
@@ -224,7 +224,6 @@ Each milestone is one or a few small PRs, in this order:
 - Plan name and prices (monthly, yearly, sats).
 - BTCPay Server self-hosted (proposed) or a hosted provider for Afim's own wallet.
 - BRL/BTC rate source.
-- Should reviews stay public after the author deletes the account (as anonymous text) or be removed?
 - Should the advertiser also be able to confirm payments when the wallet has no LUD-21 (proposed: yes)?
 - Price and duration of a city slot (e.g. per month), and the slot cap per page.
 - Integrator partners: only a category for now, or a partner badge and referral deal?

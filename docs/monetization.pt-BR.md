@@ -137,7 +137,7 @@ Não é parecer jurídico: um advogado deve revisar antes do lançamento, princi
 2. **Preço diferente por forma de pagamento** é permitido pela Lei 13.455/2017, e quem define o desconto é o anunciante. Os termos devem dizer que o anunciante responde pelo preço mostrado e pelos próprios documentos fiscais e impostos sobre a venda inteira.
 3. **Receita do Afim em sats** é receita como outra qualquer: registrar em BRL na data do recebimento e verificar com o contador as obrigações de declarar cripto recebida (Receita Federal).
 4. **Afinidades continuam sendo dado sensível.** O cruzamento das ofertas roda no servidor, o anunciante só vê contagens agregadas (mínimo 5) e nada das afinidades do membro vai para URLs, faturas (a descrição é só o nome do perfil e "Afim") ou o registro de pagamento.
-5. **Pagamentos ligam um membro a um negócio.** `payment` e `review` são dados pessoais: o anunciante não vê quem pagou, avaliações são anônimas por padrão, apagar a conta apaga pagamentos e avaliações do membro, e pagamentos pendentes com mais de 30 dias são apagados.
+5. **Pagamentos ligam um membro a um negócio.** `payment` e `review` são dados pessoais: o anunciante não vê quem pagou e avaliações são anônimas por padrão. Quando o membro apaga a conta, o Afim apaga: o vínculo `payer` de cada pagamento dele (a linha fica sem ninguém ligado, para o histórico, o painel e os totais de desconto do anunciante continuarem certos), as avaliações dele (texto, nota e dados de denúncia; a média do perfil é recalculada) e tudo o que já é apagado hoje (membro, afinidades, usuário, sessões e perfis dele). Pagamentos pendentes com mais de 30 dias são apagados.
 6. **Stripe e BTCPay** são operadores: listar no aviso de privacidade. Dados de cartão ficam no Stripe.
 7. **Localização** do "perto de mim" nunca sai do aparelho; a posição do perfil continua opcional e arredondada (cerca de 1 km).
 
@@ -161,7 +161,6 @@ Cada marco é um ou poucos PRs pequenos, nesta ordem:
 - Nome e preços do plano (mensal, anual, sats).
 - BTCPay auto-hospedado (proposto) ou um provedor hospedado para a carteira do Afim.
 - Fonte da cotação BRL/BTC.
-- Avaliações ficam públicas (como texto anônimo) quando o autor apaga a conta, ou são removidas?
 - O anunciante pode confirmar pagamentos quando a carteira não tem LUD-21 (proposto: sim)?
 - Preço e duração da vaga na cidade (ex.: por mês) e limite de vagas por página.
 - Parceiros integradores: só uma categoria por enquanto, ou selo de parceiro e acordo de indicação?

@@ -17,6 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -26,6 +27,8 @@ jobs:
       - uses: docker/build-push-action@v6
         with:
           context: cms
+          # The Dockge host (tune01) is ARM64
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: |
             ghcr.io/afim-club/afim-cms:latest

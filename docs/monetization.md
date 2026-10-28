@@ -66,6 +66,33 @@ Proposed prices:
 
 Break-even is about 15 to 30 Pro subscribers. The free plan has a cost per profile close to zero (static pages and one database row), so it is paid by Pro and the city slots. An optional "Apoie o Afim" button for a Lightning donation can help from day one.
 
+### Hosting capacity and cost
+
+Checked on 2026-10-28 against Cloudflare's docs; server prices are ranges because Hetzner and other providers repriced in 2026. R$ values assume about R$ 6 per euro and R$ 5.5 per dollar.
+
+**Where the load goes.** The public sites are static files on Cloudflare Workers: requests to static assets are free and unlimited, so visitors cost nothing however many they are. Strapi only receives the dynamic calls: login refresh on each page of a signed-in member, `/api/members/me` and matches, `/busca` (searches the REST API), the dashboard beacon on each profile view, quotes, payments and points. MariaDB stays small: a profile is a few KB, so 100,000 profiles fit in well under 1 GB.
+
+**The real limits are in the static build:**
+
+| Limit (Cloudflare) | Free | Paid (US$ 5/month) | What it means for Afim |
+| --- | --- | --- | --- |
+| Files per site version | 20,000 | 100,000 | one file per profile, category and place page: about 12,000 to 15,000 profiles on Free, about 70,000 on Paid |
+| Build minutes | 3,000/month | 6,000/month, then US$ 0.005/min | every content change triggers a rebuild, so builds must be batched (at most one every 15 to 30 minutes) |
+| Build timeout | 20 min | 20 min | a full build of tens of thousands of pages gets close to it |
+
+**Tiers:**
+
+| Tier | Profiles | Active members | Setup | Hosting cost (R$/month) |
+| --- | --- | --- | --- | --- |
+| Launch | up to about 5,000 | up to about 2,000 | 1 VPS with 4 GB (Strapi + MariaDB on Dockge); Cloudflare Free; BTCPay through a partner or a hosted wallet | about 40 to 120 |
+| Growth | up to about 15,000 | up to about 20,000 | VPS with 8 GB; Cloudflare Paid (more files and build minutes); BTCPay on its own 4 GB VPS | about 250 to 450 |
+| Scale | up to about 70,000 | up to about 100,000 | Strapi with 2 replicas plus MariaDB on its own server; a search engine (e.g. Meilisearch) for `/busca`; dashboard counters batched before reaching Strapi | about 600 to 1,200 |
+| Beyond | more than 70,000 | | profile pages rendered on demand by a Worker with cache instead of a full static build | to be designed |
+
+The 400 to 470 Pro subscribers that give R$ 10,000 a month mean roughly 2,000 to 5,000 profiles in total, which still fits the **Launch** tier. Hosting is not the main cost at that size; the accountant is.
+
+Things to watch from day one: the build time (log it in each build), the number of files (alert at 15,000 on Free), Strapi response time on `/busca`, and the database backup.
+
 ### Data model (Strapi)
 
 `plan` (collection, public `find`/`findOne`, read by the plans page of the public site):

@@ -66,6 +66,33 @@ Preços propostos:
 
 O ponto de equilíbrio fica em cerca de 15 a 30 assinantes Pro. O plano grátis tem custo por perfil perto de zero (páginas estáticas e uma linha no banco), então é pago pelo Pro e pelas vagas na cidade. Um botão opcional "Apoie o Afim" para doação em Lightning ajuda desde o primeiro dia.
 
+### Capacidade e custo de hospedagem
+
+Conferido em 2026-10-28 na documentação do Cloudflare; os preços de servidor são faixas porque a Hetzner e outros provedores reajustaram em 2026. Os valores em R$ usam cerca de R$ 6 por euro e R$ 5,5 por dólar.
+
+**Para onde vai a carga.** Os sites públicos são arquivos estáticos no Cloudflare Workers: requisições a arquivos estáticos são grátis e ilimitadas, então visitantes não custam nada, sejam quantos forem. O Strapi só recebe as chamadas dinâmicas: renovação do login em cada página de um membro logado, `/api/members/me` e matches, `/busca` (que consulta a API REST), o contador do painel a cada visita de perfil, cotações, pagamentos e pontos. O MariaDB fica pequeno: um perfil tem poucos KB, então 100.000 perfis cabem em bem menos de 1 GB.
+
+**Os limites reais estão no build estático:**
+
+| Limite (Cloudflare) | Grátis | Pago (US$ 5/mês) | O que significa para o Afim |
+| --- | --- | --- | --- |
+| Arquivos por versão do site | 20.000 | 100.000 | um arquivo por página de perfil, categoria e lugar: cerca de 12.000 a 15.000 perfis no Grátis, cerca de 70.000 no Pago |
+| Minutos de build | 3.000/mês | 6.000/mês, depois US$ 0,005/min | toda mudança de conteúdo gera um build, então os builds precisam ser agrupados (no máximo um a cada 15 a 30 minutos) |
+| Tempo máximo de build | 20 min | 20 min | um build completo de dezenas de milhares de páginas chega perto |
+
+**Faixas:**
+
+| Faixa | Perfis | Membros ativos | Estrutura | Custo de hospedagem (R$/mês) |
+| --- | --- | --- | --- | --- |
+| Lançamento | até cerca de 5.000 | até cerca de 2.000 | 1 VPS de 4 GB (Strapi + MariaDB no Dockge); Cloudflare Grátis; BTCPay por parceiro ou carteira hospedada | cerca de 40 a 120 |
+| Crescimento | até cerca de 15.000 | até cerca de 20.000 | VPS de 8 GB; Cloudflare Pago (mais arquivos e minutos de build); BTCPay numa VPS própria de 4 GB | cerca de 250 a 450 |
+| Escala | até cerca de 70.000 | até cerca de 100.000 | Strapi com 2 réplicas e MariaDB em servidor próprio; motor de busca (ex.: Meilisearch) para `/busca`; contadores do painel agrupados antes de chegar ao Strapi | cerca de 600 a 1.200 |
+| Além | mais de 70.000 | | páginas de perfil geradas sob demanda por um Worker com cache, em vez do build estático completo | a desenhar |
+
+Os 400 a 470 assinantes Pro que dão R$ 10 mil por mês significam algo como 2.000 a 5.000 perfis no total, o que ainda cabe na faixa de **Lançamento**. Nesse tamanho a hospedagem não é o maior custo; o contador é.
+
+O que acompanhar desde o primeiro dia: o tempo de build (registrar em cada build), o número de arquivos (alerta em 15.000 no Grátis), o tempo de resposta do Strapi na `/busca` e o backup do banco.
+
 ### Modelo de dados (Strapi)
 
 `plan` (collection, `find`/`findOne` públicos, lida pela página de planos do site público): `name`, `slug` (a linha `free` existe com preço 0), `description`, `priceMonthlyBrl`, `priceYearlyBrl`, `priceMonthlySats` (opcional; vazio = converte do BRL), `features` (json, lista de chaves da tabela), `highlights` (json, frases do card), `featured`, `active`, `sortOrder`, `stripePriceIdMonthly`/`stripePriceIdYearly` (privados).

@@ -38,7 +38,7 @@ pipeline {
       }
     }
 
-    // The site is static and rendered from the live CMS API, so it builds after the CMS is deployed.
+    // web renders pages on demand from the CMS API, so its build no longer needs the CMS.
     stage('Build, scan and push web and partners images') {
       when { branch 'main' }
       steps {
@@ -47,6 +47,7 @@ pipeline {
             --build-arg STRAPI_URL=https://dash.$DOMAIN \
             --build-arg PUBLIC_STRAPI_URL=https://dash.$DOMAIN \
             --build-arg PUBLIC_AUTH_PROVIDERS=$PUBLIC_AUTH_PROVIDERS \
+            --build-arg SITE_URL=https://$DOMAIN \
             --build-context design-system=design-system web
           trivy image --exit-code 1 --severity HIGH,CRITICAL --ignore-unfixed $REGISTRY/afim-web:$TAG
           docker push $REGISTRY/afim-web:$TAG

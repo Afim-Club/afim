@@ -1,0 +1,12 @@
+---
+import Layout from '../layouts/Layout.astro';
+import EmptyState from '@afim/design-system/components/EmptyState.astro';
+
+Astro.response.status = 404;
+---
+<Layout title="Página não encontrada" module="home" noindex>
+  <div class="py-12">
+    <EmptyState title="Página não encontrada">O endereço pode ter mudado ou o conteúdo saiu do ar.</EmptyState>
+    <p class="mt-6 text-center"><a href="/">Voltar ao início</a> · <a href="/explorar">Explorar o diretório</a></p>
+  </div>
+</Layout>

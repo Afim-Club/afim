@@ -1,3 +1,5 @@
+import { memo } from './memo';
+
 const BASE = import.meta.env.STRAPI_URL ?? 'http://localhost:1337';
 
 export type Category = {
@@ -28,8 +30,10 @@ export const TYPE_LABELS: Record<Profile['profileType'], string> = {
   ngo: 'ONG',
 };
 
-// Strapi caps pageSize at 100, so walk every page.
-async function fetchAll<T>(path: string, query: string): Promise<T[]> {
+// Strapi caps pageSize at 100, so walk every page. Cached for a minute (see memo.ts).
+const fetchAll = <T>(path: string, query: string) => memo(`${path}?${query}`, () => loadAll<T>(path, query));
+
+async function loadAll<T>(path: string, query: string): Promise<T[]> {
   const out: T[] = [];
   for (let page = 1; ; page++) {
     const res = await fetch(`${BASE}/api/${path}?${query}&pagination[page]=${page}&pagination[pageSize]=100`);

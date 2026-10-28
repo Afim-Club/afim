@@ -1,6 +1,8 @@
-// Marketing-site content from Strapi (home, plans, free pages, SEO). Every fetch runs at build time.
+// Marketing-site content from Strapi (home, plans, free pages, SEO). Fetched on each request,
+// cached in memory for a minute (memo.ts).
 // A missing type (an older CMS) or an empty single type returns null, so pages fall back to defaults.
 import { marked } from 'marked';
+import { memo } from './memo';
 
 const BASE = import.meta.env.STRAPI_URL ?? 'http://localhost:1337';
 
@@ -32,7 +34,9 @@ export type BlogPost = { title: string; slug: string; date: string; author?: str
 export type SiteSetting = { siteName?: string; defaultDescription?: string; ogImage?: Media; footerText?: string };
 export type ModuleSeo = { module: string; titleTemplate?: string; defaultDescription?: string; ogImage?: Media };
 
-async function get<T>(path: string): Promise<T | null> {
+const get = <T>(path: string) => memo(path, () => load<T>(path));
+
+async function load<T>(path: string): Promise<T | null> {
   const res = await fetch(`${BASE}/api/${path}`);
   if (res.status === 404 || res.status === 403) return null;
   if (!res.ok) throw new Error(`Strapi ${path} responded ${res.status}`);
@@ -41,12 +45,10 @@ async function get<T>(path: string): Promise<T | null> {
 
 const SEO = 'populate[seo][populate]=*';
 
-// Fetched once per build: every page's layout asks for them.
-let settings: Promise<SiteSetting | null> | undefined;
-let modules: Promise<ModuleSeo[]> | undefined;
-export const getSiteSetting = () => (settings ??= get<SiteSetting>('site-setting?populate=*'));
+// Every page's layout asks for them.
+export const getSiteSetting = () => get<SiteSetting>('site-setting?populate=*');
 export const getModuleSeo = async (module: string) =>
-  (await (modules ??= get<ModuleSeo[]>('module-seos?populate=*').then((m) => m ?? []))).find((m) => m.module === module) ?? null;
+  ((await get<ModuleSeo[]>('module-seos?populate=*')) ?? []).find((m) => m.module === module) ?? null;
 
 export const getHomePage = () => get<HomePage>(`home-page?populate[sections][populate]=*&${SEO}`);
 export const getPricingPage = () => get<PricingPage>(`pricing-page?populate[featureLabels]=true&populate[faq]=true&${SEO}`);
@@ -55,9 +57,8 @@ export const getPlans = async () =>
   ((await get<Plan[]>('plans?sort=sortOrder&pagination[pageSize]=100')) ?? []).filter((p) => p.active !== false);
 export const getPages = async () => (await get<Page[]>(`pages?${SEO}&pagination[pageSize]=100`)) ?? [];
 
-/** Help center (fetched once per build): topics in order, each with its published articles in order. Topics without articles are left out. */
-let help: Promise<HelpTopic[]> | undefined;
-export const getHelp = () => (help ??= loadHelp());
+/** Help center: topics in order, each with its published articles in order. Topics without articles are left out. */
+export const getHelp = () => memo('help', loadHelp);
 const loadHelp = async (): Promise<HelpTopic[]> => {
   const topics = (await get<Omit<HelpTopic, 'articles'>[]>('help-topics?sort=sortOrder&pagination[pageSize]=100')) ?? [];
   const articles =
@@ -69,10 +70,9 @@ const loadHelp = async (): Promise<HelpTopic[]> => {
 export const helpUrl = (topic: { slug: string }, article?: { slug: string }) =>
   `/ajuda/${topic.slug}${article ? `/${article.slug}` : ''}`;
 
-/** Blog (fetched once per build): published posts, newest first. */
-let blog: Promise<BlogPost[]> | undefined;
-export const getBlogPosts = () =>
-  (blog ??= get<BlogPost[]>(`blog-posts?sort=date:desc&populate[tags]=true&populate[cover]=true&${SEO}&pagination[pageSize]=100`).then((p) => p ?? []));
+/** Blog: published posts, newest first. */
+export const getBlogPosts = async () =>
+  (await get<BlogPost[]>(`blog-posts?sort=date:desc&populate[tags]=true&populate[cover]=true&${SEO}&pagination[pageSize]=100`)) ?? [];
 export const blogDate = (d: string) => new Date(`${d}T12:00:00Z`).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
 
 /** Absolute URL for a Strapi upload (local uploads come back as /uploads/...). */

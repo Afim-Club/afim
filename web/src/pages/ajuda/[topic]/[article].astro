@@ -5,16 +5,12 @@ import Breadcrumbs from '../../../components/Breadcrumbs.astro';
 import HelpNav from '../../../components/help/HelpNav.astro';
 import { getHelp, helpUrl, markdown } from '../../../lib/content';
 
-export async function getStaticPaths() {
-  return (await getHelp()).flatMap((topic) =>
-    topic.articles.map((article, i) => ({
-      params: { topic: topic.slug, article: article.slug },
-      props: { topic, article, next: topic.articles[i + 1] },
-    })),
-  );
-}
-const { topic, article, next } = Astro.props;
 const topics = await getHelp();
+const topic = topics.find((t) => t.slug === Astro.params.topic);
+const index = topic?.articles.findIndex((a) => a.slug === Astro.params.article) ?? -1;
+if (!topic || index < 0) return Astro.rewrite('/404');
+const article = topic.articles[index];
+const next = topic.articles[index + 1];
 ---
 <Layout title={article.title} module="ajuda" seo={article.seo} description={article.summary}>
   <div class="grid gap-8 py-6 md:grid-cols-[15rem_1fr]">

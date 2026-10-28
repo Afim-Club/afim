@@ -1,0 +1,20 @@
+{
+  "kind": "collectionType",
+  "collectionName": "help_articles",
+  "info": {
+    "singularName": "help-article",
+    "pluralName": "help-articles",
+    "displayName": "Help article",
+    "description": "Help center articles: /ajuda/<topic slug>/<article slug>. Never change a published slug."
+  },
+  "options": { "draftAndPublish": true },
+  "attributes": {
+    "title": { "type": "string", "required": true },
+    "slug": { "type": "uid", "targetField": "title", "required": true },
+    "summary": { "type": "text" },
+    "body": { "type": "richtext" },
+    "topic": { "type": "relation", "relation": "manyToOne", "target": "api::help-topic.help-topic", "inversedBy": "articles" },
+    "sortOrder": { "type": "integer", "default": 0 },
+    "seo": { "type": "component", "repeatable": false, "component": "shared.seo" }
+  }
+}

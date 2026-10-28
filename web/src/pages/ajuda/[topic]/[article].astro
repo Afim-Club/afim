@@ -1,0 +1,33 @@
+---
+/** Help article: /ajuda/<topic>/<article>, Markdown body from the help-article collection. */
+import Layout from '../../../layouts/Layout.astro';
+import Breadcrumbs from '../../../components/Breadcrumbs.astro';
+import HelpNav from '../../../components/help/HelpNav.astro';
+import { getHelp, helpUrl, markdown } from '../../../lib/content';
+
+export async function getStaticPaths() {
+  return (await getHelp()).flatMap((topic) =>
+    topic.articles.map((article, i) => ({
+      params: { topic: topic.slug, article: article.slug },
+      props: { topic, article, next: topic.articles[i + 1] },
+    })),
+  );
+}
+const { topic, article, next } = Astro.props;
+const topics = await getHelp();
+---
+<Layout title={article.title} module="ajuda" seo={article.seo} description={article.summary}>
+  <div class="grid gap-8 py-6 md:grid-cols-[15rem_1fr]">
+    <aside class="order-last md:order-first"><HelpNav topics={topics} current={article.slug} /></aside>
+    <article class="min-w-0 max-w-3xl">
+      <Breadcrumbs items={[{ name: 'Ajuda', href: '/ajuda' }, { name: topic.name, href: helpUrl(topic) }, { name: article.title }]} />
+      <h1>{article.title}</h1>
+      <div class="richtext" set:html={markdown(article.body)} />
+      {next && (
+        <p class="mt-10 border-t border-line pt-4">
+          Próximo: <a href={helpUrl(topic, next)}>{next.title}</a>
+        </p>
+      )}
+    </article>
+  </div>
+</Layout>

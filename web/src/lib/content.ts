@@ -25,6 +25,8 @@ export type Plan = {
   features?: string[] | null; highlights?: string[] | null; featured?: boolean; active?: boolean; sortOrder?: number;
 };
 export type Page = { title: string; slug: string; body?: string; seo: Seo };
+export type HelpArticle = { title: string; slug: string; summary?: string; body?: string; sortOrder?: number; topic?: { slug: string } | null; seo: Seo };
+export type HelpTopic = { name: string; slug: string; description?: string; articles: HelpArticle[] };
 export type SiteSetting = { siteName?: string; defaultDescription?: string; ogImage?: Media; footerText?: string };
 export type ModuleSeo = { module: string; titleTemplate?: string; defaultDescription?: string; ogImage?: Media };
 
@@ -50,6 +52,20 @@ export const getLaunchPage = () => get<LaunchPage>(`launch-page?populate[items]=
 export const getPlans = async () =>
   ((await get<Plan[]>('plans?sort=sortOrder&pagination[pageSize]=100')) ?? []).filter((p) => p.active !== false);
 export const getPages = async () => (await get<Page[]>(`pages?${SEO}&pagination[pageSize]=100`)) ?? [];
+
+/** Help center (fetched once per build): topics in order, each with its published articles in order. Topics without articles are left out. */
+let help: Promise<HelpTopic[]> | undefined;
+export const getHelp = () => (help ??= loadHelp());
+const loadHelp = async (): Promise<HelpTopic[]> => {
+  const topics = (await get<Omit<HelpTopic, 'articles'>[]>('help-topics?sort=sortOrder&pagination[pageSize]=100')) ?? [];
+  const articles =
+    (await get<HelpArticle[]>(`help-articles?sort=sortOrder&populate[topic][fields][0]=slug&${SEO}&pagination[pageSize]=100`)) ?? [];
+  return topics
+    .map((t) => ({ ...t, articles: articles.filter((a) => a.topic?.slug === t.slug) }))
+    .filter((t) => t.articles.length);
+};
+export const helpUrl = (topic: { slug: string }, article?: { slug: string }) =>
+  `/ajuda/${topic.slug}${article ? `/${article.slug}` : ''}`;
 
 /** Absolute URL for a Strapi upload (local uploads come back as /uploads/...). */
 export const mediaUrl = (m: Media | undefined) =>

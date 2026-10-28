@@ -1,0 +1,18 @@
+{
+  "kind": "collectionType",
+  "collectionName": "help_topics",
+  "info": {
+    "singularName": "help-topic",
+    "pluralName": "help-topics",
+    "displayName": "Help topic",
+    "description": "Help center sections: /ajuda/<topic slug>."
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "name": { "type": "string", "required": true },
+    "slug": { "type": "uid", "targetField": "name", "required": true },
+    "description": { "type": "text" },
+    "sortOrder": { "type": "integer", "default": 0 },
+    "articles": { "type": "relation", "relation": "oneToMany", "target": "api::help-article.help-article", "mappedBy": "topic" }
+  }
+}

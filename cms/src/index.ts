@@ -2,6 +2,7 @@ import type { Core } from '@strapi/strapi';
 import { configureAuthProviders } from './auth-providers';
 import { seed, seedAffinities } from './seed';
 import { seedContent } from './seed-content';
+import { seedHelp } from './seed-help';
 
 const PUBLIC_ACTIONS = [
   'api::profile.profile.find',
@@ -21,6 +22,10 @@ const PUBLIC_ACTIONS = [
   'api::page.page.findOne',
   'api::plan.plan.find',
   'api::plan.plan.findOne',
+  'api::help-topic.help-topic.find',
+  'api::help-topic.help-topic.findOne',
+  'api::help-article.help-article.find',
+  'api::help-article.help-article.findOne',
 ];
 
 // Signed-in members: the same reads, plus their own member data (see cms/src/api/member).
@@ -58,6 +63,7 @@ export default {
     await seedAffinities(strapi);
     // Starter copy for the marketing site, created only when missing (edit it in the admin).
     await seedContent(strapi);
+    await seedHelp(strapi);
     if (process.env.SEED === 'true') await seed(strapi);
   },
 };

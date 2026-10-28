@@ -31,6 +31,8 @@ Two plans to start (KISS). Prices are open (see the end).
 | `dashboard`: views, clicks, payments and discount given | | yes |
 | `verifiedBadge`: document check and badge | | yes |
 | `reviewReplies`: answer reviews | | yes |
+| `highlight`: highlighted card and listed first | | yes |
+| `cityFeatured`: can buy "Destaque na sua cidade" slots (extra charge) | | yes |
 
 Members (people looking for afins) never pay. Paying a discounted Lightning bill, writing a review and inviting are free.
 
@@ -134,6 +136,18 @@ Payer (member)            Afim CMS                          Advertiser's wallet
 
 This record is what reviews and the dashboard count on. Afim does not keep the invoice after it expires or is paid, only its hash.
 
+## Highlight, featured in your city and Afim recommended
+
+Three different things, kept apart so the directory stays credible:
+
+- **Highlight** (`highlight`, in the paid plan): a paid profile gets a highlighted card and comes first among the profiles that **already match** the page and the affinity filter. It never makes a profile show up where it does not match.
+- **Featured in your city** (`cityFeatured`, paid add-on on top of the plan): a "Destaque na sua cidade" strip at the top of the city page (and of the city + category page), at most 3 slots per page, for a fixed period. The card is labeled "Destaque" so visitors know it was paid (CDC transparency).
+- **Afim recommended in the city** (free, never sold): a "Recomendados do Afim" strip chosen by criteria: verified badge, at least 5 reviews with average 4.5 or more, active in the last 90 days, and no open moderation. The admin can remove one by hand. Selling it would break the trust the reviews section works to build.
+
+`featured-slot` (collection, private; the public site reads only current slots at build time): `profile`, `state` (UF), `citySlug`, `category` (optional), `startsAt`, `endsAt`, `provider` (stripe|lightning), `paymentRef`. Bought from `/conta/plano` with a one-off Stripe Checkout or a BTCPay invoice, only while the plan is active. Recommended profiles are computed at build time, no new field.
+
+The site is static, so highlight order, slots and recommended strips change only on a rebuild: add a daily scheduled build in Jenkins so slots start and end on time.
+
 ## Reviews
 
 - `review` (collection): `profile`, `payment` (one review per paid payment), `author` (member, private), `rating` 1–5, `text`, `showName` (boolean, default false: shown as "Membro Afim"), `reply` (owner, needs `reviewReplies`), `moderationStatus` like profiles.
@@ -203,6 +217,7 @@ Each milestone is one or a few small PRs, in this order:
 7. **Verified badge.**
 8. **Referral rewards.** One free month per invited paying member.
 9. **PWA and near me.**
+10. **Highlight, featured in your city and Afim recommended.** Highlight ordering can ship with milestone 1; the city slots and the recommended strip need reviews and the badge first.
 
 ## Open questions
 
@@ -211,4 +226,5 @@ Each milestone is one or a few small PRs, in this order:
 - BRL/BTC rate source.
 - Should reviews stay public after the author deletes the account (as anonymous text) or be removed?
 - Should the advertiser also be able to confirm payments when the wallet has no LUD-21 (proposed: yes)?
+- Price and duration of a city slot (e.g. per month), and the slot cap per page.
 - Integrator partners: only a category for now, or a partner badge and referral deal?

@@ -31,6 +31,8 @@ Dois planos para começar (KISS). Preços em aberto (ver o final).
 | `dashboard`: visitas, cliques, pagamentos e desconto concedido | | sim |
 | `verifiedBadge`: verificação de documento e selo | | sim |
 | `reviewReplies`: responder avaliações | | sim |
+| `highlight`: card em destaque e listado primeiro | | sim |
+| `cityFeatured`: pode comprar vagas de "Destaque na sua cidade" (cobrança extra) | | sim |
 
 Membros (pessoas buscando afins) nunca pagam. Pagar uma conta com desconto, avaliar e convidar são gratuitos.
 
@@ -74,6 +76,18 @@ O desconto é sempre para membros logados: "entre perfis Afim" significa que que
 5. Confirmação: se a carteira suporta LUD-21 (URL `verify`), a página consulta e marca como `paid`; senão o anunciante confirma no painel. A parte em Pix/dinheiro nunca passa pelo Afim.
 
 `payment` (collection privada; o pagante vê os seus, o anunciante vê os do perfil sem a identidade do pagante): `profile`, `offer`, `payer` (privado), `billBrl`, `lightningBrl`, `discountBrl`, `amountSats`, `rateBrlPerBtc`, `invoiceHash`, `verifyUrl`, `status` (`pending`, `paid`, `expired`).
+
+## Destaque, destaque na cidade e recomendados do Afim
+
+Três coisas diferentes, separadas para o diretório continuar confiável:
+
+- **Destaque** (`highlight`, no plano pago): o perfil pago tem card em destaque e aparece primeiro entre os perfis que **já combinam** com a página e o filtro de afinidades. Nunca faz um perfil aparecer onde ele não combina.
+- **Destaque na sua cidade** (`cityFeatured`, adicional pago sobre o plano): uma faixa no topo da página da cidade (e da cidade + categoria), no máximo 3 vagas por página, por um período fixo. O card leva o selo "Destaque" para o visitante saber que é pago (transparência do CDC).
+- **Recomendados do Afim na cidade** (grátis, nunca vendido): faixa escolhida por critério: selo de verificado, pelo menos 5 avaliações com média 4,5 ou mais, ativo nos últimos 90 dias e sem moderação em aberto. O admin pode retirar um manualmente. Vender isso quebraria a confiança que as regras de avaliação constroem.
+
+`featured-slot` (collection privada; o site público lê só as vagas vigentes no build): `profile`, `state` (UF), `citySlug`, `category` (opcional), `startsAt`, `endsAt`, `provider` (stripe|lightning), `paymentRef`. Comprado em `/conta/plano` com Checkout avulso do Stripe ou fatura do BTCPay, só com plano ativo. Os recomendados são calculados no build, sem campo novo.
+
+O site é estático, então ordem de destaque, vagas e recomendados só mudam num novo build: um build agendado diário no Jenkins faz as vagas começarem e terminarem no dia certo.
 
 ## Avaliações
 
@@ -140,6 +154,7 @@ Cada marco é um ou poucos PRs pequenos, nesta ordem:
 7. **Selo de verificado.**
 8. **Recompensa por indicação.**
 9. **PWA e perto de mim.**
+10. **Destaque, destaque na cidade e recomendados.** A ordem de destaque pode sair junto com o marco 1; as vagas na cidade e os recomendados dependem de avaliações e do selo.
 
 ## Perguntas em aberto
 
@@ -148,4 +163,5 @@ Cada marco é um ou poucos PRs pequenos, nesta ordem:
 - Fonte da cotação BRL/BTC.
 - Avaliações ficam públicas (como texto anônimo) quando o autor apaga a conta, ou são removidas?
 - O anunciante pode confirmar pagamentos quando a carteira não tem LUD-21 (proposto: sim)?
+- Preço e duração da vaga na cidade (ex.: por mês) e limite de vagas por página.
 - Parceiros integradores: só uma categoria por enquanto, ou selo de parceiro e acordo de indicação?

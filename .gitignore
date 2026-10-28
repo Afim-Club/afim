@@ -11,3 +11,6 @@ build/
 .idea/
 .vscode/
 .wrangler/
+
+# Local MCP client config (endpoints stay out of the public repo)
+.mcp.json

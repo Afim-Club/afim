@@ -104,9 +104,9 @@ ou publique de uma máquina com `npm run deploy` (precisa de `wrangler login` ou
 
 O [servidor MCP](https://docs.strapi.io/cms/features/strapi-mcp-server) embutido no Strapi permite que um cliente de IA (Claude Code, Claude Desktop, Cursor...) liste, crie, edite e publique conteúdo no CMS.
 
-1. Defina `MCP_ENABLED=true` no ambiente do CMS (`.env` da stack no Dockge) e faça o redeploy. O endereço é `https://dash.afim.club/mcp`.
+1. Defina `MCP_ENABLED=true` no ambiente do CMS (`.env` da stack no Dockge) e faça o redeploy. O endereço é `https://<host-do-cms>/mcp`.
 2. No painel admin, abra **Settings → Admin tokens** e crie um token só com o conteúdo necessário. Sugestão: ler, criar, editar e publicar em Home page, Pricing page, Launch page, Page, Help topic, Help article, Blog post, Blog tag, Plan, Site settings e Module SEO. **Nunca** dê acesso a Member, Newsletter signup, User ou Profile: eles têm dados pessoais (LGPD). O token só faz o que as permissões dele permitem, e nunca mais do que o admin que o criou.
-3. Conecte o cliente. Neste repositório, o `.mcp.json` já declara o servidor `strapi` para o Claude Code; ele lê o token de `STRAPI_MCP_TOKEN` (e, se quiser, a URL de `STRAPI_MCP_URL`). No Claude Code na web, adicione `STRAPI_MCP_TOKEN` ao ambiente de nuvem e libere `dash.afim.club` no acesso de rede. Em outros lugares: `claude mcp add strapi --transport http https://dash.afim.club/mcp -H "Authorization: Bearer <token>"`.
+3. Conecte o cliente só do seu lado: o endereço e o token nunca vão para este repositório público (o `.mcp.json` está no `.gitignore`). Com o Claude Code: `claude mcp add --scope user --transport http strapi https://<host-do-cms>/mcp -H "Authorization: Bearer <token>"`. No Claude Code na web, rode o mesmo comando (sem `-H`) no script de setup do ambiente de nuvem, guarde o token como segredo de rede do host do CMS (cabeçalho `Authorization`, prefixo `Bearer`) e libere esse host no acesso de rede.
 
 O conteúdo criado pelo MCP segue as mesmas regras do painel admin (rascunho até publicar). O site estático ainda precisa de um novo build para mostrá-lo (o webhook do Strapi dispara um).
 

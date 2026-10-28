@@ -118,6 +118,19 @@ O saldo é a soma das entradas `available`. Nada é editado: um erro se corrige 
 - **Sempre verificável:** cada entrada `earn` guarda a fatura BOLT11 e o preimage (a descrição da fatura tem só o nome do perfil e "Afim", sem dado pessoal). Qualquer pessoa com eles confere a prova sem confiar no Afim: a assinatura da fatura mostra qual nó a emitiu e o valor, e `sha256(preimage) == payment_hash` mostra que foi paga. Em `/conta/pontos` o membro baixa o extrato com as provas, e a página as confere no navegador.
 - **O histórico não pode ser reescrito em silêncio:** todo dia o Afim publica o `hash` final de cada corrente combinado numa raiz Merkle em `GET /api/points/roots/:dia`, e registra essa raiz na blockchain do Bitcoin com OpenTimestamps (grátis, sem carteira). O extrato baixado traz o caminho da corrente do membro até a raiz do dia, então ele prova que o saldo existia naquela data, até contra o Afim.
 
+### Ancoragem diária em detalhe
+
+Biblioteca: `javascript-opentimestamps` (npm `opentimestamps`), chamada por jobs agendados do Strapi. Sem carteira e sem taxa.
+
+Nova collection `point-root` (leitura pública): `day` (data, única), `merkleRoot`, `leafCount`, `otsProof` (o arquivo `.ots` em base64), `status` (`pending`, `confirmed`), `bitcoinBlock` (altura do bloco, quando confirmado).
+
+1. **Cada nova entrada estende a corrente do membro.** Ao gravar um `point-entry`, o servidor lê o último `hash` do membro (na mesma transação, com trava na linha) e grava `prevHash` e `hash = sha256(prevHash | id da corrente | kind | points | payment_hash | createdAt)`. A primeira entrada usa um `prevHash` fixo de zeros. O id da corrente é um id aleatório por membro, não o id do usuário.
+2. **00:05 todo dia: monta a árvore.** Um job pega o `hash` final de cada corrente (só esses hashes, que não revelam nada sobre ninguém), ordena e monta uma árvore Merkle. A raiz vai para `point-root` com a data do dia anterior. Dia sem movimento também ganha raiz, para não haver buracos.
+3. **Carimba a raiz.** O job chama `OpenTimestamps.stamp` com a raiz. A biblioteca envia para vários calendários públicos e recebe uma prova `.ots` pendente, salva em `otsProof` com `status = pending`. A raiz fica pública em `GET /api/points/roots/:dia`.
+4. **De hora em hora: upgrade.** Um job chama `OpenTimestamps.upgrade` nas provas pendentes. Quando a transação dos calendários entra num bloco (em geral algumas horas), a prova ganha o caminho até esse bloco, e o job marca `status = confirmed` e `bitcoinBlock`. Calendário fora do ar é só tentado de novo; raiz pendente por mais de 48 horas avisa o admin.
+5. **O membro confere.** Em `/conta/pontos` o membro baixa um JSON com as entradas dele (fatura, preimage, hashes), o caminho Merkle do hash final dele até a raiz de cada dia e o `.ots` daquele dia. A página confere no navegador: cada preimage contra a fatura, a corrente da primeira entrada até a última, o caminho até a raiz publicada, e o `.ots` contra o Bitcoin (a biblioteca consulta o cabeçalho do bloco em exploradores públicos; qualquer pessoa também pode soltar a raiz e o `.ots` em opentimestamps.org, ou usar `ots verify` com o próprio nó).
+6. **O que isso garante.** Depois que um dia é confirmado, o Afim não consegue alterar, remover ou antedatar nenhuma entrada daquele dia sem que o arquivo do membro deixe de bater com uma raiz que já está na blockchain do Bitcoin. Entradas mais novas que a última raiz ficam protegidas só pelo banco até o dia seguinte.
+
 ### Antifraude
 
 O risco é anunciante e membro (ou a mesma pessoa nos dois papéis) pagarem um ao outro em círculo para acumular pontos, já que os sats voltam para eles.

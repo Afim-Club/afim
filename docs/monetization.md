@@ -186,6 +186,19 @@ The balance is the sum of `available` entries. Entries are never edited: a mista
 - **Always verifiable:** each `earn` entry keeps the BOLT11 invoice and the preimage (the invoice text carries only the profile name and "Afim", no personal data). Anyone holding them can recheck the proof without trusting Afim: the invoice signature shows which node issued it and for how much, and `sha256(preimage) == payment_hash` shows it was paid. In `/conta/pontos` the member can download their ledger with these proofs, and the page rechecks them in the browser.
 - **History cannot be rewritten in silence:** every day Afim publishes the head `hash` of every member chain combined into one Merkle root at `GET /api/points/roots/:day`, and stamps that root in the Bitcoin blockchain with OpenTimestamps (free, no wallet needed). A member's downloaded ledger includes the path from their chain head to that day's root, so they can prove their balance existed on that date, even against Afim.
 
+### Daily anchoring in detail
+
+Library: `javascript-opentimestamps` (npm `opentimestamps`), called from Strapi cron jobs. No wallet, no fee.
+
+New collection `point-root` (public read): `day` (date, unique), `merkleRoot`, `leafCount`, `otsProof` (the `.ots` file, base64), `status` (`pending`, `confirmed`), `bitcoinBlock` (height, once confirmed).
+
+1. **Every new entry extends the member's chain.** When a `point-entry` is written, the server reads the member's last `hash` (inside the same transaction, with a row lock) and stores `prevHash` and `hash = sha256(prevHash | member chain id | kind | points | payment_hash | createdAt)`. The first entry uses a fixed `prevHash` of zeros. The chain id is a random id per member, not their user id.
+2. **00:05 every day: build the tree.** A job takes the current head `hash` of every member chain (only these hashes, which reveal nothing about anyone), sorts them, and builds a Merkle tree. It stores the root in `point-root` for the previous day. A day with no changes still gets a root, so there are no gaps.
+3. **Stamp the root.** The job calls `OpenTimestamps.stamp` with the root. The library sends it to several public calendars and gets back a pending `.ots` proof, which is saved in `otsProof` with `status = pending`. The root is now public at `GET /api/points/roots/:day`.
+4. **Every hour: upgrade.** A job calls `OpenTimestamps.upgrade` on pending proofs. Once the calendars' Bitcoin transaction is in a block (usually a few hours), the proof gains the path to that block, and the job sets `status = confirmed` and `bitcoinBlock`. A calendar that is down is simply retried; a root still pending after 48 hours alerts the admin.
+5. **The member checks.** In `/conta/pontos` the member downloads a JSON file with their entries (invoice, preimage, hashes), the Merkle path from their chain head to each day's root, and that day's `.ots`. The page checks in the browser: every preimage against its invoice, the chain from the first entry to the head, the path up to the published root, and the `.ots` against Bitcoin (the library asks public block explorers for the block header; anyone can also drop the root and the `.ots` on opentimestamps.org, or use `ots verify` with their own node).
+6. **What it guarantees.** Once a day is confirmed, Afim cannot change, remove or back-date any entry of that day without the member's file failing to verify against a root that is already in the Bitcoin blockchain. Entries newer than the last root are protected only by the database until the next day.
+
 ### Anti-fraud
 
 The risk is an advertiser and a member (or one person with both roles) paying each other in a loop to farm points, since the sats come back to them.

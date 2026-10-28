@@ -11,6 +11,14 @@ Status: proposal (2026-10-28). Portuguese version: [monetization.pt-BR.md](monet
 
 Also approved: reviews after a payment, referral rewards on the existing invite link, affinity-targeted coupons and campaigns, an advertiser dashboard, a verified badge, and an installable app (PWA) with "near me".
 
+## Why Lightning
+
+The main argument for advertisers. Brazil's tax reform (EC 132/2023, LC 214/2025) brings **split payment** to electronic payments such as Pix and cards, phased in from 2026 on: the CBS/IBS tax is separated at the moment of payment and the seller receives only the net amount, even when the sale makes a loss. A Lightning payment reaches the advertiser in full, and the advertiser keeps paying their taxes the normal way, on their own books. The discount offer is how the advertiser shares that cash-flow gain with afins.
+
+Afim never presents Lightning as a way to avoid taxes: the terms and the plans page say the advertiser stays responsible for every tax on the sale. How split payment applies to each case, and when, must be confirmed with an accountant.
+
+**Integrator partners.** Advertisers who do not want to depend on third-party wallets can run their own Bitcoin and Lightning node. Integrator partners (IT companies that set up and support nodes) are listed in the directory as `company` profiles in an "Integradores Bitcoin e Lightning" category, and the plans page and the Lightning Address form point to them. No new data model is needed; a partner badge or referral deal can come later.
+
 ## Plans
 
 Two plans to start (KISS). Prices are open (see the end).
@@ -189,3 +197,4 @@ Each milestone is one or a few small PRs, in this order:
 - BRL/BTC rate source.
 - Should reviews stay public after the author deletes the account (as anonymous text) or be removed?
 - Should the advertiser also be able to confirm payments when the wallet has no LUD-21 (proposed: yes)?
+- Integrator partners: only a category for now, or a partner badge and referral deal?

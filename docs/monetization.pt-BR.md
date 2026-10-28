@@ -11,6 +11,14 @@ Status: proposta (2026-10-28). Versão em inglês (referência): [monetization.m
 
 Também aprovados: avaliações após pagamento, recompensa por indicação no convite que já existe, cupons e campanhas por afinidade, painel do anunciante, selo de verificado e app instalável (PWA) com "perto de mim".
 
+## Por que Lightning
+
+É o principal argumento para o anunciante. A reforma tributária (EC 132/2023, LC 214/2025) traz o **split payment** para pagamentos eletrônicos como Pix e cartão, em fases a partir de 2026: o imposto (CBS/IBS) é separado na hora do pagamento e o vendedor recebe só o valor líquido, mesmo quando a venda dá prejuízo. Um pagamento Lightning chega inteiro ao anunciante, que continua pagando seus impostos normalmente, pela própria contabilidade. A oferta de desconto é como o anunciante divide esse ganho de caixa com os afins.
+
+O Afim nunca apresenta Lightning como forma de não pagar imposto: os termos e a página de planos dizem que o anunciante continua responsável por todos os tributos da venda. Como e quando o split payment se aplica a cada caso deve ser confirmado com um contador.
+
+**Parceiros integradores.** Quem não quiser depender de carteiras de terceiros pode ter o próprio nó Bitcoin e Lightning. Parceiros integradores (empresas de TI que montam e dão suporte a nós) aparecem no diretório como perfis `company` numa categoria "Integradores Bitcoin e Lightning", e a página de planos e o formulário da Lightning Address apontam para eles. Não precisa de modelo de dados novo; selo de parceiro ou acordo de indicação podem vir depois.
+
 ## Planos
 
 Dois planos para começar (KISS). Preços em aberto (ver o final).
@@ -126,3 +134,4 @@ Cada marco é um ou poucos PRs pequenos, nesta ordem:
 - Fonte da cotação BRL/BTC.
 - Avaliações ficam públicas (como texto anônimo) quando o autor apaga a conta, ou são removidas?
 - O anunciante pode confirmar pagamentos quando a carteira não tem LUD-21 (proposto: sim)?
+- Parceiros integradores: só uma categoria por enquanto, ou selo de parceiro e acordo de indicação?

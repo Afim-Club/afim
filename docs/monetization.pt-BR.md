@@ -17,7 +17,7 @@ Também aprovados: avaliações após pagamento, recompensa por indicação no c
 
 O Afim nunca apresenta Lightning como forma de não pagar imposto: os termos e a página de planos dizem que o anunciante continua responsável por todos os tributos da venda. Como e quando o split payment se aplica a cada caso deve ser confirmado com um contador.
 
-**Parceiros integradores.** Quem não quiser depender de carteiras de terceiros pode ter o próprio nó Bitcoin e Lightning. Parceiros integradores (empresas de TI que montam e dão suporte a nós) aparecem no diretório como perfis `company` numa categoria "Integradores Bitcoin e Lightning", e a página de planos e o formulário da Lightning Address apontam para eles. Não precisa de modelo de dados novo; selo de parceiro ou acordo de indicação podem vir depois.
+**Parceiros integradores.** Quem não quiser depender de carteiras de terceiros pode ter o próprio nó Bitcoin e Lightning. Parceiros integradores (empresas de TI que montam e dão suporte a nós) aparecem no diretório como perfis `company` numa categoria "Integradores Bitcoin", e a página de planos e o formulário da Lightning Address apontam para eles. Não precisa de modelo de dados novo; selo de parceiro ou acordo de indicação podem vir depois.
 
 ## Planos
 

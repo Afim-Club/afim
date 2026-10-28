@@ -27,6 +27,8 @@ export type Plan = {
 export type Page = { title: string; slug: string; body?: string; seo: Seo };
 export type HelpArticle = { title: string; slug: string; summary?: string; body?: string; sortOrder?: number; topic?: { slug: string } | null; seo: Seo };
 export type HelpTopic = { name: string; slug: string; description?: string; articles: HelpArticle[] };
+export type BlogTag = { name: string; slug: string };
+export type BlogPost = { title: string; slug: string; date: string; author?: string; excerpt?: string; body?: string; cover?: Media; tags: BlogTag[]; seo: Seo };
 export type SiteSetting = { siteName?: string; defaultDescription?: string; ogImage?: Media; footerText?: string };
 export type ModuleSeo = { module: string; titleTemplate?: string; defaultDescription?: string; ogImage?: Media };
 
@@ -66,6 +68,12 @@ const loadHelp = async (): Promise<HelpTopic[]> => {
 };
 export const helpUrl = (topic: { slug: string }, article?: { slug: string }) =>
   `/ajuda/${topic.slug}${article ? `/${article.slug}` : ''}`;
+
+/** Blog (fetched once per build): published posts, newest first. */
+let blog: Promise<BlogPost[]> | undefined;
+export const getBlogPosts = () =>
+  (blog ??= get<BlogPost[]>(`blog-posts?sort=date:desc&populate[tags]=true&populate[cover]=true&${SEO}&pagination[pageSize]=100`).then((p) => p ?? []));
+export const blogDate = (d: string) => new Date(`${d}T12:00:00Z`).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
 
 /** Absolute URL for a Strapi upload (local uploads come back as /uploads/...). */
 export const mediaUrl = (m: Media | undefined) =>

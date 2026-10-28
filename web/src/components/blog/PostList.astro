@@ -1,0 +1,22 @@
+---
+/** List of blog post cards: date, title, excerpt and tags. */
+import Badge from '@afim/design-system/components/Badge.astro';
+import { blogDate, mediaUrl, type BlogPost } from '../../lib/content';
+interface Props { posts: BlogPost[] }
+const { posts } = Astro.props;
+---
+<ul class="m-0 grid list-none gap-8 p-0">
+  {posts.map((p) => (
+    <li class:list={['grid gap-4', mediaUrl(p.cover) && 'sm:grid-cols-[12rem_1fr]']}>
+      {mediaUrl(p.cover) && (
+        <img src={mediaUrl(p.cover)} alt={p.cover?.alternativeText ?? ''} class="aspect-[16/10] w-full rounded-afim object-cover" loading="lazy" />
+      )}
+      <div>
+        <p class="m-0 text-sm text-muted"><time datetime={p.date}>{blogDate(p.date)}</time></p>
+        <h2 class="mt-1 mb-2"><a href={`/blog/${p.slug}`} class="text-fg no-underline hover:text-brand">{p.title}</a></h2>
+        {p.excerpt && <p class="m-0 text-muted">{p.excerpt}</p>}
+        {p.tags.length > 0 && <p class="mt-2 flex flex-wrap gap-2">{p.tags.map((t) => <Badge href={`/blog/tag/${t.slug}`}>{t.name}</Badge>)}</p>}
+      </div>
+    </li>
+  ))}
+</ul>

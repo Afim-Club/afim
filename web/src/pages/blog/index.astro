@@ -1,0 +1,15 @@
+---
+/** Blog module home: every published post, newest first. */
+import Layout from '../../layouts/Layout.astro';
+import EmptyState from '@afim/design-system/components/EmptyState.astro';
+import PostList from '../../components/blog/PostList.astro';
+import { getBlogPosts } from '../../lib/content';
+const posts = await getBlogPosts();
+---
+<Layout title="Blog" module="blog" description="Novidades do Afim, Bitcoin Lightning e economia entre afins.">
+  <section class="py-6">
+    <h1 class="mt-0">Blog do Afim</h1>
+    <p class="text-muted">Novidades, Lightning e economia entre afins. <a href="/blog/rss.xml">Assine o RSS</a>.</p>
+  </section>
+  {posts.length ? <PostList posts={posts} /> : <EmptyState title="Nenhum post ainda" />}
+</Layout>

@@ -1,0 +1,24 @@
+---
+/** Blog tag: /blog/tag/<slug>, the posts with that tag. Only tags used by a published post get a page. */
+import Layout from '../../../layouts/Layout.astro';
+import Breadcrumbs from '../../../components/Breadcrumbs.astro';
+import PostList from '../../../components/blog/PostList.astro';
+import { getBlogPosts, type BlogTag } from '../../../lib/content';
+
+export async function getStaticPaths() {
+  const posts = await getBlogPosts();
+  const tags = new Map<string, BlogTag>(posts.flatMap((p) => p.tags.map((t) => [t.slug, t] as const)));
+  return [...tags.values()].map((tag) => ({
+    params: { tag: tag.slug },
+    props: { tag, posts: posts.filter((p) => p.tags.some((t) => t.slug === tag.slug)) },
+  }));
+}
+const { tag, posts } = Astro.props;
+---
+<Layout title={`Posts sobre ${tag.name}`} module="blog">
+  <section class="py-6">
+    <Breadcrumbs items={[{ name: 'Blog', href: '/blog' }, { name: tag.name }]} />
+    <h1>{tag.name}</h1>
+  </section>
+  <PostList posts={posts} />
+</Layout>

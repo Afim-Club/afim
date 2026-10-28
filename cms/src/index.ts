@@ -3,6 +3,7 @@ import { configureAuthProviders } from './auth-providers';
 import { seed, seedAffinities } from './seed';
 import { seedContent } from './seed-content';
 import { seedHelp } from './seed-help';
+import { seedBlog } from './seed-blog';
 
 const PUBLIC_ACTIONS = [
   'api::profile.profile.find',
@@ -26,6 +27,10 @@ const PUBLIC_ACTIONS = [
   'api::help-topic.help-topic.findOne',
   'api::help-article.help-article.find',
   'api::help-article.help-article.findOne',
+  'api::blog-post.blog-post.find',
+  'api::blog-post.blog-post.findOne',
+  'api::blog-tag.blog-tag.find',
+  'api::blog-tag.blog-tag.findOne',
 ];
 
 // Signed-in members: the same reads, plus their own member data (see cms/src/api/member).
@@ -64,6 +69,7 @@ export default {
     // Starter copy for the marketing site, created only when missing (edit it in the admin).
     await seedContent(strapi);
     await seedHelp(strapi);
+    await seedBlog(strapi);
     if (process.env.SEED === 'true') await seed(strapi);
   },
 };

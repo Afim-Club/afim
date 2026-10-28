@@ -1,0 +1,36 @@
+---
+/** Blog post: /blog/<slug>, Markdown body, BlogPosting JSON-LD. */
+import Layout from '../../layouts/Layout.astro';
+import Badge from '@afim/design-system/components/Badge.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import { blogDate, getBlogPosts, markdown, mediaUrl } from '../../lib/content';
+
+export async function getStaticPaths() {
+  return (await getBlogPosts()).map((post) => ({ params: { slug: post.slug }, props: { post } }));
+}
+const { post } = Astro.props;
+const image = mediaUrl(post.cover);
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  headline: post.title,
+  datePublished: post.date,
+  description: post.excerpt ?? undefined,
+  image,
+  author: post.author ? { '@type': 'Organization', name: post.author } : undefined,
+  mainEntityOfPage: Astro.site ? new URL(Astro.url.pathname, Astro.site).href : undefined,
+};
+---
+<Layout title={post.title} module="blog" seo={post.seo} description={post.excerpt}>
+  <script slot="head" type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  <article class="mx-auto max-w-3xl py-6">
+    <Breadcrumbs items={[{ name: 'Blog', href: '/blog' }, { name: post.title }]} />
+    <h1>{post.title}</h1>
+    <p class="text-sm text-muted"><time datetime={post.date}>{blogDate(post.date)}</time>{post.author && ` · ${post.author}`}</p>
+    {image && <img src={image} alt={post.cover?.alternativeText ?? ''} class="my-6 w-full rounded-afim" />}
+    <div class="richtext" set:html={markdown(post.body)} />
+    {post.tags.length > 0 && (
+      <p class="mt-8 flex flex-wrap gap-2 border-t border-line pt-4">{post.tags.map((t) => <Badge href={`/blog/tag/${t.slug}`}>{t.name}</Badge>)}</p>
+    )}
+  </article>
+</Layout>

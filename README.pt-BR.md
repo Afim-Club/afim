@@ -8,7 +8,7 @@
 - Empresas contratam pessoas que compartilham seus valores.
 - Comércios e fornecedores fazem negócios com parceiros que compartilham seus valores.
 
-O site público é dividido em módulos, cada um com seu prefixo de URL: a home de divulgação fica na raiz (`/`, `/planos`, `/avise-me` e páginas livres como `/sobre`, `/valores` e `/privacidade`), com textos, planos e SEO editados no Strapi, a central de ajuda fica em `/ajuda` (tópicos e artigos editados no Strapi, começando por como usar uma carteira Lightning), e o diretório fica em `/explorar`.
+O site público é dividido em módulos, cada um com seu prefixo de URL: a home de divulgação fica na raiz (`/`, `/planos`, `/avise-me` e páginas livres como `/sobre`, `/valores` e `/privacidade`), com textos, planos e SEO editados no Strapi, o blog fica em `/blog` (com tags e feed RSS), a central de ajuda fica em `/ajuda` (tópicos e artigos editados no Strapi, começando por como usar uma carteira Lightning), e o diretório fica em `/explorar`.
 
 O diretório pode ser navegado por lugar, como um diretório clássico: todo o diretório fica em `/explorar` (as URLs antigas redirecionam com 301): `/explorar/estados` lista os estados, e `/explorar/sp`, `/explorar/sp/campinas` e `/explorar/sp/campinas/servicos` listam os perfis ativos por estado, cidade e categoria, com contagens e trilha de navegação.
 
@@ -96,7 +96,7 @@ Cada site tem um `wrangler.jsonc` (`afim-web` e `afim-partners`) que publica `di
 ou publique de uma máquina com `npm run deploy` (precisa de `wrangler login` ou `CLOUDFLARE_API_TOKEN`, e das mesmas variáveis no shell).
 
 - `STRAPI_URL` e `PUBLIC_STRAPI_URL` são o endereço público do CMS (`https://dash.afim.club`). O build do `web` busca nele os dados de todas as páginas, então **o CMS precisa estar no ar e acessível pela Cloudflare durante o build**.
-- O `web` é estático: conteúdo novo ou alterado só aparece depois de um novo build. Crie um Deploy Hook (Worker → Settings → Builds → Deploy Hooks) e cadastre a URL como webhook no Strapi (Settings → Webhooks, eventos de Profile/Category/Affinity, e também Home page, Pricing page, Launch page, Help topic, Help article, Page, Plan, Site settings e Module SEO) para que cada alteração dispare um build.
+- O `web` é estático: conteúdo novo ou alterado só aparece depois de um novo build. Crie um Deploy Hook (Worker → Settings → Builds → Deploy Hooks) e cadastre a URL como webhook no Strapi (Settings → Webhooks, eventos de Profile/Category/Affinity, e também Home page, Pricing page, Launch page, Help topic, Help article, Blog post, Blog tag, Page, Plan, Site settings e Module SEO) para que cada alteração dispare um build.
 - Use os domínios próprios, não `*.workers.dev`: o login de membros depende de o site e o CMS serem do mesmo site (`afim.club` e `dash.afim.club`). Inclua o endereço de cada site em `CORS_ORIGINS` e defina `WEB_URL` no CMS.
 - O cache longo de `/_astro/*` vem de `public/_headers`.
 

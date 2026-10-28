@@ -1,0 +1,22 @@
+{
+  "kind": "collectionType",
+  "collectionName": "blog_posts",
+  "info": {
+    "singularName": "blog-post",
+    "pluralName": "blog-posts",
+    "displayName": "Blog post",
+    "description": "Blog posts: /blog/<slug>, newest first by date. Never change a published slug."
+  },
+  "options": { "draftAndPublish": true },
+  "attributes": {
+    "title": { "type": "string", "required": true },
+    "slug": { "type": "uid", "targetField": "title", "required": true },
+    "date": { "type": "date", "required": true },
+    "author": { "type": "string" },
+    "excerpt": { "type": "text" },
+    "cover": { "type": "media", "multiple": false, "allowedTypes": ["images"] },
+    "body": { "type": "richtext" },
+    "tags": { "type": "relation", "relation": "manyToMany", "target": "api::blog-tag.blog-tag", "inversedBy": "posts" },
+    "seo": { "type": "component", "repeatable": false, "component": "shared.seo" }
+  }
+}

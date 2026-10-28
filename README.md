@@ -8,7 +8,7 @@
 - Businesses hire people who share their values.
 - Shops and suppliers do business with partners who share their values.
 
-The public site is split in modules, each with its own URL prefix: the marketing home owns the root (`/`, `/planos`, `/avise-me`, and free pages such as `/sobre`, `/valores` and `/privacidade`), with its text, plans and SEO edited in Strapi, the help center lives under `/ajuda` (topics and articles edited in Strapi, starting with how to use a Lightning wallet), and the directory lives under `/explorar`.
+The public site is split in modules, each with its own URL prefix: the marketing home owns the root (`/`, `/planos`, `/avise-me`, and free pages such as `/sobre`, `/valores` and `/privacidade`), with its text, plans and SEO edited in Strapi, the blog lives under `/blog` (with tags and an RSS feed), the help center lives under `/ajuda` (topics and articles edited in Strapi, starting with how to use a Lightning wallet), and the directory lives under `/explorar`.
 
 The directory can be browsed by place, like a classic directory: the whole directory lives under `/explorar` (old URLs redirect with 301): `/explorar/estados` lists the states, then `/explorar/sp`, `/explorar/sp/campinas` and `/explorar/sp/campinas/servicos` list the active profiles by state, city and category, with counts and breadcrumbs.
 
@@ -96,7 +96,7 @@ Each site has a `wrangler.jsonc` (`afim-web` and `afim-partners`) that uploads `
 or deploy from a machine with `npm run deploy` (needs `wrangler login` or `CLOUDFLARE_API_TOKEN`, plus the same variables in the shell).
 
 - `STRAPI_URL` and `PUBLIC_STRAPI_URL` are the public CMS address (`https://dash.afim.club`). The `web` build fetches every page's data from it, so **the CMS must be up and reachable from Cloudflare during the build**.
-- `web` is static: new or changed content shows up only after a rebuild. Create a Deploy Hook (Worker → Settings → Builds → Deploy Hooks) and add its URL as a webhook in Strapi (Settings → Webhooks, events on Profile/Category/Affinity entries, plus Home page, Pricing page, Launch page, Help topic, Help article, Page, Plan, Site settings and Module SEO) so each change triggers a rebuild.
+- `web` is static: new or changed content shows up only after a rebuild. Create a Deploy Hook (Worker → Settings → Builds → Deploy Hooks) and add its URL as a webhook in Strapi (Settings → Webhooks, events on Profile/Category/Affinity entries, plus Home page, Pricing page, Launch page, Help topic, Help article, Blog post, Blog tag, Page, Plan, Site settings and Module SEO) so each change triggers a rebuild.
 - Use the custom domains, not `*.workers.dev`: member login relies on the site and the CMS being same-site (`afim.club` and `dash.afim.club`). Add each site's address to `CORS_ORIGINS` and set `WEB_URL` in the CMS.
 - Long cache for `/_astro/*` comes from `public/_headers`.
 

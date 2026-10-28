@@ -1,0 +1,90 @@
+---
+/**
+ * Home module: launch announcement sign-up. Text from the launch-page single type; the form POSTs from the
+ * browser to /api/newsletter/subscribe (private newsletter-signup collection, rate limit, honeypot, Turnstile).
+ */
+import Alert from '@afim/design-system/components/Alert.astro';
+import Badge from '@afim/design-system/components/Badge.astro';
+import Button from '@afim/design-system/components/Button.astro';
+import FormField from '@afim/design-system/components/FormField.astro';
+import Input from '@afim/design-system/components/Input.astro';
+import Layout from '../../layouts/Layout.astro';
+import { getLaunchPage } from '../../lib/content';
+
+const page = await getLaunchPage();
+const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY;
+const api = import.meta.env.PUBLIC_STRAPI_URL ?? 'http://localhost:1337';
+const consentText = page?.consentText ?? 'Aceito receber e-mails do Afim sobre o lançamento. Posso sair a qualquer momento pelo link em cada e-mail.';
+---
+<Layout title="Avise-me" module="home" seo={page?.seo} description={page?.text}>
+  {siteKey && <script is:inline slot="head" src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>}
+  <div class="grid gap-10 py-8 md:grid-cols-2">
+    <section>
+      {page?.badge && <Badge tone="brand">{page.badge}</Badge>}
+      <h1 class="text-3xl font-extrabold">{page?.title ?? 'Quer saber quando tudo estiver pronto?'}</h1>
+      {page?.text && <p class="text-lg text-muted">{page.text}</p>}
+      {page?.items?.length ? (
+        <ul class="space-y-2 pl-5">{page.items.map((i) => <li><strong>{i.title}:</strong> {i.text}</li>)}</ul>
+      ) : null}
+    </section>
+    <section class="rounded-afim border border-line bg-surface p-6">
+      <form id="f" class="grid gap-4">
+        <h2 class="m-0 text-xl">Avise-me</h2>
+        <FormField label="E-mail" required><Input name="email" type="email" autocomplete="email" required /></FormField>
+        <FormField label="Nome (opcional)"><Input name="name" autocomplete="given-name" maxlength="120" /></FormField>
+        <fieldset class="m-0 grid gap-2 border-0 p-0">
+          <legend class="mb-1 text-sm font-medium">Quero novidades para</legend>
+          <label class="flex gap-2"><input type="checkbox" name="forPeople" /> Encontrar afins (sou pessoa)</label>
+          <label class="flex gap-2"><input type="checkbox" name="forBusiness" /> Divulgar meu negócio</label>
+        </fieldset>
+        <label class="flex items-start gap-2 text-sm">
+          <input type="checkbox" name="consent" required class="mt-1" />
+          <span>{consentText} <a href="/privacidade">Política de privacidade</a></span>
+        </label>
+        <input name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px" />
+        {siteKey && <div class="cf-turnstile" data-sitekey={siteKey}></div>}
+        <div><Button size="lg">Quero ser avisado</Button></div>
+        <p class="m-0 text-xs text-muted">Guardamos só o e-mail, o nome, para quem você quer novidades e a data do seu aceite. Nada é compartilhado.</p>
+        <Alert id="msg" role="status" />
+      </form>
+      <div id="done" hidden>
+        <h2 class="mt-0 text-xl">{page?.doneTitle ?? 'Pronto, você está na lista'}</h2>
+        <p class="text-muted">{page?.doneText ?? 'Avisamos por e-mail quando os novos recursos chegarem.'}</p>
+        <Button href="/explorar">Explorar o diretório</Button>
+      </div>
+    </section>
+  </div>
+  <script define:vars={{ api }}>
+    const form = document.getElementById('f');
+    const msg = document.getElementById('msg');
+    const button = form.querySelector('button');
+    const show = (tone, text) => { msg.dataset.tone = tone; msg.textContent = text; };
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      button.disabled = true; // no double submits
+      show('info', 'Enviando...');
+      const f = new FormData(form);
+      try {
+        const res = await fetch(`${api}/api/newsletter/subscribe`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: f.get('email'), name: f.get('name'), website: f.get('website'),
+            forPeople: f.has('forPeople'), forBusiness: f.has('forBusiness'), consent: f.has('consent'),
+            captchaToken: f.get('cf-turnstile-response'),
+          }),
+        });
+        if (res.ok) {
+          form.hidden = true;
+          document.getElementById('done').hidden = false;
+        } else if (res.status === 429) show('warning', 'Muitas tentativas. Tente novamente mais tarde.');
+        else show('danger', 'Não foi possível enviar. Confira o e-mail, o aceite e a verificação e tente novamente.');
+      } catch {
+        show('danger', 'Falha de conexão. Tente novamente em instantes.');
+      } finally {
+        window.turnstile?.reset(); // Turnstile tokens are single-use
+        button.disabled = false;
+      }
+    });
+  </script>
+</Layout>

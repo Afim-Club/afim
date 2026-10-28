@@ -1,0 +1,38 @@
+---
+/**
+ * Leave the launch list. Each e-mail links here with ?t=<unsubscribeToken>; the visitor confirms with a
+ * button (so link scanners that open the URL don't unsubscribe anyone) and the CMS deletes the row.
+ */
+import Alert from '@afim/design-system/components/Alert.astro';
+import Button from '@afim/design-system/components/Button.astro';
+import Layout from '../../layouts/Layout.astro';
+const api = import.meta.env.PUBLIC_STRAPI_URL ?? 'http://localhost:1337';
+---
+<Layout title="Sair da lista" module="home" noindex>
+  <section class="mx-auto max-w-xl py-10">
+    <h1>Sair da lista do avise-me</h1>
+    <p class="text-muted">Você deixa de receber os e-mails do lançamento e apagamos o seu e-mail, nome e aceite.</p>
+    <Button id="leave">Sair da lista</Button>
+    <Alert id="msg" role="status" class="mt-4" />
+  </section>
+  <script define:vars={{ api }}>
+    const token = new URLSearchParams(location.search).get('t');
+    const button = document.getElementById('leave');
+    const msg = document.getElementById('msg');
+    const show = (tone, text) => { msg.dataset.tone = tone; msg.textContent = text; };
+    if (!token) { button.disabled = true; show('warning', 'Link incompleto. Use o link que veio no e-mail.'); }
+    button.addEventListener('click', async () => {
+      button.disabled = true;
+      try {
+        const res = await fetch(`${api}/api/newsletter/unsubscribe`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token }),
+        });
+        if (res.ok) show('success', 'Pronto. Você saiu da lista e seus dados foram apagados.');
+        else { show('danger', 'Não foi possível concluir. Tente novamente mais tarde.'); button.disabled = false; }
+      } catch {
+        show('danger', 'Falha de conexão. Tente novamente em instantes.');
+        button.disabled = false;
+      }
+    });
+  </script>
+</Layout>

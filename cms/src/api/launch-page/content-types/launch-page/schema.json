@@ -1,0 +1,23 @@
+{
+  "kind": "singleType",
+  "collectionName": "launch_pages",
+  "info": {
+    "singularName": "launch-page",
+    "pluralName": "launch-pages",
+    "displayName": "Launch page",
+    "description": "Text of /avise-me, the launch announcement sign-up. Sign-ups are in Newsletter signup."
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "badge": { "type": "string" },
+    "title": { "type": "string", "required": true },
+    "text": { "type": "text" },
+    "items": { "type": "component", "repeatable": true, "component": "marketing.item" },
+    "consentText": { "type": "text" },
+    "doneTitle": { "type": "string" },
+    "doneText": { "type": "text" },
+    "seo": { "type": "component", "repeatable": false, "component": "shared.seo" }
+  }
+}

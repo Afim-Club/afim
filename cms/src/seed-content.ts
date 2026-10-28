@@ -1,12 +1,12 @@
 import type { Core } from '@strapi/strapi';
 
-// Starter copy for the marketing site (home, plans, about). Each item is created only when it does not
-// exist yet, so edits made in the admin are kept. Prices are examples until the plans are confirmed.
+// Starter copy for the marketing site (home, plans, /avise-me, /sobre, /valores, /privacidade). Each item is created only when it does not
+// exist yet (a deleted starter page comes back on the next boot: unpublish it instead), so edits made in the admin are kept. Prices are examples until the plans are confirmed.
 
 const HOME = {
-  heroTitle: 'Encontre quem compartilha seus valores',
+  heroTitle: 'Está afim de encontrar quem tem os mesmos valores que você?',
   heroText:
-    'O Afim é um diretório aberto de profissionais, empresas, comércios e ONGs. Você marca suas afinidades e o diretório mostra só quem combina com você.',
+    'O Afim é um diretório aberto de profissionais, empresas, comércios e ONGs. Você marca suas afinidades e o diretório mostra só os seus afins.',
   heroNote: 'Suas afinidades nunca são exibidas. Elas servem só para filtrar os perfis que você vê.',
   searchPlaceholder: 'Busque por nome, serviço ou cidade',
   sections: [
@@ -72,6 +72,23 @@ const PRICING = {
   seo: { metaTitle: 'Planos para negócios · Afim', metaDescription: 'O Afim é grátis para pessoas e negócios. O plano Pro traz ofertas em Lightning, campanhas por afinidade, painel e selo de verificado.' },
 };
 
+const LAUNCH = {
+  badge: 'Em breve',
+  title: 'Está afim de saber quando tudo estiver pronto?',
+  text: 'O Afim está crescendo e o diretório já funciona. Deixe seu e-mail e avisamos quando estes recursos chegarem:',
+  items: [
+    { title: 'Descontos em Lightning', text: 'Pague em Bitcoin e economize nos negócios afins.' },
+    { title: 'Cupons por afinidade', text: 'Ofertas só para quem compartilha seus valores.' },
+    { title: 'Avaliações entre afins', text: 'Confiança depois de cada compra.' },
+    { title: 'Perto de mim', text: 'O app no celular mostra afins ao seu redor.' },
+    { title: 'Plano Pro para negócios', text: 'Painel, selo de verificado e campanhas.' },
+  ],
+  consentText: 'Aceito receber e-mails do Afim sobre o lançamento. Posso sair a qualquer momento pelo link em cada e-mail.',
+  doneTitle: 'Pronto, você está na lista',
+  doneText: 'Avisamos por e-mail quando os novos recursos chegarem. Enquanto isso, o diretório já está aberto.',
+  seo: { metaTitle: 'Avise-me · Afim', metaDescription: 'Deixe seu e-mail e saiba quando os descontos em Lightning, os cupons por afinidade e o plano Pro do Afim chegarem.' },
+};
+
 const PLANS = [
   {
     name: 'Grátis', slug: 'free', description: 'Para estar no diretório e ser encontrado.', priceMonthlyBrl: 0, priceYearlyBrl: 0,
@@ -91,10 +108,19 @@ const PAGES = [
     title: 'Sobre o Afim', slug: 'sobre',
     body: 'O Afim é um diretório aberto que conecta pessoas, negócios e comércios com valores em comum.\n\n## Como funciona\n\nCada pessoa marca as afinidades que importam para ela, e o diretório mostra só os perfis que combinam. As afinidades de quem busca nunca aparecem para ninguém.\n\n## Código aberto\n\nO Afim é software livre (AGPL-3.0). Qualquer pessoa pode ler o código, sugerir melhorias e verificar como os dados são tratados.',
   },
+  {
+    title: 'Nossos valores', slug: 'valores',
+    body: 'Está afim de encontrar pessoas e empresas com os mesmos valores que você? O Afim existe para aproximar afins. Estes são os valores que guiam o projeto.\n\n## Afinidade sem exposição\n\nSuas afinidades são suas. Elas filtram os perfis que você vê, mas nunca aparecem para ninguém. E a posição política de ninguém é exibida em perfil.\n\n## Cada um declara o que quer\n\nPerfis são feitos só com o que a própria pessoa ou o próprio negócio declarou. Nada de dados comprados, raspados da internet ou deduzidos do seu comportamento.\n\n## Respeito a todos os lados\n\nO Afim não escolhe lado. Do espectro político aos valores de cada um, todas as afinidades têm lugar, e cada pessoa decide com quem quer se encontrar.\n\n## Código aberto\n\nO Afim é software livre (AGPL-3.0). Qualquer pessoa pode ler o código, propor melhorias e conferir como os dados são tratados.\n\n## Sem rastreamento\n\nNão vendemos dados nem usamos rastreadores de publicidade. Você apaga a sua conta e tudo o que é seu quando quiser, como manda a LGPD.\n\n## Economia entre afins\n\nQueremos que o dinheiro circule entre quem compartilha valores: negócios locais, descontos para quem paga em Bitcoin Lightning, direto para quem vende, sem intermediários.',
+    seo: { metaTitle: 'Nossos valores · Afim', metaDescription: 'Afinidade sem exposição, dados só declarados, respeito a todos os lados, código aberto e economia entre afins: os valores do Afim.' },
+  },
+  {
+    title: 'Privacidade', slug: 'privacidade',
+    body: 'Texto inicial: revise com um advogado antes de divulgar.\n\nO Afim segue a Lei Geral de Proteção de Dados (LGPD).\n\n## O que guardamos\n\n- **Conta**: e-mail e senha (cifrada) ou o login social que você escolher.\n- **Afinidades**: só com o seu consentimento, com a data e a versão do aceite. Elas nunca são exibidas e servem só para filtrar os perfis que você vê. Desmarcar o consentimento apaga todas.\n- **Perfis de negócios**: só o que o próprio negócio declarou. O e-mail de contato não é público.\n- **Lista do avise-me**: e-mail, nome (opcional), para quem quer novidades e a data do aceite.\n\n## O que não fazemos\n\nNão vendemos nem compartilhamos seus dados, e o site não usa rastreadores de publicidade.\n\n## Seus direitos\n\nVocê apaga a sua conta e todos os seus dados em Minha conta, a qualquer momento. Para sair da lista do avise-me, use o link em qualquer e-mail que enviarmos.',
+  },
 ];
 
 export async function seedContent(strapi: Core.Strapi) {
-  const singles: [string, object][] = [['api::home-page.home-page', HOME], ['api::pricing-page.pricing-page', PRICING]];
+  const singles: [string, object][] = [['api::home-page.home-page', HOME], ['api::pricing-page.pricing-page', PRICING], ['api::launch-page.launch-page', LAUNCH]];
   for (const [uid, data] of singles) {
     const docs = strapi.documents(uid as any);
     if (!(await docs.findFirst({ status: 'draft' } as any))) {
@@ -109,5 +135,7 @@ export async function seedContent(strapi: Core.Strapi) {
   const plans = strapi.documents('api::plan.plan');
   if ((await plans.count({})) === 0) for (const p of PLANS) await plans.create({ data: p as any });
   const pages = strapi.documents('api::page.page');
-  if ((await pages.count({ status: 'draft' } as any)) === 0) for (const p of PAGES) await pages.create({ data: p as any, status: 'published' } as any);
+  for (const p of PAGES) {
+    if (!(await pages.findFirst({ filters: { slug: p.slug }, status: 'draft' } as any))) await pages.create({ data: p as any, status: 'published' } as any);
+  }
 }

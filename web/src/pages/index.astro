@@ -12,7 +12,7 @@ import Steps from '../components/marketing/Steps.astro';
 import { getHomePage, type HomePage } from '../lib/content';
 
 const FALLBACK: HomePage = {
-  heroTitle: 'Encontre quem compartilha seus valores', sections: [{ __component: 'marketing.directory-showcase' }], seo: null,
+  heroTitle: 'Está afim de encontrar quem tem os mesmos valores que você?', sections: [{ __component: 'marketing.directory-showcase' }], seo: null,
 };
 const home = (await getHomePage()) ?? FALLBACK;
 const site = Astro.site?.href ?? 'https://afim.club/';

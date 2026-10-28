@@ -14,6 +14,7 @@ const PUBLIC_ACTIONS = [
   // Marketing site content (read at build time).
   'api::home-page.home-page.find',
   'api::pricing-page.pricing-page.find',
+  'api::launch-page.launch-page.find',
   'api::site-setting.site-setting.find',
   'api::module-seo.module-seo.find',
   'api::page.page.find',

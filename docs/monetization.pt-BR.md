@@ -79,6 +79,20 @@ O desconto é sempre para membros logados: "entre perfis Afim" significa que que
 
 `review`: `profile`, `payment` (uma por pagamento confirmado), `author` (privado), `rating` 1 a 5, `text`, `showName` (padrão falso: aparece "Membro Afim"), `reply` (do dono, plano pago), `moderationStatus`. Média e avaliações ativas aparecem na página do perfil.
 
+### Separar avaliação verdadeira de ataque
+
+O risco são avaliações falsas para prejudicar o negócio, de concorrentes ou de quem quer boicotá-lo por discordar de um posicionamento. Regras, da mais barata à mais manual:
+
+1. **Só com compra paga.** A avaliação exige um pagamento `paid` confirmado pela carteira (LUD-21) ou pelo anunciante, acima de um mínimo (ex.: R$ 10), feito há no máximo 60 dias. Quem ataca precisa pagar ao negócio para avaliar, o que torna a campanha cara. Cada avaliação mostra "Pagamento confirmado".
+2. **Uma voz por pessoa.** Uma avaliação por membro por perfil (um novo pagamento atualiza, não soma) e só contas com pelo menos 7 dias.
+3. **Avalia-se o serviço, não as opiniões.** O formulário e os termos dizem que a avaliação é sobre o serviço recebido. Avaliações sobre crenças, política ou afinidades do negócio, ofensas ou dados pessoais são removidas na moderação. Isso também tira dado sensível do texto público.
+4. **Direito de resposta antes de publicar.** Notas 1 e 2 ficam ocultas por 48 horas: o anunciante é avisado e pode responder ou denunciar. Depois são publicadas com a resposta ao lado. A denúncia sozinha não esconde a avaliação; quem decide é o admin.
+5. **Freio de rajada.** Quando um perfil recebe muitas notas baixas em pouco tempo (ex.: 3 ou mais notas 1 ou 2 em 48 horas, acima do ritmo normal dele), as novas avaliações vão para moderação e o perfil mostra "Avaliações em análise". Isso segura um ataque coordenado enquanto é verificado.
+6. **Sinais para o admin, nunca públicos.** Na fila de moderação o admin vê, por avaliação: idade da conta, valor pago, se a carteira confirmou o pagamento, se outros autores da rajada foram convidados pela mesma pessoa (`invitedBy`) e quantas avaliações o autor fez em outros perfis. As afinidades do membro nunca são usadas para julgar avaliações: seria um novo uso de dado sensível.
+7. **Mostrar mais que a média.** O perfil mostra o número de avaliações e a distribuição de 1 a 5, não só a média, e a média só aparece a partir de 3 avaliações.
+
+`review` ganha `heldUntil` (datetime), `reportReason` (texto, privado) e `reportedAt` (datetime, privado).
+
 ## Recompensa por indicação
 
 Usa o convite existente (`inviteCode`, `invitedBy`). Quando o convidado paga a primeira assinatura, quem convidou ganha **um mês grátis** (assinatura `gift` ou um mês somado ao período atual), uma vez por convidado. Pagar em sats ficou de fora de propósito: o Afim passaria a enviar dinheiro e precisaria de uma carteira com saldo.

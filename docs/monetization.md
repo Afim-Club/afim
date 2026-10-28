@@ -139,6 +139,20 @@ This record is what reviews and the dashboard count on. Afim does not keep the i
 - `review` (collection): `profile`, `payment` (one review per paid payment), `author` (member, private), `rating` 1–5, `text`, `showName` (boolean, default false: shown as "Membro Afim"), `reply` (owner, needs `reviewReplies`), `moderationStatus` like profiles.
 - Public: the average rating and active reviews on the profile page (needs a rebuild today, like any content). Sorting by rating can come later.
 
+### Telling real reviews from attacks
+
+The risk is fake reviews meant to hurt a business, from competitors or from people boycotting it over a position it holds. Rules, from the cheapest to the most manual:
+
+1. **Paid purchase only.** A review needs a `paid` payment confirmed by the wallet (LUD-21) or by the advertiser, at or above a minimum (e.g. R$ 10), made at most 60 days before. An attacker has to pay the business to review it, which makes a campaign costly. Each review shows "Pagamento confirmado".
+2. **One voice per person.** One review per member per profile (a new payment updates it, it does not add one), and only accounts at least 7 days old.
+3. **Rate the service, not the opinions.** The review form and the terms say a review is about the service received. Reviews about the business's beliefs, politics or affinities, insults or personal data are removed in moderation. This also keeps sensitive data out of public text.
+4. **Right of reply before publication.** Ratings of 1 or 2 stay hidden for 48 hours: the advertiser is notified and can reply or report. Then they publish with the reply next to them. A report does not hide a review by itself; the admin decides.
+5. **Burst brake.** When a profile gets an unusual number of low ratings in a short time (e.g. 3 or more ratings of 1 or 2 in 48 hours, above its normal pace), new reviews for it wait in `review` moderation and the profile shows "Avaliações em análise". This stops a coordinated attack while it is checked.
+6. **Signals for the admin, never public.** In the moderation queue the admin sees per review: account age, payment amount, whether the payment was wallet-confirmed, whether other reviewers in the burst were invited by the same person (`invitedBy`), and how many reviews the author wrote elsewhere. Member affinities are never used to judge reviews: that would be a new use of sensitive data.
+7. **Show more than the average.** The profile shows the number of reviews and the 1 to 5 distribution, not only the average, and the average is shown only from 3 reviews on.
+
+`review` gains `heldUntil` (datetime), `reportReason` (text, private) and `reportedAt` (datetime, private).
+
 ## Referral rewards
 
 Uses the invite already in place (`member.inviteCode`, `member.invitedBy`). When an invited member's first paid subscription is settled (Stripe or Lightning), the inviter gets **one free month**: a `gift` subscription, or one month added to their current period. Each invited member rewards once. Paying sats out was left out on purpose: sending money would make Afim pay people and needs a funded wallet; months cost nothing to give.

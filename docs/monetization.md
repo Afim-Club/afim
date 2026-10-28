@@ -21,7 +21,7 @@ Afim never presents Lightning as a way to avoid taxes: the terms and the plans p
 
 ## Plans
 
-Two plans to start (KISS). Prices are open (see the end).
+Two plans to start (KISS): Free and Pro. Prices are proposed below.
 
 | Feature key | Free | Paid |
 | --- | --- | --- |
@@ -35,6 +35,36 @@ Two plans to start (KISS). Prices are open (see the end).
 | `cityFeatured`: can buy "Destaque na sua cidade" slots (extra charge) | | yes |
 
 Members (people looking for afins) never pay. Paying a discounted Lightning bill, writing a review and inviting are free.
+
+### Pricing proposal
+
+Estimates to validate, made on 2026-10-28 for the chosen hosting (static sites on Cloudflare Workers, Strapi and MariaDB in Docker on Dockge).
+
+Monthly operating cost at launch:
+
+| Item | Estimate (R$/month) | Notes |
+| --- | --- | --- |
+| Server for Strapi + MariaDB (VPS 4 GB) | 60 to 150 | backups included |
+| BTCPay Server (VPS 4 GB, pruned node) | 60 to 150 | zero if a partner or a hosted wallet is used at first |
+| Cloudflare Workers (sites, Turnstile) | 0 | free tier; paid plan about US$ 5 if builds or requests grow |
+| Transactional e-mail | 0 to 50 | free tiers cover the start |
+| Domain | about 5 | about R$ 60 a year |
+| Accountant (company in Simples Nacional) | 200 to 400 | the largest fixed cost |
+| **Total** | **about 330 to 750** | |
+
+Stripe takes a fee per card payment (check the current Brazilian rate); Lightning costs almost nothing.
+
+Proposed prices:
+
+| Plan | Price | Notes |
+| --- | --- | --- |
+| Free | R$ 0 | every person and every business; the directory only has value with volume |
+| Pro (card, Stripe) | R$ 29/month or R$ 290/year | 2 months free on the yearly plan |
+| Pro (Lightning, prepaid) | R$ 26/month or R$ 261/year in sats | 10% off, the same pitch Afim sells to advertisers |
+| Destaque na sua cidade | R$ 49 per city for 30 days | Pro only, at most 3 per city |
+| Fundador launch offer | R$ 19/month for life | first 100 Pro subscribers, to start the outreach |
+
+Break-even is about 15 to 30 Pro subscribers. The free plan has a cost per profile close to zero (static pages and one database row), so it is paid by Pro and the city slots. An optional "Apoie o Afim" button for a Lightning donation can help from day one.
 
 ### Data model (Strapi)
 
@@ -297,7 +327,7 @@ Each milestone is one or a few small PRs, in this order:
 
 ## Open questions
 
-- Plan name and prices (monthly, yearly, sats).
+- Confirm the pricing proposal above (Pro, Lightning discount, city slot, Fundador offer).
 - BTCPay Server self-hosted (proposed) or a hosted provider for Afim's own wallet.
 - BRL/BTC rate source.
 - Should the advertiser also be able to confirm payments when the wallet has no LUD-21 (proposed: yes)?

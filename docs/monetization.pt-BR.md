@@ -21,7 +21,7 @@ O Afim nunca apresenta Lightning como forma de não pagar imposto: os termos e a
 
 ## Planos
 
-Dois planos para começar (KISS). Preços em aberto (ver o final).
+Dois planos para começar (KISS): Grátis e Pro. Preços propostos abaixo.
 
 | Chave do recurso | Grátis | Pago |
 | --- | --- | --- |
@@ -35,6 +35,36 @@ Dois planos para começar (KISS). Preços em aberto (ver o final).
 | `cityFeatured`: pode comprar vagas de "Destaque na sua cidade" (cobrança extra) | | sim |
 
 Membros (pessoas buscando afins) nunca pagam. Pagar uma conta com desconto, avaliar e convidar são gratuitos.
+
+### Proposta de preços
+
+Estimativas para validar, feitas em 2026-10-28 para a hospedagem escolhida (sites estáticos no Cloudflare Workers, Strapi e MariaDB em Docker no Dockge).
+
+Custo operacional mensal no lançamento:
+
+| Item | Estimativa (R$/mês) | Observação |
+| --- | --- | --- |
+| Servidor do Strapi + MariaDB (VPS 4 GB) | 60 a 150 | com backup |
+| BTCPay Server (VPS 4 GB, nó podado) | 60 a 150 | zero se começar com parceiro ou carteira hospedada |
+| Cloudflare Workers (sites, Turnstile) | 0 | plano grátis; plano pago por cerca de US$ 5 se builds ou acessos crescerem |
+| E-mail transacional | 0 a 50 | os planos grátis cobrem o início |
+| Domínio | cerca de 5 | cerca de R$ 60 por ano |
+| Contador (empresa no Simples Nacional) | 200 a 400 | o maior custo fixo |
+| **Total** | **cerca de 330 a 750** | |
+
+O Stripe cobra uma taxa por pagamento com cartão (confirmar a taxa atual no Brasil); Lightning custa quase nada.
+
+Preços propostos:
+
+| Plano | Preço | Observação |
+| --- | --- | --- |
+| Grátis | R$ 0 | toda pessoa e todo negócio; o diretório só tem valor com volume |
+| Pro (cartão, Stripe) | R$ 29/mês ou R$ 290/ano | 2 meses grátis no anual |
+| Pro (Lightning, pré-pago) | R$ 26/mês ou R$ 261/ano em sats | 10% de desconto, o mesmo argumento que o Afim vende ao anunciante |
+| Destaque na sua cidade | R$ 49 por cidade por 30 dias | só para Pro, até 3 por cidade |
+| Oferta Fundador | R$ 19/mês para sempre | primeiros 100 assinantes Pro, para começar a divulgação |
+
+O ponto de equilíbrio fica em cerca de 15 a 30 assinantes Pro. O plano grátis tem custo por perfil perto de zero (páginas estáticas e uma linha no banco), então é pago pelo Pro e pelas vagas na cidade. Um botão opcional "Apoie o Afim" para doação em Lightning ajuda desde o primeiro dia.
 
 ### Modelo de dados (Strapi)
 
@@ -225,7 +255,7 @@ Cada marco é um ou poucos PRs pequenos, nesta ordem:
 
 ## Perguntas em aberto
 
-- Nome e preços do plano (mensal, anual, sats).
+- Confirmar a proposta de preços acima (Pro, desconto Lightning, vaga na cidade, oferta Fundador).
 - BTCPay auto-hospedado (proposto) ou um provedor hospedado para a carteira do Afim.
 - Fonte da cotação BRL/BTC.
 - O anunciante pode confirmar pagamentos quando a carteira não tem LUD-21 (proposto: sim)?

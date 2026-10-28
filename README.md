@@ -17,7 +17,6 @@ The directory can be browsed by place, like a classic directory: the whole direc
 | Folder | Description | Planned address |
 | --- | --- | --- |
 | `web/` | Public site for users (Astro) | `afim.club` |
-| `partners/` | Redirect from the old partner site to `afim.club/parceiros` (the partner pages now live in `web/`) | `partners.afim.club` |
 | `cms/` | Backoffice and API (Strapi) | `dash.afim.club` |
 | `infra/` | Deploy: Dockge stack for the CMS (`infra/dockge/`), plus Docker Swarm, Traefik and Jenkins | - |
 | `design-system/` | Design system: Tailwind theme, Astro components and brand assets used by `web/` | - |
@@ -27,7 +26,7 @@ The directory can be browsed by place, like a classic directory: the whole direc
 - **Front-end:** Astro (SSG/SSR)
 - **Back-end / admin:** Strapi CMS
 - **Database:** MySQL 8 / MariaDB
-- **Infrastructure:** Cloudflare Workers (sites) + Docker on Dockge (CMS); Docker Swarm + Traefik as an alternative
+- **Infrastructure:** Cloudflare Workers (site) + Docker on Dockge (CMS); Docker Swarm + Traefik as an alternative
 - **CI/CD:** Jenkins, SonarQube and Trivy
 
 ## Getting started
@@ -40,7 +39,7 @@ The directory can be browsed by place, like a classic directory: the whole direc
 
 ## Local development
 
-Prerequisites: Docker (with Compose) and Node.js 20–26. MariaDB runs in Docker; the CMS and the two Astro sites run on the host with hot reload.
+Prerequisites: Docker (with Compose) and Node.js 20–26. MariaDB runs in Docker; the CMS and the Astro site run on the host with hot reload.
 
 ```bash
 docker compose up -d --wait                  # MariaDB on :3306
@@ -48,11 +47,10 @@ cp cms/.env.example cms/.env                 # dev-only values, loads sample dat
 cd cms && npm install && npm run develop     # Strapi on :1337
 ```
 
-In other terminals:
+In another terminal:
 
 ```bash
 cd web && npm install && npm run dev         # public site on :4321
-cd partners && npm install && npm run dev    # partner site on :4322
 ```
 
 | Address | What |
@@ -60,17 +58,16 @@ cd partners && npm install && npm run dev    # partner site on :4322
 | http://localhost:1337/admin | Strapi admin (create the first admin user on first visit) |
 | http://localhost:1337/api/profiles | REST API |
 | http://localhost:4321 | Public site (`web/`) |
-| http://localhost:4322 | Partner site (`partners/`) |
 
-Or start everything at once with `./dev.sh` (stop with `./dev.sh stop`; logs in `.tmp/`). To reach the dev servers through a tunnel such as cloudflared, set `DEV_WEB_HOST`, `DEV_PARTNERS_HOST` and `DEV_CMS_HOST` in the root `.env` (e.g. `dev.afim.club`): the script then allows those hostnames, points the browser at `https://$DEV_CMS_HOST` and adds the sites to the CMS CORS list. The sites then listen on all interfaces.
+Or start everything at once with `./dev.sh` (stop with `./dev.sh stop`; logs in `.tmp/`). To reach the dev servers through a tunnel such as cloudflared, set `DEV_WEB_HOST` and `DEV_CMS_HOST` in the root `.env` (e.g. `dev.afim.club`): the script then allows those hostnames, points the browser at `https://$DEV_CMS_HOST` and adds the site to the CMS CORS list. The site then listens on all interfaces.
 
 > **Stop the CMS before switching branches** (`./dev.sh stop`). `strapi develop` reloads on file changes, and if a checkout briefly removes content types, Strapi drops their tables (data and relations included).
 
-The ports are fixed because the CMS only accepts browser requests from `localhost:4321` and `localhost:4322` (`CORS_ORIGINS`). `web/` reads the CMS at request time in dev, so it needs Strapi running. Stop the database with `docker compose stop`; `docker compose down -v` also deletes its data.
+The port is fixed because the CMS only accepts browser requests from `localhost:4321` (`CORS_ORIGINS`). `web/` reads the CMS at request time in dev, so it needs Strapi running. Stop the database with `docker compose stop`; `docker compose down -v` also deletes its data.
 
 ## Deploy (Cloudflare Workers + Dockge)
 
-The CMS runs as a Docker container on a host managed by [Dockge](https://github.com/louislam/dockge); the public site (`web`) runs on Cloudflare Workers, rendering each page on demand from the CMS with the `@astrojs/cloudflare` adapter and a short edge cache; `partners` is a static redirect stub. The Swarm/Jenkins setup in `infra/stack.yml` remains as an alternative.
+The CMS runs as a Docker container on a host managed by [Dockge](https://github.com/louislam/dockge); the public site (`web`) runs on Cloudflare Workers, rendering each page on demand from the CMS with the `@astrojs/cloudflare` adapter and a short edge cache. The Swarm/Jenkins setup in `infra/stack.yml` remains as an alternative.
 
 ### CMS on Dockge
 
@@ -81,23 +78,23 @@ The CMS runs as a Docker container on a host managed by [Dockge](https://github.
 
 The stack has no database container: it uses an existing MySQL 8 or MariaDB (`DATABASE_HOST`, `DATABASE_SSL`, ...), such as a managed MySQL on the same private network. Create an empty database and a user for it; Strapi creates the tables and the starter content on first boot. Media from the admin panel lives in the `uploads` volume. Back up both.
 
-### Sites on Cloudflare Workers
+### Site on Cloudflare Workers
 
-Each site has a `wrangler.jsonc` (`afim-web`: a Worker built by the Astro adapter; `afim-partners`: static assets). Either connect the repository in **Workers & Pages → Create → Import a repository** (Workers Builds), once per site:
+`web/wrangler.jsonc` (worker `afim-web`, built by the Astro adapter) deploys the site. Either connect the repository in **Workers & Pages → Create → Import a repository** (Workers Builds):
 
-| Setting | `web` | `partners` |
-| --- | --- | --- |
-| Root directory | `web` | `partners` |
-| Build command | `npm run build` | `npm run build` |
-| Deploy command | `npx wrangler deploy` | `npx wrangler deploy` |
-| Build variables | `STRAPI_URL`, `PUBLIC_STRAPI_URL`, `PUBLIC_AUTH_PROVIDERS`, `SITE_URL` (canonical URLs and sitemap, default `https://afim.club`), `PUBLIC_TURNSTILE_SITE_KEY` (optional, /avise-me form) | `PUBLIC_STRAPI_URL`, `PUBLIC_TURNSTILE_SITE_KEY` |
-| Custom domain | `afim.club` | `partners.afim.club` |
+| Setting | `web` |
+| --- | --- |
+| Root directory | `web` |
+| Build command | `npm run build` |
+| Deploy command | `npx wrangler deploy` |
+| Build variables | `STRAPI_URL`, `PUBLIC_STRAPI_URL`, `PUBLIC_AUTH_PROVIDERS`, `SITE_URL` (canonical URLs and sitemap, default `https://afim.club`), `PUBLIC_TURNSTILE_SITE_KEY` (optional, /avise-me and /parceiros/cadastro forms) |
+| Custom domain | `afim.club` |
 
 or deploy from a machine with `npm run deploy` (needs `wrangler login` or `CLOUDFLARE_API_TOKEN`, plus the same variables in the shell).
 
 - `STRAPI_URL` and `PUBLIC_STRAPI_URL` are the public CMS address (`https://dash.afim.club`). They are read at build time, but the build itself does not call the CMS.
 - `web` renders pages on demand, so CMS changes show up without a rebuild: within about a minute (each Worker caches Strapi responses for 60 s, and the edge cache keeps each page for 60 s). After that, the edge serves the old copy for up to a day while it renders a fresh one, so a short CMS outage does not take the site down. The sitemap (`/sitemap.xml`) is built on request too.
-- Use the custom domains, not `*.workers.dev`: member login relies on the site and the CMS being same-site (`afim.club` and `dash.afim.club`). Add each site's address to `CORS_ORIGINS` and set `WEB_URL` in the CMS.
+- Use the custom domains, not `*.workers.dev`: member login relies on the site and the CMS being same-site (`afim.club` and `dash.afim.club`). Add the site's address to `CORS_ORIGINS` and set `WEB_URL` in the CMS.
 - Long cache for `/_astro/*` comes from `public/_headers`.
 
 ## Managing content with AI (MCP)

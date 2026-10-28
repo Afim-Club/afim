@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Status
 
-`cms/` (Strapi 5, TypeScript), `web/` (Astro 7, rendered on demand on Cloudflare Workers), `partners/` (Astro 7, static redirect stub) and `infra/` (Swarm stack) are implemented. The product spec: a searchable directory of profiles with hierarchical categories, delivered trunk-based via Jenkins → Docker Swarm/Traefik. Code identifiers are in English; UI copy may be Portuguese.
+`cms/` (Strapi 5, TypeScript), `web/` (Astro 7, rendered on demand on Cloudflare Workers) and `infra/` (Swarm stack) are implemented. The product spec: a searchable directory of profiles with hierarchical categories, delivered trunk-based via Jenkins → Docker Swarm/Traefik. Code identifiers are in English; UI copy may be Portuguese.
 
 ## Commands (cms/)
 
@@ -16,7 +16,7 @@ npm run develop                           # an older cms/.env may say DATABASE_H
 npm run build                             # build admin panel
 ```
 
-`./dev.sh` (repo root) starts MariaDB, the CMS and both sites in the background (logs and the CMS pid in `.tmp/`; `./dev.sh stop`). Optional `DEV_WEB_HOST`/`DEV_PARTNERS_HOST`/`DEV_CMS_HOST` in the root `.env` expose them through a tunnel: Astro `--host --allowed-hosts`, `PUBLIC_STRAPI_URL=https://$DEV_CMS_HOST`, `WEB_URL=https://$DEV_WEB_HOST` (social login callback), and the hosts appended to `CORS_ORIGINS`. Astro 7 `astro dev` daemonizes when stdout is not a TTY; stop it with `astro dev stop`. Stop the CMS before switching branches: `strapi develop` reloads on file changes and drops the tables of content types missing from the checkout (this wiped affinities and their profile links once).
+`./dev.sh` (repo root) starts MariaDB, the CMS and the site in the background (logs and the CMS pid in `.tmp/`; `./dev.sh stop`). Optional `DEV_WEB_HOST`/`DEV_CMS_HOST` in the root `.env` expose them through a tunnel: Astro `--host --allowed-hosts`, `PUBLIC_STRAPI_URL=https://$DEV_CMS_HOST`, `WEB_URL=https://$DEV_WEB_HOST` (social login callback), and the hosts appended to `CORS_ORIGINS`. Astro 7 `astro dev` daemonizes when stdout is not a TTY; stop it with `astro dev stop`. Stop the CMS before switching branches: `strapi develop` reloads on file changes and drops the tables of content types missing from the checkout (this wiped affinities and their profile links once).
 
 No lint or test setup exists yet.
 
@@ -24,7 +24,7 @@ No lint or test setup exists yet.
 
 ```bash
 cd web && npm install
-npm run dev     # needs the CMS running (cms/ on :1337); web on :4321, partners on :4322 (fixed in astro.config.mjs to match CORS_ORIGINS)
+npm run dev     # needs the CMS running (cms/ on :1337); web on :4321 (fixed in astro.config.mjs to match CORS_ORIGINS)
 npm run build   # Cloudflare Worker (output: 'server'); the build does not call the CMS
 ```
 
@@ -32,11 +32,11 @@ npm run build   # Cloudflare Worker (output: 'server'); the build does not call 
 
 ## Design system
 
-`design-system/` (package `@afim/design-system`, modeled on the SiteTune design system but native to Astro) is used by both sites as a `file:../design-system` dependency. `src/theme.css` is the single source of truth for tokens (Tailwind v4 `@theme`: `primary` green ramp with `600` = `#2f7d5b`, `neutral` ramp, and semantic colors `page/surface/fg/muted/line/brand/brand-soft/on-brand/success/warning/danger` that switch via `prefers-color-scheme`, so no `dark:` variants). `src/components/*.astro` holds the components (Logo, SiteHeader/SiteFooter, Container, Button, Badge, Card, FormField, Input/Select/Textarea, Alert, EmptyState); `npm run dev` there serves the catalog page. Sites load it through `src/styles/global.css` (`@import "tailwindcss"`, the theme, and `@source "../../../design-system/src"`). Use components and semantic classes instead of page-local CSS. System fonts only. Components must not import runtime packages (the Docker image has no `design-system/node_modules`, and `design-system/` has no tsconfig for the same reason). Docker builds pass the folder with `--build-context design-system=design-system`, copied to `../design-system` before `npm ci`.
+`design-system/` (package `@afim/design-system`, modeled on the SiteTune design system but native to Astro) is used by `web/` as a `file:../design-system` dependency. `src/theme.css` is the single source of truth for tokens (Tailwind v4 `@theme`: `primary` green ramp with `600` = `#2f7d5b`, `neutral` ramp, and semantic colors `page/surface/fg/muted/line/brand/brand-soft/on-brand/success/warning/danger` that switch via `prefers-color-scheme`, so no `dark:` variants). `src/components/*.astro` holds the components (Logo, SiteHeader/SiteFooter, Container, Button, Badge, Card, FormField, Input/Select/Textarea, Alert, EmptyState); `npm run dev` there serves the catalog page. The site loads it through `src/styles/global.css` (`@import "tailwindcss"`, the theme, and `@source "../../../design-system/src"`). Use components and semantic classes instead of page-local CSS. System fonts only. Components must not import runtime packages (the Docker image has no `design-system/node_modules`, and `design-system/` has no tsconfig for the same reason). Docker builds pass the folder with `--build-context design-system=design-system`, copied to `../design-system` before `npm ci`.
 
-## Partners site
+## Partner pages
 
-The partner pages live in `web/` under `/parceiros` (Parceiros module: `src/pages/parceiros/`, landing + `/parceiros/cadastro` form). `partners/` is now only a redirect stub for the old partners.afim.club: `public/_redirects` (Workers, absolute targets: `/cadastro` → `https://afim.club/parceiros/cadastro`, everything else → `https://afim.club/parceiros`), the same in `infra-nginx.conf` (Docker), and a meta-refresh `index.astro` as fallback; the afim-partners worker can be deleted once the old links no longer matter. The form POSTs from the browser to `POST /api/profiles/submit` (`PUBLIC_STRAPI_URL`). That public, unauthenticated route (`cms/src/api/profile`) accepts only company|shop|ngo, whitelists fields, always creates `moderationStatus=review`, and stores `contactEmail` (a `private` field, never returned by the API, encrypted). Anti-spam: (1) in-memory per-IP rate limit (`cms/src/middlewares/submit-rate-limit.ts`, `SUBMIT_RATE_MAX`/`SUBMIT_RATE_WINDOW_MS`, default 5/hour; per replica, and relies on `PROXY=true` for the real client IP); (2) a hidden `website` honeypot field that silently returns 201 without saving; (3) optional Cloudflare Turnstile, enforced only when `TURNSTILE_SECRET` is set (the form renders the widget when `PUBLIC_TURNSTILE_SITE_KEY` is set at build time). The form was tested end to end in headless Chromium against a local CMS (submit, honeypot, 429 rate limit, double-click guard, network-error message, Turnstile token reset after each submit with a mocked widget). The real Turnstile widget has not been loaded in a browser (challenges.cloudflare.com was unreachable from the test sandbox); the server check was tested with Cloudflare's published dummy secrets. The `partners` image is wired into `infra/stack.yml` and the Jenkinsfile (untested there).
+The partner pages live in `web/` under `/parceiros` (Parceiros module: `src/pages/parceiros/`, landing + `/parceiros/cadastro` form). The old `partners/` app (partners.afim.club) was removed; its worker afim-partners and the domain are retired. The form POSTs from the browser to `POST /api/profiles/submit` (`PUBLIC_STRAPI_URL`). That public, unauthenticated route (`cms/src/api/profile`) accepts only company|shop|ngo, whitelists fields, always creates `moderationStatus=review`, and stores `contactEmail` (a `private` field, never returned by the API, encrypted). Anti-spam: (1) in-memory per-IP rate limit (`cms/src/middlewares/submit-rate-limit.ts`, `SUBMIT_RATE_MAX`/`SUBMIT_RATE_WINDOW_MS`, default 5/hour; per replica, and relies on `PROXY=true` for the real client IP); (2) a hidden `website` honeypot field that silently returns 201 without saving; (3) optional Cloudflare Turnstile, enforced only when `TURNSTILE_SECRET` is set (the form renders the widget when `PUBLIC_TURNSTILE_SITE_KEY` is set at build time). The form was tested end to end in headless Chromium against a local CMS (submit, honeypot, 429 rate limit, double-click guard, network-error message, Turnstile token reset after each submit with a mocked widget). The real Turnstile widget has not been loaded in a browser (challenges.cloudflare.com was unreachable from the test sandbox); the server check was tested with Cloudflare's published dummy secrets.
 
 ## Member accounts
 
@@ -50,7 +50,7 @@ Owned profiles: `profile.owner` (private relation to the user). `cms/src/api/mem
 
 ## Infra and delivery
 
-- Target deploy (preferred): `web/` on Cloudflare Workers via the Astro adapter (worker afim-web, afim.club, live since 2026-10-28) and `partners/` as static assets (`wrangler.jsonc` per site; `npm run deploy` or Workers Builds with root directory `web`/`partners`; `public/_headers` sets the `/_astro/*` cache) and the CMS on Dockge against an existing MySQL 8/MariaDB, no DB container (`infra/dockge/compose.yaml` pulls `ghcr.io/afim-club/afim-cms:${CMS_TAG:-latest}`, published by `.github/workflows/cms-image.yml` on pushes to main touching `cms/`; `DATABASE_HOST`/`DATABASE_SSL` from env, volume `uploads`; env in `infra/dockge/.env.example`). Use custom domains, not workers.dev, because login needs same-site cookies. Only `wrangler deploy --dry-run` and `wrangler dev` (partners) and `docker compose config` were checked in the sandbox. The afim-partners worker (partners.afim.club) was deleted on 2026-10-28.
+- Target deploy (preferred): `web/` on Cloudflare Workers via the Astro adapter (worker afim-web, afim.club, live since 2026-10-28; `web/wrangler.jsonc`; `npm run deploy` or Workers Builds with root directory `web`; `public/_headers` sets the `/_astro/*` cache) and the CMS on Dockge against an existing MySQL 8/MariaDB, no DB container (`infra/dockge/compose.yaml` pulls `ghcr.io/afim-club/afim-cms:${CMS_TAG:-latest}`, published by `.github/workflows/cms-image.yml` on pushes to main touching `cms/`; `DATABASE_HOST`/`DATABASE_SSL` from env, volume `uploads`; env in `infra/dockge/.env.example`). Use custom domains, not workers.dev, because login needs same-site cookies. Only `wrangler deploy --dry-run` and `docker compose config` were checked in the sandbox. The afim-partners worker (partners.afim.club) was deleted on 2026-10-28.
 - `infra/stack.yml`: Swarm stack (Traefik v3 with Let's Encrypt, MariaDB pinned to a node labelled `db=true`, `cms` and `web` with 2 replicas and `start-first` rolling updates). Needs the external overlay network `proxy`; variables come from the environment (see `.env.example`).
 - `cms/Dockerfile` (multi-stage, runs `strapi start`, verified healthy against MariaDB) and `web/Dockerfile` (Astro build, then `wrangler dev` serving the Worker in workerd on port 80; untested in Docker). The build no longer needs the CMS.
 - Root `Jenkinsfile`: Sonar → build → Trivy → push → `docker stack deploy`. Credential ids (`afim-registry-url`, `afim-env`) and the `sonarqube` server name are assumptions; the real Jenkins Shared Library is not wired yet. The web image was built (`docker build --network host --build-arg STRAPI_URL=http://localhost:1337 ...`) and served correctly against the local CMS; the stack and Jenkinsfile have not been run against a real Swarm/Jenkins.
@@ -76,11 +76,10 @@ Not done yet: dedicated search endpoint (text search currently via `$containsi` 
 Afim (afim.club) is an open source directory connecting people, businesses and shops with shared values. It is a monorepo of independently deployed components:
 
 - `web/` — public site for users (Astro, SSG/SSR) → `afim.club`
-- `partners/` — site for affiliates, i.e. businesses and shops (Astro) → `partners.afim.club`
 - `cms/` — backoffice and API (Strapi, backed by MariaDB) → `dash.afim.club`
 - `infra/` — Docker Swarm, Traefik (automatic TLS) and Jenkins configuration
 
-Both Astro sites are expected to consume content/data from the Strapi API. CI/CD is Jenkins with SonarQube and Trivy.
+The Astro site consumes content/data from the Strapi API. CI/CD is Jenkins with SonarQube and Trivy.
 
 ## Configuration
 

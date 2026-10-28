@@ -20,7 +20,7 @@ export default defineConfig({
     '/': { maxAge: 60, swr: 86400 },
     '/[...path]': { maxAge: 60, swr: 86400 },
   },
-  // Fixed dev port so the CMS CORS allow-list matches (web 4321, partners 4322).
+  // Fixed dev port so the CMS CORS allow-list matches (4321).
   server: { port: 4321 },
   vite: { plugins: [tailwindcss()] },
 });

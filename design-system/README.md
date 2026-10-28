@@ -2,7 +2,7 @@
 
 [Português](README.pt-BR.md)
 
-Tailwind v4 theme, Astro components and brand assets shared by `web/` and `partners/`. Modeled on the SiteTune design system, but native to Astro: components render to static HTML with no client-side JavaScript, and nothing is published to a registry (the sites use it as a local `file:` dependency).
+Tailwind v4 theme, Astro components and brand assets used by `web/`. Modeled on the SiteTune design system, but native to Astro: components render to static HTML with no client-side JavaScript, and nothing is published to a registry (the sites use it as a local `file:` dependency).
 
 ```bash
 cd design-system && npm install

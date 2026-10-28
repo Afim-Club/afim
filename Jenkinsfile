@@ -39,7 +39,7 @@ pipeline {
     }
 
     // web renders pages on demand from the CMS API, so its build no longer needs the CMS.
-    stage('Build, scan and push web and partners images') {
+    stage('Build, scan and push the web image') {
       when { branch 'main' }
       steps {
         sh '''
@@ -47,16 +47,11 @@ pipeline {
             --build-arg STRAPI_URL=https://dash.$DOMAIN \
             --build-arg PUBLIC_STRAPI_URL=https://dash.$DOMAIN \
             --build-arg PUBLIC_AUTH_PROVIDERS=$PUBLIC_AUTH_PROVIDERS \
+            --build-arg PUBLIC_TURNSTILE_SITE_KEY=$PUBLIC_TURNSTILE_SITE_KEY \
             --build-arg SITE_URL=https://$DOMAIN \
             --build-context design-system=design-system web
           trivy image --exit-code 1 --severity HIGH,CRITICAL --ignore-unfixed $REGISTRY/afim-web:$TAG
           docker push $REGISTRY/afim-web:$TAG
-          docker build -t $REGISTRY/afim-partners:$TAG \
-            --build-arg PUBLIC_STRAPI_URL=https://dash.$DOMAIN \
-            --build-arg PUBLIC_TURNSTILE_SITE_KEY=$PUBLIC_TURNSTILE_SITE_KEY \
-            --build-context design-system=design-system partners
-          trivy image --exit-code 1 --severity HIGH,CRITICAL --ignore-unfixed $REGISTRY/afim-partners:$TAG
-          docker push $REGISTRY/afim-partners:$TAG
         '''
         deployStack()
       }

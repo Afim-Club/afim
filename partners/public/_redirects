@@ -1,4 +1,0 @@
-# partners.afim.club moved into the main site: every URL redirects to afim.club/parceiros.
-/cadastro https://afim.club/parceiros/cadastro 301
-/cadastro/ https://afim.club/parceiros/cadastro 301
-/* https://afim.club/parceiros 301

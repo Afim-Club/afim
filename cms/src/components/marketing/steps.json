@@ -1,0 +1,17 @@
+{
+  "collectionName": "components_marketing_stepss",
+  "info": {
+    "displayName": "Steps",
+    "icon": "layer"
+  },
+  "attributes": {
+    "title": {
+      "type": "string"
+    },
+    "items": {
+      "type": "component",
+      "repeatable": true,
+      "component": "marketing.item"
+    }
+  }
+}

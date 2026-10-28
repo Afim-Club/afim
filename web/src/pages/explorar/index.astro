@@ -1,0 +1,27 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Card from '@afim/design-system/components/Card.astro';
+import AffinityFilter from '../../components/AffinityFilter.astro';
+import ProfileCard from '../../components/ProfileCard.astro';
+import { getCategories, getProfiles } from '../../lib/strapi';
+
+const roots = (await getCategories()).filter((c) => !c.parent);
+// Every profile is rendered so the affinity filter can still fill the first 6 slots.
+const profiles = await getProfiles();
+---
+<Layout title="Explorar o diretório" description="Profissionais, empresas, comércios e ONGs com valores em comum, por categoria, estado, cidade ou no mapa.">
+  <h1>Explorar o diretório</h1>
+  <nav aria-label="Diretório" class="flex flex-wrap gap-4 font-semibold"><a href="/explorar/estados">Por estado</a><a href="/explorar/mapa">Mapa</a><a href="/explorar/busca">Buscar</a></nav>
+  <h2>Categorias</h2>
+  <ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    {roots.map((c) => (
+      <Card as="li">
+        <a href={`/explorar/categorias/${c.slug}`} class="font-semibold">{c.name}</a>
+        {c.children?.length ? <div class="text-sm text-muted">{c.children.map((s) => s.name).join(', ')}</div> : null}
+      </Card>
+    ))}
+  </ul>
+  <h2>Perfis</h2>
+  <AffinityFilter />
+  <ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" data-limit="6">{profiles.map((p) => <ProfileCard profile={p} />)}</ul>
+</Layout>

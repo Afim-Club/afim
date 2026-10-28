@@ -1,0 +1,35 @@
+{
+  "collectionName": "components_marketing_feature_grids",
+  "info": {
+    "displayName": "Feature grid",
+    "icon": "apps"
+  },
+  "attributes": {
+    "title": {
+      "type": "string"
+    },
+    "text": {
+      "type": "text"
+    },
+    "note": {
+      "type": "text"
+    },
+    "ctaLabel": {
+      "type": "string"
+    },
+    "ctaHref": {
+      "type": "string"
+    },
+    "secondaryLabel": {
+      "type": "string"
+    },
+    "secondaryHref": {
+      "type": "string"
+    },
+    "items": {
+      "type": "component",
+      "repeatable": true,
+      "component": "marketing.item"
+    }
+  }
+}

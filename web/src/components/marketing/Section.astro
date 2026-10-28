@@ -1,0 +1,8 @@
+---
+/** One full-width marketing band with a centered column. */
+import Container from '@afim/design-system/components/Container.astro';
+interface Props { tone?: 'page' | 'soft' | 'surface' | 'dark'; id?: string }
+const { tone = 'page', id } = Astro.props;
+const bg = { page: 'bg-page', soft: 'bg-brand-soft', surface: 'bg-surface', dark: 'bg-primary-800 text-white' }[tone];
+---
+<section id={id} class:list={[bg, 'py-14 sm:py-20']}><Container><slot /></Container></section>

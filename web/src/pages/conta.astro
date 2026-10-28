@@ -6,7 +6,7 @@ import FormField from '@afim/design-system/components/FormField.astro';
 import Input from '@afim/design-system/components/Input.astro';
 import Layout from '../layouts/Layout.astro';
 ---
-<Layout title="Minha conta">
+<Layout module="conta" title="Minha conta">
   <div id="root" class="grid gap-6 pt-8" hidden>
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div>
@@ -208,7 +208,7 @@ import Layout from '../layouts/Layout.astro';
       $('matches').replaceChildren(...matches.map((p: any) => {
         const li = tpl.cloneNode(true) as HTMLElement;
         const a = li.querySelector('a')!;
-        a.href = `/perfis/${p.slug}`;
+        a.href = `/explorar/perfis/${p.slug}`;
         a.textContent = p.name;
         li.querySelector('span')!.textContent = `${TYPE_LABELS[p.profileType as keyof typeof TYPE_LABELS]} · Em comum: ${p.matchedAffinities.map((x: any) => x.name).join(', ')}`;
         return li;

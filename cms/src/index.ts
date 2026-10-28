@@ -1,6 +1,7 @@
 import type { Core } from '@strapi/strapi';
 import { configureAuthProviders } from './auth-providers';
 import { seed, seedAffinities } from './seed';
+import { seedContent } from './seed-content';
 
 const PUBLIC_ACTIONS = [
   'api::profile.profile.find',
@@ -10,6 +11,15 @@ const PUBLIC_ACTIONS = [
   'api::category.category.findOne',
   'api::affinity.affinity.find',
   'api::affinity.affinity.findOne',
+  // Marketing site content (read at build time).
+  'api::home-page.home-page.find',
+  'api::pricing-page.pricing-page.find',
+  'api::site-setting.site-setting.find',
+  'api::module-seo.module-seo.find',
+  'api::page.page.find',
+  'api::page.page.findOne',
+  'api::plan.plan.find',
+  'api::plan.plan.findOne',
 ];
 
 // Signed-in members: the same reads, plus their own member data (see cms/src/api/member).
@@ -45,6 +55,8 @@ export default {
     await configureAuthProviders(strapi);
     // A starter list of affinities when there are none, so /conta always has options (edit them in the admin).
     await seedAffinities(strapi);
+    // Starter copy for the marketing site, created only when missing (edit it in the admin).
+    await seedContent(strapi);
     if (process.env.SEED === 'true') await seed(strapi);
   },
 };

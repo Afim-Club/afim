@@ -1,0 +1,43 @@
+{
+  "kind": "singleType",
+  "collectionName": "pricing_pages",
+  "info": {
+    "singularName": "pricing-page",
+    "pluralName": "pricing-pages",
+    "displayName": "Pricing page",
+    "description": "Text of /planos. Plans come from the plan collection."
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "intro": {
+      "type": "text"
+    },
+    "lightningDiscountPercent": {
+      "type": "integer",
+      "default": 10,
+      "min": 0,
+      "max": 100
+    },
+    "featureLabels": {
+      "type": "component",
+      "repeatable": true,
+      "component": "marketing.feature-label"
+    },
+    "faq": {
+      "type": "component",
+      "repeatable": true,
+      "component": "marketing.faq-item"
+    },
+    "seo": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.seo"
+    }
+  }
+}

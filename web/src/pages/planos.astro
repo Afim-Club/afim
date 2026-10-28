@@ -1,0 +1,65 @@
+---
+/** Home module: plans and prices. Text from the pricing-page single type, plans from the plan collection. */
+import Button from '@afim/design-system/components/Button.astro';
+import Layout from '../layouts/Layout.astro';
+import Faq from '../components/marketing/Faq.astro';
+import { brl, getPlans, getPricingPage } from '../lib/content';
+
+const page = await getPricingPage();
+const plans = await getPlans();
+const discount = page?.lightningDiscountPercent ?? 0;
+const labels = page?.featureLabels ?? [];
+const lightning = (n: number) => Math.round(n * (100 - discount)) / 100;
+---
+<Layout title="Planos" module="home" seo={page?.seo} description={page?.intro}>
+  <section class="py-10 text-center">
+    <h1 class="mt-0 text-4xl font-extrabold">{page?.title ?? 'Planos'}</h1>
+    {page?.intro && <p class="mx-auto max-w-2xl text-lg text-muted">{page.intro}</p>}
+  </section>
+  <ul class="m-0 grid list-none gap-5 p-0 md:grid-cols-2">
+    {plans.map((p) => (
+      <li class:list={['flex flex-col gap-4 rounded-afim border p-7', p.featured ? 'border-2 border-brand' : 'border-line']}>
+        <div>
+          <h2 class="m-0 text-2xl">{p.name}</h2>
+          {p.description && <p class="m-0 text-muted">{p.description}</p>}
+        </div>
+        {p.priceMonthlyBrl > 0 ? (
+          <div>
+            <p class="m-0"><span class="text-4xl font-extrabold">{brl(p.priceMonthlyBrl)}</span> <span class="text-muted">por mês</span></p>
+            <p class="m-0 text-sm text-muted">ou {brl(p.priceYearlyBrl)} por ano</p>
+            {discount > 0 && <p class="m-0 text-sm font-semibold text-brand">ou {brl(lightning(p.priceMonthlyBrl))} por mês pagando em Lightning ({discount}% off)</p>}
+          </div>
+        ) : (
+          <p class="m-0"><span class="text-4xl font-extrabold">R$ 0</span> <span class="text-muted">para sempre</span></p>
+        )}
+        <Button size="lg" variant={p.featured ? 'primary' : 'outline'} href={p.priceMonthlyBrl > 0 ? '/conta' : '/entrar'}>
+          {p.priceMonthlyBrl > 0 ? `Assinar o ${p.name}` : 'Começar grátis'}
+        </Button>
+        {p.highlights?.length ? (
+          <ul class="m-0 space-y-2 pl-5">{p.highlights.map((h) => <li>{h}</li>)}</ul>
+        ) : null}
+      </li>
+    ))}
+  </ul>
+  <p class="mt-4 text-center text-sm text-muted">Pagamento por cartão (Stripe) ou Bitcoin Lightning. Cancele quando quiser.</p>
+  {labels.length > 0 && plans.length > 0 && (
+    <div class="mt-10 overflow-x-auto rounded-afim border border-line">
+      <table class="w-full min-w-[32rem] border-collapse text-left">
+        <caption class="sr-only">Comparação dos planos</caption>
+        <thead><tr class="border-b border-line bg-surface">
+          <th scope="col" class="p-3">Recurso</th>
+          {plans.map((p) => <th scope="col" class="p-3">{p.name}</th>)}
+        </tr></thead>
+        <tbody>
+          {labels.map((l) => (
+            <tr class="border-b border-line">
+              <th scope="row" class="p-3 font-medium">{l.label}</th>
+              {plans.map((p) => <td class="p-3">{p.features?.includes(l.key) ? 'Sim' : 'Não'}</td>)}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+  {page?.faq?.length ? <div class="mt-12"><Faq title="Perguntas frequentes" items={page.faq} /></div> : null}
+</Layout>

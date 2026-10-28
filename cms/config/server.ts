@@ -9,6 +9,11 @@ const config = ({ env }: Core.Config.Shared.ConfigParams): Core.Config.Server =>
   app: {
     keys: env.array('APP_KEYS')!,
   },
+  // Built-in MCP server at /mcp for AI clients (content management). Off unless MCP_ENABLED=true;
+  // every request needs an Admin token, and its permissions decide which content types it can touch.
+  mcp: {
+    enabled: env.bool('MCP_ENABLED', false),
+  },
   webhooks: {
     populateRelations: env.bool('WEBHOOKS_POPULATE_RELATIONS', false),
   },

@@ -84,6 +84,10 @@ People sign up on the public site (`/entrar`) with email and password or a socia
 
 Social providers are enabled from the CMS environment (`AUTH_<PROVIDER>_CLIENT_ID` / `_CLIENT_SECRET`, see `.env.example`); register `https://admin.<domain>/api/connect/<provider>/callback` as the redirect URI at each provider.
 
+## Roadmap
+
+Plans, Lightning discounts between Afim profiles and the features that come with them are described in [docs/monetization.md](docs/monetization.md).
+
 ## License
 
 [GNU AGPL-3.0](LICENSE). If you run a modified version of this software as a network service, you must offer its source code to the users of that service.

@@ -15,7 +15,7 @@ export type Profile = {
   slug: string;
   description?: string;
   categories?: Category[];
-  affinities?: { name: string; slug: string }[];
+  affinities?: { name: string; slug: string; group?: string | null }[];
   location?: { city?: string; state?: string; lat?: number; lng?: number } | null;
   mediaLinks?: { platform: string; url: string }[];
   extra?: ({ __component: string } & Record<string, unknown>)[];
@@ -50,6 +50,9 @@ export const getProfiles = (filters = '') =>
 
 export const profilesBySlugs = (slugs: string[]) =>
   getProfiles(slugs.map((s, i) => `filters[categories][slug][$in][${i}]=${encodeURIComponent(s)}`).join('&'));
+
+// Political affinities still filter listings but are never shown on a profile page.
+export const isPolitical = (a: { group?: string | null }) => a.group === 'Política' || a.group === 'Pautas políticas';
 
 export type Affinity = { name: string; slug: string; group?: string | null; lean?: number | null };
 

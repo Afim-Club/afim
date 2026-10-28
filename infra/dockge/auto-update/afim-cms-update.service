@@ -1,0 +1,8 @@
+[Unit]
+Description=Update the afim-cms Dockge stack when a new image is published
+After=docker.service network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/afim-cms-update.sh

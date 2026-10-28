@@ -73,10 +73,26 @@ The CMS runs as a Docker container on a host managed by [Dockge](https://github.
 
 1. In Dockge, create a stack (e.g. `afim-cms`) and paste [`infra/dockge/compose.yaml`](infra/dockge/compose.yaml).
 2. Fill the stack's `.env` from [`infra/dockge/.env.example`](infra/dockge/.env.example). Generate each secret with `openssl rand -base64 32`, including `DATA_ENCRYPTION_KEY` (keep a copy of it outside the server: see Encryption below).
-3. Deploy. The image `ghcr.io/afim-club/afim-cms` is published by the `CMS image` GitHub Action on every push to `main` that touches `cms/` (tags `latest` and the commit SHA); **Update in Dockge pulls the new one**. Set `CMS_TAG` to a commit SHA to pin or roll back. The package must be public on GitHub (Package settings → Change visibility), or run `docker login ghcr.io` on the host.
+3. Deploy. The image `ghcr.io/afim-club/afim-cms` is published by the `CMS image` GitHub Action on every push to `main` that touches `cms/` (tags `latest` and the commit SHA); **Update in Dockge pulls the new one** (or let the host do it: see Automatic updates below). Set `CMS_TAG` to a commit SHA to pin or roll back. The package must be public on GitHub (Package settings → Change visibility), or run `docker login ghcr.io` on the host.
 4. Expose port `CMS_PORT` (1337) as `https://dash.afim.club` through a reverse proxy or a Cloudflare Tunnel. The container trusts `X-Forwarded-*` (`PROXY=true`).
 
 The stack has no database container: it uses an existing MySQL 8 or MariaDB (`DATABASE_HOST`, `DATABASE_SSL`, ...), such as a managed MySQL on the same private network. Create an empty database and a user for it; Strapi creates the tables and the starter content on first boot. Media from the admin panel lives in the `uploads` volume. Back up both.
+
+#### Automatic updates
+
+[`infra/dockge/auto-update/`](infra/dockge/auto-update/) has a script and a systemd timer that update the stack on the host itself (pull based: no SSH from GitHub, no secrets in Actions). Every 5 minutes it pulls the stack's image tag anonymously (an empty Docker config, so an old `docker login` on the host does not get in the way). When there is a new build it dumps the database to `/data/backups/afim-cms` (`mysqldump` in a throwaway `mysql:8.4` container, credentials read from the stack's `.env`; keeps the last 14; no dump, no update), recreates only this stack's container, waits for the image healthcheck and, if it fails, goes back to the previous image (kept as the `previous` tag) and skips that build until a newer one is published. Other stacks and images on the host are never touched. Install it as root on the Dockge host:
+
+```bash
+base=https://raw.githubusercontent.com/Afim-Club/afim/main/infra/dockge/auto-update
+curl -fsSL -o /usr/local/bin/afim-cms-update.sh $base/afim-cms-update.sh && chmod 755 /usr/local/bin/afim-cms-update.sh
+curl -fsSL -o /etc/systemd/system/afim-cms-update.service $base/afim-cms-update.service
+curl -fsSL -o /etc/systemd/system/afim-cms-update.timer $base/afim-cms-update.timer
+systemctl daemon-reload && systemctl start afim-cms-update.service   # first run, now
+systemctl enable --now afim-cms-update.timer
+journalctl -u afim-cms-update -f                                      # log
+```
+
+The defaults match `/data/stacks/afim-cms`; override `STACK_DIR`, `BACKUP_DIR` or `KEEP_BACKUPS` with `systemctl edit afim-cms-update.service` (`[Service]` + `Environment=...`). A rollback does not undo database migrations: restore with `zcat <backup>.sql.gz | mysql -h <host> -u <user> -p <db>`. To stop updates, pin `CMS_TAG` to a commit SHA or `systemctl disable --now afim-cms-update.timer`. The uploads volume is not part of the backup.
 
 ### Site on Cloudflare Workers
 

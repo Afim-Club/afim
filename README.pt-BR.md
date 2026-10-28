@@ -73,10 +73,26 @@ O CMS roda como container Docker num host gerenciado pelo [Dockge](https://githu
 
 1. No Dockge, crie uma stack (ex.: `afim-cms`) e cole o [`infra/dockge/compose.yaml`](infra/dockge/compose.yaml).
 2. Preencha o `.env` da stack a partir do [`infra/dockge/.env.example`](infra/dockge/.env.example). Gere cada segredo com `openssl rand -base64 32`, inclusive o `DATA_ENCRYPTION_KEY` (guarde uma cópia dele fora do servidor: veja Criptografia abaixo).
-3. Faça o deploy. A imagem `ghcr.io/afim-club/afim-cms` é publicada pelo GitHub Action `CMS image` a cada push na `main` que mexe em `cms/` (tags `latest` e o SHA do commit); **o Update do Dockge baixa a nova**. Defina `CMS_TAG` com um SHA para fixar uma versão ou voltar atrás. O pacote precisa ser público no GitHub (Package settings → Change visibility), ou rode `docker login ghcr.io` no host.
+3. Faça o deploy. A imagem `ghcr.io/afim-club/afim-cms` é publicada pelo GitHub Action `CMS image` a cada push na `main` que mexe em `cms/` (tags `latest` e o SHA do commit); **o Update do Dockge baixa a nova** (ou deixe o host fazer isso: veja Atualização automática abaixo). Defina `CMS_TAG` com um SHA para fixar uma versão ou voltar atrás. O pacote precisa ser público no GitHub (Package settings → Change visibility), ou rode `docker login ghcr.io` no host.
 4. Exponha a porta `CMS_PORT` (1337) como `https://dash.afim.club` por um proxy reverso ou um Cloudflare Tunnel. O container confia em `X-Forwarded-*` (`PROXY=true`).
 
 A stack não tem container de banco: ela usa um MySQL 8 ou MariaDB que já existe (`DATABASE_HOST`, `DATABASE_SSL`, ...), como um MySQL gerenciado na mesma rede privada. Crie um banco vazio e um usuário para ele; o Strapi cria as tabelas e o conteúdo inicial no primeiro boot. As mídias do painel ficam no volume `uploads`. Faça backup dos dois.
+
+#### Atualização automática
+
+[`infra/dockge/auto-update/`](infra/dockge/auto-update/) tem um script e um timer do systemd que atualizam a stack no próprio host (por pull: sem SSH vindo do GitHub, sem segredos no Actions). A cada 5 minutos ele baixa a tag da imagem da stack de forma anônima (com uma configuração Docker vazia, então um `docker login` antigo no host não atrapalha). Quando há build nova, ele faz um dump do banco em `/data/backups/afim-cms` (`mysqldump` num container `mysql:8.4` descartável, credenciais lidas do `.env` da stack; guarda os 14 últimos; sem dump, sem atualização), recria só o container desta stack, espera o healthcheck da imagem e, se falhar, volta para a imagem anterior (guardada na tag `previous`) e ignora essa build até sair uma mais nova. Outras stacks e imagens do host nunca são tocadas. Instale como root no host do Dockge:
+
+```bash
+base=https://raw.githubusercontent.com/Afim-Club/afim/main/infra/dockge/auto-update
+curl -fsSL -o /usr/local/bin/afim-cms-update.sh $base/afim-cms-update.sh && chmod 755 /usr/local/bin/afim-cms-update.sh
+curl -fsSL -o /etc/systemd/system/afim-cms-update.service $base/afim-cms-update.service
+curl -fsSL -o /etc/systemd/system/afim-cms-update.timer $base/afim-cms-update.timer
+systemctl daemon-reload && systemctl start afim-cms-update.service   # primeira execução, agora
+systemctl enable --now afim-cms-update.timer
+journalctl -u afim-cms-update -f                                      # log
+```
+
+Os padrões batem com `/data/stacks/afim-cms`; mude `STACK_DIR`, `BACKUP_DIR` ou `KEEP_BACKUPS` com `systemctl edit afim-cms-update.service` (`[Service]` + `Environment=...`). O rollback não desfaz migrations do banco: restaure com `zcat <backup>.sql.gz | mysql -h <host> -u <user> -p <db>`. Para parar as atualizações, fixe `CMS_TAG` num SHA ou rode `systemctl disable --now afim-cms-update.timer`. O volume de uploads não entra no backup.
 
 ### Site no Cloudflare Workers
 

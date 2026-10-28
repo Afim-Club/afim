@@ -100,6 +100,16 @@ ou publique de uma máquina com `npm run deploy` (precisa de `wrangler login` ou
 - Use os domínios próprios, não `*.workers.dev`: o login de membros depende de o site e o CMS serem do mesmo site (`afim.club` e `dash.afim.club`). Inclua o endereço de cada site em `CORS_ORIGINS` e defina `WEB_URL` no CMS.
 - O cache longo de `/_astro/*` vem de `public/_headers`.
 
+## Gerenciar conteúdo com IA (MCP)
+
+O [servidor MCP](https://docs.strapi.io/cms/features/strapi-mcp-server) embutido no Strapi permite que um cliente de IA (Claude Code, Claude Desktop, Cursor...) liste, crie, edite e publique conteúdo no CMS.
+
+1. Defina `MCP_ENABLED=true` no ambiente do CMS (`.env` da stack no Dockge) e faça o redeploy. O endereço é `https://dash.afim.club/mcp`.
+2. No painel admin, abra **Settings → Admin tokens** e crie um token só com o conteúdo necessário. Sugestão: ler, criar, editar e publicar em Home page, Pricing page, Launch page, Page, Help topic, Help article, Blog post, Blog tag, Plan, Site settings e Module SEO. **Nunca** dê acesso a Member, Newsletter signup, User ou Profile: eles têm dados pessoais (LGPD). O token só faz o que as permissões dele permitem, e nunca mais do que o admin que o criou.
+3. Conecte o cliente. Neste repositório, o `.mcp.json` já declara o servidor `strapi` para o Claude Code; ele lê o token de `STRAPI_MCP_TOKEN` (e, se quiser, a URL de `STRAPI_MCP_URL`). No Claude Code na web, adicione `STRAPI_MCP_TOKEN` ao ambiente de nuvem e libere `dash.afim.club` no acesso de rede. Em outros lugares: `claude mcp add strapi --transport http https://dash.afim.club/mcp -H "Authorization: Bearer <token>"`.
+
+O conteúdo criado pelo MCP segue as mesmas regras do painel admin (rascunho até publicar). O site estático ainda precisa de um novo build para mostrá-lo (o webhook do Strapi dispara um).
+
 ## Privacidade e dados
 
 Os perfis são construídos a partir de informações **declaradas pelos próprios usuários** (opt-in). Os dados pessoais são tratados conforme a Lei Geral de Proteção de Dados (LGPD).

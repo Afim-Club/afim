@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "strapi": {
+      "type": "http",
+      "url": "${STRAPI_MCP_URL:-https://dash.afim.club/mcp}",
+      "headers": {
+        "Authorization": "Bearer ${STRAPI_MCP_TOKEN}"
+      }
+    }
+  }
+}

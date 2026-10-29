@@ -1,13 +1,17 @@
 ---
-/** Top bar: logo on the left, navigation links (slot) on the right. */
+/** Top bar: logo (plus an optional `badge`, e.g. "Beta") on the left, navigation links (slot) on the right. */
+import Badge from './Badge.astro';
 import Container from './Container.astro';
 import Logo from './Logo.astro';
-interface Props { label?: string; size?: 'md' | 'lg' }
-const { label, size } = Astro.props;
+interface Props { label?: string; size?: 'md' | 'lg'; badge?: string }
+const { label, size, badge } = Astro.props;
 ---
 <header class="border-b border-line">
   <Container size={size} class="flex items-center justify-between py-4">
-    <Logo label={label} />
+    <div class="flex shrink-0 items-center gap-2">
+      <Logo label={label} />
+      {badge && <Badge tone="brand">{badge}</Badge>}
+    </div>
     <nav class="flex items-center gap-4 text-sm font-medium"><slot /></nav>
   </Container>
 </header>

@@ -52,7 +52,11 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : un
     <slot name="head" />
   </head>
   <body>
-    <SiteHeader>
+    <!-- Beta corner ribbon: only on wide screens, where the corner is empty; the header badge covers the rest. -->
+    <div aria-hidden="true" class="pointer-events-none absolute top-0 right-0 z-10 hidden h-32 w-32 overflow-hidden xl:block">
+      <div class="absolute top-6 -right-10 w-44 rotate-45 bg-brand py-1 text-center text-xs font-bold tracking-widest text-on-brand shadow">BETA</div>
+    </div>
+    <SiteHeader badge="Beta">
       <a href="/explorar">Explorar</a>
       <a href="/planos">Planos</a>
       <a href="/ajuda">Ajuda</a>

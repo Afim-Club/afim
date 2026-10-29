@@ -1,15 +1,6 @@
 import type { Core } from '@strapi/strapi';
 import { STARTER_AFFINITIES } from './starter-affinities';
-
-const CATEGORIES: Record<string, string[]> = {
-  Tecnologia: ['Desenvolvimento', 'Design'],
-  Alimentação: ['Restaurantes', 'Padarias', 'Doces', 'Buffet'],
-  Saúde: ['Clínicas', 'Terapias', 'Psicologia', 'Laboratórios'],
-  'Bem-estar': ['Yoga', 'Fitness', 'Dança'],
-  Beleza: ['Estética', 'Maquiagem'],
-  Serviços: ['Advocacia', 'Contabilidade', 'Construção', 'Imóveis', 'Segurança', 'Turismo', 'Marcenaria'],
-  Comércio: ['Varejo', 'Moda', 'Mercados', 'Autopeças', 'Agronegócio', 'Artesanato', 'Postos de combustível'],
-};
+import { STARTER_CATEGORIES } from './starter-categories';
 
 const slugify = (s: string) =>
   s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -37,22 +28,27 @@ export async function seedAffinities(strapi: Core.Strapi) {
   }
 }
 
+// Each starter parent is created with its subcategories only while its slug is missing, so edits and
+// deletions of subcategories made in the admin are kept. Never renames or moves existing categories.
+export async function seedCategories(strapi: Core.Strapi) {
+  const docs = strapi.documents('api::category.category');
+  for (const [parent, children] of Object.entries(STARTER_CATEGORIES)) {
+    if (await docs.findFirst({ filters: { slug: slugify(parent) } } as any)) continue;
+    const p = await docs.create({ data: { name: parent, slug: slugify(parent) } as any });
+    for (const child of children) {
+      if (await docs.findFirst({ filters: { slug: slugify(child) } } as any)) continue;
+      await docs.create({ data: { name: child, slug: slugify(child), parent: p.documentId } as any });
+    }
+    strapi.log.info(`Seeded starter categories (${parent})`);
+  }
+}
+
 export async function seed(strapi: Core.Strapi) {
   if ((await strapi.documents('api::profile.profile').count({})) > 0) return;
 
-  const cats: Record<string, string> = {};
-  for (const [parent, children] of Object.entries(CATEGORIES)) {
-    const p = await strapi.documents('api::category.category').create({
-      data: { name: parent, slug: slugify(parent) },
-    });
-    cats[parent] = p.documentId;
-    for (const child of children) {
-      const c = await strapi.documents('api::category.category').create({
-        data: { name: child, slug: slugify(child), parent: p.documentId },
-      });
-      cats[child] = c.documentId;
-    }
-  }
+  const cats: Record<string, string> = Object.fromEntries(
+    (await strapi.documents('api::category.category').findMany({ fields: ['name'] })).map((c) => [c.name, c.documentId]),
+  );
 
   const affinities: Record<string, string> = Object.fromEntries(
     (await strapi.documents('api::affinity.affinity').findMany({ fields: ['name'] })).map((a) => [a.name, a.documentId]),
@@ -128,5 +124,5 @@ export async function seed(strapi: Core.Strapi) {
       } as any,
     });
   }
-  strapi.log.info('Seeded sample categories and profiles');
+  strapi.log.info('Seeded sample profiles');
 }

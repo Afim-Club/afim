@@ -63,7 +63,7 @@ Content types in `cms/src/api/`: `profile` and `category` (draftAndPublish disab
 
 Public access: `cms/src/index.ts` bootstrap grants the public role `find`/`findOne` on both types (idempotent). `profile` controller forces `moderationStatus=active` on `find` and 404s non-active on `findOne`, so review/blocked profiles are only visible in the admin. Filtering works through the REST API, e.g. `filters[location][state][$eq]=SP`, `filters[categories][slug][$eq]=...` (use `curl -g`).
 
-Seed: `SEED=true` loads sample categories/profiles on boot, only when no profiles exist (`cms/src/seed.ts`). Starter affinities (general values and the "Política" spectrum) are created on every boot, per group, while that group is empty, regardless of `SEED`.
+Seed: `SEED=true` loads sample categories/profiles on boot, only when no profiles exist (`cms/src/seed.ts`). Starter affinities (general values and the "Política" spectrum) are created on every boot, per group, while that group is empty, regardless of `SEED`. Starter categories (`cms/src/starter-categories.ts`, a broad parent -> subcategory tree, also used by the sample profiles) are created on every boot, per parent, while the parent's slug is missing (existing categories are never renamed or moved), so the daily moderation routine rarely needs to create one.
 
 `npm run start` serves the compiled `dist/`: run `npm run build` after editing `src/`, or use `develop`.
 

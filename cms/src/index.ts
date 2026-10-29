@@ -1,6 +1,6 @@
 import type { Core } from '@strapi/strapi';
 import { configureAuthProviders } from './auth-providers';
-import { seed, seedAffinities } from './seed';
+import { seed, seedAffinities, seedCategories } from './seed';
 import { seedContent } from './seed-content';
 import { seedHelp } from './seed-help';
 import { seedBlog } from './seed-blog';
@@ -70,6 +70,8 @@ export default {
     await configureAuthProviders(strapi);
     // A starter list of affinities when there are none, so /conta always has options (edit them in the admin).
     await seedAffinities(strapi);
+    // A broad starter category tree, so profiles (and the moderation routine) rarely need a new category.
+    await seedCategories(strapi);
     // Starter copy for the marketing site, created only when missing (edit it in the admin).
     await seedContent(strapi);
     await seedHelp(strapi);

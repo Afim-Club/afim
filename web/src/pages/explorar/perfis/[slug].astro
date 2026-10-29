@@ -9,6 +9,8 @@ if (!profile) return Astro.rewrite('/404');
 const placeLink = placeHref(profile);
 const place = [profile.location?.city, profile.location?.state].filter(Boolean).join(' / ');
 const shownAffinities = (profile.affinities ?? []).filter((a) => !isPolitical(a));
+// Only http(s) links are rendered (older admin-entered links are not validated).
+const links = (profile.mediaLinks ?? []).filter((l) => /^https?:\/\//i.test(l.url));
 const extra = profile.extra?.[0];
 // Labeled per-type details; false booleans and empty fields are left out.
 const details = extra ? EXTRA_FIELDS[profile.profileType].flatMap((f) => {
@@ -25,8 +27,8 @@ const details = extra ? EXTRA_FIELDS[profile.profileType].flatMap((f) => {
   {profile.categories?.length ? <p class="flex flex-wrap gap-2">{profile.categories.map((c) => <Badge href={`/explorar/categorias/${c.slug}`}>{c.name}</Badge>)}</p> : null}
   {shownAffinities.length ? <p class="flex flex-wrap gap-2"><span class="text-sm text-muted">Afinidades:</span>{shownAffinities.map((a) => <Badge tone="brand">{a.name}</Badge>)}</p> : null}
   {details.length ? <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">{details.map(([k, v]) => <><dt class="font-medium text-muted">{k}</dt><dd class="whitespace-pre-line">{v}</dd></>)}</dl> : null}
-  {profile.mediaLinks?.length ? (
-    <ul class="flex flex-wrap gap-3">{profile.mediaLinks.map((l) => <li><a href={l.url} rel="noopener nofollow">{l.platform}</a></li>)}</ul>
+  {links.length ? (
+    <ul class="flex flex-wrap gap-3">{links.map((l) => <li><a href={l.url} rel="noopener nofollow">{l.platform}</a></li>)}</ul>
   ) : null}
   </div>
 </Layout>

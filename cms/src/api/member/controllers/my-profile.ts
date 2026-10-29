@@ -18,6 +18,7 @@ export const MAX_CATEGORIES = 3;
 const MAX_LINKS = 10;
 
 // Per-type details (the `extra` dynamic zone): only these fields, with these types, are accepted from members.
+// A new field in cms/src/components/extra/*.json must be added here and to EXTRA_FIELDS in web/src/lib/strapi.ts.
 const EXTRA: Record<string, Record<string, 'string' | 'text' | 'boolean' | string[]>> = {
   professional: { seniority: ['intern', 'junior', 'mid', 'senior', 'lead'], openToWork: 'boolean' },
   company: { legalName: 'string', employeeRange: ['1-10', '11-50', '51-200', '201-1000', '1000+'], hiring: 'boolean' },

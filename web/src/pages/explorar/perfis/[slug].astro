@@ -1,7 +1,7 @@
 ---
 import Layout from '../../../layouts/Layout.astro';
 import Badge from '@afim/design-system/components/Badge.astro';
-import { TYPE_LABELS, getProfiles, isPolitical } from '../../../lib/strapi';
+import { EXTRA_FIELDS, TYPE_LABELS, getProfiles, isPolitical } from '../../../lib/strapi';
 import { placeHref } from '../../../lib/places';
 
 const profile = Astro.params.slug ? (await getProfiles(`filters[slug][$eq]=${encodeURIComponent(Astro.params.slug)}`))[0] : undefined;
@@ -9,8 +9,15 @@ if (!profile) return Astro.rewrite('/404');
 const placeLink = placeHref(profile);
 const place = [profile.location?.city, profile.location?.state].filter(Boolean).join(' / ');
 const shownAffinities = (profile.affinities ?? []).filter((a) => !isPolitical(a));
+// Only http(s) links are rendered (older admin-entered links are not validated).
+const links = (profile.mediaLinks ?? []).filter((l) => /^https?:\/\//i.test(l.url));
 const extra = profile.extra?.[0];
-const details = extra ? Object.entries(extra).filter(([k, v]) => !['__component', 'id'].includes(k) && v !== null) : [];
+// Labeled per-type details; false booleans and empty fields are left out.
+const details = extra ? EXTRA_FIELDS[profile.profileType].flatMap((f) => {
+  const v = extra[f.key];
+  if (v === null || v === undefined || v === '' || v === false) return [];
+  return [[f.label, f.kind === 'boolean' ? 'Sim' : f.options?.[String(v)] ?? String(v)]];
+}) : [];
 ---
 <Layout title={profile.name}>
   <div class="space-y-3 pt-8">
@@ -19,9 +26,9 @@ const details = extra ? Object.entries(extra).filter(([k, v]) => !['__component'
   {profile.description && <p>{profile.description}</p>}
   {profile.categories?.length ? <p class="flex flex-wrap gap-2">{profile.categories.map((c) => <Badge href={`/explorar/categorias/${c.slug}`}>{c.name}</Badge>)}</p> : null}
   {shownAffinities.length ? <p class="flex flex-wrap gap-2"><span class="text-sm text-muted">Afinidades:</span>{shownAffinities.map((a) => <Badge tone="brand">{a.name}</Badge>)}</p> : null}
-  {details.length ? <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">{details.map(([k, v]) => <><dt class="font-medium text-muted">{k}</dt><dd>{String(v)}</dd></>)}</dl> : null}
-  {profile.mediaLinks?.length ? (
-    <ul class="flex flex-wrap gap-3">{profile.mediaLinks.map((l) => <li><a href={l.url} rel="noopener nofollow">{l.platform}</a></li>)}</ul>
+  {details.length ? <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">{details.map(([k, v]) => <><dt class="font-medium text-muted">{k}</dt><dd class="whitespace-pre-line">{v}</dd></>)}</dl> : null}
+  {links.length ? (
+    <ul class="flex flex-wrap gap-3">{links.map((l) => <li><a href={l.url} rel="noopener nofollow">{l.platform}</a></li>)}</ul>
   ) : null}
   </div>
 </Layout>

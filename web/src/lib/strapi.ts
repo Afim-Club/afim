@@ -64,3 +64,25 @@ export type Affinity = { name: string; slug: string; group?: string | null; lean
 export const getProfileAffinities = async () =>
   (await fetchAll<Affinity>('affinities', 'fields[0]=name&fields[1]=slug&fields[2]=group&fields[3]=lean&sort[0]=group&sort[1]=sortOrder&sort[2]=name'))
     .filter((a) => a.lean === null || a.lean === undefined);
+
+// Per-type details (profile.extra): field labels and enum values in Portuguese, for the profile page and the /conta/perfis form.
+export const EXTRA_FIELDS: Record<Profile['profileType'], { key: string; label: string; options?: Record<string, string>; kind?: 'boolean' | 'text' }[]> = {
+  professional: [
+    { key: 'seniority', label: 'Nível de experiência', options: { intern: 'Estágio', junior: 'Júnior', mid: 'Pleno', senior: 'Sênior', lead: 'Liderança' } },
+    { key: 'openToWork', label: 'Aberto a oportunidades', kind: 'boolean' },
+  ],
+  company: [
+    { key: 'legalName', label: 'Razão social' },
+    { key: 'employeeRange', label: 'Funcionários', options: { '1-10': '1 a 10', '11-50': '11 a 50', '51-200': '51 a 200', '201-1000': '201 a 1000', '1000+': 'Mais de 1000' } },
+    { key: 'hiring', label: 'Contratando', kind: 'boolean' },
+  ],
+  shop: [
+    { key: 'openingHours', label: 'Horário de funcionamento', kind: 'text' },
+    { key: 'offersDiscount', label: 'Oferece desconto', kind: 'boolean' },
+    { key: 'discountDetails', label: 'Detalhes do desconto', kind: 'text' },
+  ],
+  ngo: [
+    { key: 'cause', label: 'Causa' },
+    { key: 'acceptsVolunteers', label: 'Aceita voluntários', kind: 'boolean' },
+  ],
+};

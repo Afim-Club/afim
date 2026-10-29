@@ -10,14 +10,53 @@ export const MAX_OWNED = 10;
 const TYPE_ERROR = 'name and profileType (professional|company|shop|ngo) are required';
 
 const FIELDS = ['name', 'slug', 'profileType', 'description', 'moderationStatus'];
-const POPULATE = { location: true, affinities: { fields: ['name', 'slug', 'group'] } };
+const POPULATE = {
+  location: true, mediaLinks: true, extra: true,
+  affinities: { fields: ['name', 'slug', 'group'] }, categories: { fields: ['name', 'slug'] },
+};
+export const MAX_CATEGORIES = 3;
+const MAX_LINKS = 10;
+
+// Per-type details (the `extra` dynamic zone): only these fields, with these types, are accepted from members.
+// A new field in cms/src/components/extra/*.json must be added here and to EXTRA_FIELDS in web/src/lib/strapi.ts.
+const EXTRA: Record<string, Record<string, 'string' | 'text' | 'boolean' | string[]>> = {
+  professional: { seniority: ['intern', 'junior', 'mid', 'senior', 'lead'], openToWork: 'boolean' },
+  company: { legalName: 'string', employeeRange: ['1-10', '11-50', '51-200', '201-1000', '1000+'], hiring: 'boolean' },
+  shop: { openingHours: 'text', offersDiscount: 'boolean', discountDetails: 'text' },
+  ngo: { cause: 'string', acceptsVolunteers: 'boolean' },
+};
 
 const view = (p: any) => ({
   documentId: p.documentId, name: p.name, slug: p.slug, profileType: p.profileType, description: p.description ?? '', status: p.moderationStatus,
   city: p.location?.city ?? '', state: p.location?.state ?? '',
   lat: p.location?.lat ?? null, lng: p.location?.lng ?? null,
   affinities: (p.affinities ?? []).map((a: any) => ({ documentId: a.documentId, name: a.name, group: a.group ?? null })),
+  categories: (p.categories ?? []).map((c: any) => ({ documentId: c.documentId, name: c.name })),
+  mediaLinks: (p.mediaLinks ?? []).map((l: any) => ({ platform: l.platform, url: l.url })),
+  extra: (({ __component, id, ...fields }: any) => fields)(p.extra?.[0] ?? {}),
 });
+
+const str = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
+
+// Only http(s) links, so a profile page never renders a javascript: or data: URL.
+function links(v: unknown) {
+  return (Array.isArray(v) ? v : [])
+    .map((l: any) => ({ platform: str(l?.platform, 50), url: str(l?.url, 255) }))
+    .filter((l) => l.platform && /^https?:\/\/[^\s]+$/i.test(l.url))
+    .slice(0, MAX_LINKS);
+}
+
+function extra(profileType: string, v: unknown) {
+  const body = (v && typeof v === 'object' ? v : {}) as Record<string, unknown>;
+  const out: Record<string, unknown> = { __component: `extra.${profileType}` };
+  for (const [key, kind] of Object.entries(EXTRA[profileType])) {
+    const value = body[key];
+    if (kind === 'boolean') out[key] = value === true;
+    else if (Array.isArray(kind)) out[key] = kind.includes(value as string) ? value : null;
+    else out[key] = str(value, kind === 'text' ? 1000 : 255) || null;
+  }
+  return [out];
+}
 
 export default ({ strapi }: { strapi: Core.Strapi }) => {
   const profiles = () => strapi.documents('api::profile.profile');
@@ -28,7 +67,6 @@ export default ({ strapi }: { strapi: Core.Strapi }) => {
   // spectrums, never the political issues (those only describe a member's own answers).
   async function input(ctx: any) {
     const body = ((ctx.request.body as any)?.data ?? {}) as Record<string, any>;
-    const str = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
     const name = str(body.name, 255);
     const profileType = str(body.profileType, 20);
     if (!name || !TYPES.includes(profileType)) return null;
@@ -40,6 +78,11 @@ export default ({ strapi }: { strapi: Core.Strapi }) => {
     const affinities = ids.length
       ? await strapi.documents('api::affinity.affinity').findMany({ filters: { documentId: { $in: ids }, lean: { $null: true } } as any, fields: ['id'] as any })
       : [];
+    // Existing categories only (members can't create them), at most MAX_CATEGORIES.
+    const categoryIds = (Array.isArray(body.categories) ? body.categories : []).filter((id: unknown) => typeof id === 'string').slice(0, MAX_CATEGORIES);
+    const categories = categoryIds.length
+      ? await strapi.documents('api::category.category').findMany({ filters: { documentId: { $in: categoryIds } } as any, fields: ['id'] as any })
+      : [];
     return {
       name, profileType,
       description: str(body.description, 2000),
@@ -47,6 +90,9 @@ export default ({ strapi }: { strapi: Core.Strapi }) => {
       state: str(body.state, 2).toUpperCase(),
       ...(lat !== null && lng !== null ? { lat, lng } : { lat: null, lng: null }),
       affinities: affinities.map((a: any) => a.id),
+      categories: categories.map((c: any) => c.id),
+      mediaLinks: links(body.mediaLinks),
+      extra: extra(profileType, body.extra),
     };
   }
 

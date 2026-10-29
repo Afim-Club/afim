@@ -7,6 +7,14 @@ import Input from '@afim/design-system/components/Input.astro';
 import Select from '@afim/design-system/components/Select.astro';
 import Textarea from '@afim/design-system/components/Textarea.astro';
 import Layout from '../../layouts/Layout.astro';
+import { EXTRA_FIELDS, TYPE_LABELS, getCategories } from '../../lib/strapi';
+
+// Category options grouped by parent (rendered here, so the browser doesn't page through the API).
+const categories = await getCategories().catch(() => []);
+const groups = categories.filter((c) => !c.parent).map((root) => ({
+  root, children: categories.filter((c) => c.parent?.documentId === root.documentId),
+}));
+const PLATFORMS = ['Site', 'Instagram', 'LinkedIn', 'Facebook', 'X', 'YouTube', 'TikTok', 'WhatsApp', 'GitHub', 'Loja online'];
 ---
 <Layout module="conta" title="Meus perfis">
   <div id="root" class="grid gap-6 pt-8" hidden>
@@ -48,6 +56,46 @@ import Layout from '../../layouts/Layout.astro';
           </div>
         </div>
         <FormField label="Apresentação"><Textarea name="description" rows="4" maxlength="2000" /></FormField>
+        <div class="grid gap-2">
+          <p class="m-0 text-sm font-medium">Categorias</p>
+          <p class="m-0 text-xs text-muted">Até 3. É por elas que o perfil aparece em Explorar.</p>
+          <div class="grid gap-2 sm:grid-cols-3">
+            {[0, 1, 2].map((i) => (
+              <Select name="category" aria-label={`Categoria ${i + 1}`}>
+                <option value="">—</option>
+                {groups.map(({ root, children }) => (
+                  <optgroup label={root.name}>
+                    <option value={root.documentId}>{root.name} (geral)</option>
+                    {children.map((c) => <option value={c.documentId}>{c.name}</option>)}
+                  </optgroup>
+                ))}
+              </Select>
+            ))}
+          </div>
+        </div>
+        {Object.entries(EXTRA_FIELDS).map(([type, fields]) => (
+          <fieldset data-extra={type} class="grid gap-3 sm:grid-cols-2" hidden>
+            <legend class="mb-2 text-sm font-medium">Detalhes ({TYPE_LABELS[type as keyof typeof TYPE_LABELS]})</legend>
+            {fields.map((f) => f.kind === 'boolean' ? (
+              <label class="flex items-center gap-2 text-sm"><input type="checkbox" data-key={f.key} class="accent-brand" /> {f.label}</label>
+            ) : f.options ? (
+              <FormField label={f.label}>
+                <Select data-key={f.key}><option value="">—</option>{Object.entries(f.options).map(([v, l]) => <option value={v}>{l}</option>)}</Select>
+              </FormField>
+            ) : f.kind === 'text' ? (
+              <FormField label={f.label} class="sm:col-span-2"><Textarea data-key={f.key} rows="2" maxlength="1000" /></FormField>
+            ) : (
+              <FormField label={f.label}><Input data-key={f.key} maxlength="255" /></FormField>
+            ))}
+          </fieldset>
+        ))}
+        <div class="grid gap-2">
+          <p class="m-0 text-sm font-medium">Links</p>
+          <p class="m-0 text-xs text-muted">Site, redes sociais ou loja. Aparecem na página do perfil. Use o endereço completo (https://...).</p>
+          <ul id="links" class="grid gap-2"></ul>
+          <datalist id="platforms">{PLATFORMS.map((p) => <option value={p} />)}</datalist>
+          <div><Button id="addLink" type="button" variant="outline" size="sm">Adicionar link</Button></div>
+        </div>
         <div>
           <p class="m-0 text-sm font-medium">Afinidades</p>
           <p class="mt-1 text-xs text-muted">São públicas: aparecem na página do perfil e servem para pessoas com as mesmas afinidades o encontrarem.</p>
@@ -74,6 +122,13 @@ import Layout from '../../layouts/Layout.astro';
         <Button data-role="delete" type="button" variant="outline" size="sm" class="text-danger">Excluir</Button>
       </div>
     </Card>
+  </template>
+  <template id="linkRow">
+    <li class="grid gap-2 sm:grid-cols-[10rem_1fr_auto]">
+      <Input data-role="platform" list="platforms" maxlength="50" placeholder="Instagram" aria-label="Rede ou site" />
+      <Input data-role="url" type="url" maxlength="255" placeholder="https://" aria-label="Endereço" />
+      <Button data-role="remove" type="button" variant="outline" size="sm">Remover</Button>
+    </li>
   </template>
   <template id="checkRow">
     <li class="rounded-afim border border-line px-3 py-2 text-sm">
@@ -113,6 +168,22 @@ import Layout from '../../layouts/Layout.astro';
     });
     $('unlocate').addEventListener('click', () => { pos = null; renderPos(); });
 
+    const categorySelects = [...form.querySelectorAll<HTMLSelectElement>('select[name=category]')];
+    const extraBox = (type: string) => form.querySelector<HTMLFieldSetElement>(`[data-extra=${type}]`)!;
+    const extraInputs = (type: string) => [...extraBox(type).querySelectorAll<HTMLInputElement>('[data-key]')];
+    // Only the details of the chosen type are shown (and sent).
+    const showExtra = () => form.querySelectorAll<HTMLFieldSetElement>('[data-extra]').forEach((f) => (f.hidden = f.dataset.extra !== typeSelect.value));
+    typeSelect.addEventListener('change', showExtra);
+
+    function addLink(link?: { platform: string; url: string }) {
+      const li = clone('linkRow');
+      li.querySelector<HTMLInputElement>('[data-role=platform]')!.value = link?.platform ?? '';
+      li.querySelector<HTMLInputElement>('[data-role=url]')!.value = link?.url ?? '';
+      li.querySelector('[data-role=remove]')!.addEventListener('click', () => li.remove());
+      $('links').append(li);
+    }
+    $('addLink').addEventListener('click', () => addLink());
+
     // Affinities a business can declare: plain ones and the political spectrums, never the political issues.
     function renderAffinities(affinities: any[]) {
       const rows: HTMLElement[] = [];
@@ -139,6 +210,16 @@ import Layout from '../../layouts/Layout.astro';
       for (const k of ['name', 'profileType', 'city', 'state', 'description']) if (p) field(k).value = p[k] ?? '';
       const chosen = new Set((p?.affinities ?? []).map((a: any) => a.documentId));
       $('affinities').querySelectorAll('input').forEach((i) => (i.checked = chosen.has(i.value)));
+      categorySelects.forEach((sel, i) => (sel.value = p?.categories?.[i]?.documentId ?? ''));
+      $('links').replaceChildren();
+      (p?.mediaLinks ?? []).forEach(addLink);
+      for (const type of Object.keys(TYPE_LABELS)) {
+        for (const i of extraInputs(type)) {
+          const v = p?.profileType === type ? p.extra?.[i.dataset.key!] : null;
+          if (i.type === 'checkbox') i.checked = v === true;
+          else i.value = v ?? '';
+        }
+      }
       $('formTitle').textContent = p ? `Editar ${p.name}` : 'Cadastrar perfil';
       pos = p && p.lat !== null && p.lng !== null ? { lat: Number(p.lat), lng: Number(p.lng) } : null;
       renderPos();
@@ -146,6 +227,7 @@ import Layout from '../../layouts/Layout.astro';
       typeSelect.disabled = !!p;
       professionalOption.disabled = !p && profiles.some((x) => x.profileType === 'professional');
       if (!p && professionalOption.disabled) typeSelect.value = 'company';
+      showExtra();
       $('cancel').hidden = !p;
     }
 
@@ -203,7 +285,16 @@ import Layout from '../../layouts/Layout.astro';
       const data = {
         name: fd.get('name'), profileType: typeSelect.value, lat: pos?.lat ?? null, lng: pos?.lng ?? null, city: fd.get('city'), state: fd.get('state'), description: fd.get('description'),
         affinities: [...$('affinities').querySelectorAll('input')].filter((i) => i.checked).map((i) => i.value),
+        categories: [...new Set(categorySelects.map((sel) => sel.value).filter(Boolean))],
+        mediaLinks: [...$('links').children].map((li) => ({
+          platform: li.querySelector<HTMLInputElement>('[data-role=platform]')!.value.trim(),
+          url: li.querySelector<HTMLInputElement>('[data-role=url]')!.value.trim(),
+        })).filter((l) => l.platform || l.url),
+        extra: Object.fromEntries(extraInputs(typeSelect.value).map((i) => [i.dataset.key, i.type === 'checkbox' ? i.checked : i.value])),
       };
+      if (data.mediaLinks.some((l) => !l.platform || !/^https?:\/\/\S+$/i.test(l.url))) {
+        return show('danger', 'Cada link precisa do nome da rede ou site e de um endereço completo começando com https://.');
+      }
       const button = form.querySelector<HTMLButtonElement>('button:not([type=button])')!;
       button.disabled = true;
       try {
